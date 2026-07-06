@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 /**
  * Smoke test del Home: grid y buscador se renderizan correctamente.
- * Assume que el dev server (o server de CI) está en :3000.
+ * Assume que el dev server (o server de CI) está en :3100.
  */
 test.describe("Home", () => {
   test("muestra título y descripción de CompetiDex", async ({ page }) => {

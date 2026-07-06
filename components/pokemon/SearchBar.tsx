@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Search, X } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -14,13 +14,28 @@ import { capitalize, extractIdFromUrl } from "@/lib/pokemon-utils";
  *
  * Estrategia: trae toda la lista de nombres (PokeAPI permite hasta 1025+ en
  * una sola petición; cacheada en Redis 1h) y filtra client-side tras el
- * debounce. Encaminamiento a `/pokemon/{id}` al pulsar enter o clic en
- * sugerencia, manteniendo ruta canónica.
+ * debounce. Sincroniza el término en la URL (?q=) para que PokemonGrid
+ * pueda filtrar la cuadrícula. Encaminamiento a `/pokemon/{id}` al pulsar
+ * enter o clic en sugerencia, manteniendo ruta canónica.
  */
 export function SearchBar() {
-  const [query, setQuery] = useState("");
-  const debounced = useDebounce(query.trim().toLowerCase(), 300);
+  const searchParams = useSearchParams();
   const router = useRouter();
+  const pathname = usePathname();
+
+  const [query, setQuery] = useState(searchParams.get("q") ?? "");
+  const debounced = useDebounce(query.trim().toLowerCase(), 300);
+
+  // Sincronizar búsqueda con URL para que PokemonGrid pueda filtrar
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (debounced) {
+      params.set("q", debounced);
+    } else {
+      params.delete("q");
+    }
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }, [debounced, pathname, router, searchParams]);
 
   // Listado cacheado — fetched solo una vez. Limite generoso.
   const { data } = usePokemonInfiniteList(1025);
@@ -34,9 +49,8 @@ export function SearchBar() {
       .map((r) => ({ name: r.name, url: r.url, id: extractIdFromUrl(r.url) }));
   }, [debounced, data]);
 
-  const submit = (name: string) => {
-    if (!name) return;
-    router.push(`/pokemon/${name}`);
+  const submit = (id: number) => {
+    router.push(`/pokemon/${id}`);
     setQuery("");
   };
 
@@ -54,7 +68,7 @@ export function SearchBar() {
           onKeyDown={(e) => {
             if (e.key === "Enter" && suggestions[0]) {
               e.preventDefault();
-              submit(suggestions[0].name);
+              submit(suggestions[0].id);
             }
           }}
           placeholder="Buscar Pokémon…"
@@ -82,7 +96,7 @@ export function SearchBar() {
             <li key={s.name}>
               <button
                 type="button"
-                onClick={() => submit(s.name)}
+                onClick={() => submit(s.id)}
                 className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground"
               >
                 <span className="font-mono text-xs text-muted-foreground">

@@ -50,6 +50,18 @@ function NavBar() {
         >
           Equipos
         </a>
+        <a
+          href="/comparar"
+          className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          Comparador
+        </a>
+        <a
+          href="/efectividades"
+          className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          Efectividades
+        </a>
       </div>
     </nav>
   );

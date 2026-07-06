@@ -145,6 +145,15 @@ export function PokemonDetail({
           </dl>
 
           {flavorText && <p className="text-sm italic text-muted-foreground">“{flavorText}”</p>}
+
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/comparar?ids=${pokemon.id}`}>Comparar</Link>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <Link href={`/efectividades?defender=${pokemon.id}`}>Calcular</Link>
+            </Button>
+          </div>
         </div>
       </header>
 

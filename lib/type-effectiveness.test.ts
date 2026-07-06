@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   computeDefensiveEffectiveness,
   categorizeEffectiveness,
+  computeDefensiveCoverage,
   formatMultiplier,
 } from "@/lib/type-effectiveness";
 import type { TypeRelations } from "@/lib/pokeapi";
@@ -123,6 +124,40 @@ describe("categorizeEffectiveness", () => {
   it("mapa vacio devuelve breakdown vacio", () => {
     const result = categorizeEffectiveness({});
     expect(result).toEqual({ weaknesses: [], resistances: [], immunities: [] });
+  });
+});
+
+describe("computeDefensiveCoverage", () => {
+  it("equipo vacío devuelve breakdown vacío", () => {
+    expect(computeDefensiveCoverage([])).toEqual({
+      weaknesses: [],
+      resistances: [],
+      immunities: [],
+    });
+  });
+
+  it("agrega cobertura de dos miembros (peor caso)", () => {
+    const a = rel({ double_damage_from: [res("water"), res("rock")] });
+    const b = rel({ double_damage_from: [res("water")] });
+    // equipo {a, b} → water x2 (peor caso coincide), rock x2
+    const map = computeDefensiveCoverage([
+      [{ name: "a", relations: a }],
+      [{ name: "b", relations: b }],
+    ]);
+    expect(map.weaknesses.find((w) => w.type === "water")?.multiplier).toBe(2);
+    expect(map.weaknesses.find((w) => w.type === "rock")?.multiplier).toBe(2);
+  });
+
+  it("inmunidad de un miembro se refleja si otro no la anula", () => {
+    const a = rel({ double_damage_from: [res("ghost")] });
+    const b = rel({ no_damage_from: [res("ghost")] });
+    // a recibe x2 de ghost, b recibe x0. Peor caso: x2
+    const map = computeDefensiveCoverage([
+      [{ name: "a", relations: a }],
+      [{ name: "b", relations: b }],
+    ]);
+    expect(map.weaknesses.find((w) => w.type === "ghost")?.multiplier).toBe(2);
+    expect(map.immunities).not.toContain("ghost");
   });
 });
 

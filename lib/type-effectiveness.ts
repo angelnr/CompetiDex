@@ -83,6 +83,35 @@ export function categorizeEffectiveness(map: EffectivenessMap): EffectivenessBre
   return { weaknesses, resistances, immunities };
 }
 
+/**
+ * Cobertura defensiva agregada de un equipo.
+ * Para cada tipo atacante, computa el peor caso entre todos los miembros
+ * del equipo (el que más daño recibiría). Útil en el comparador y en la
+ * vista de equipo.
+ */
+export function computeDefensiveCoverage(
+  membersTypeRelations: { name: string; relations: TypeRelations }[][],
+): EffectivenessBreakdown {
+  if (membersTypeRelations.length === 0) {
+    return { weaknesses: [], resistances: [], immunities: [] };
+  }
+
+  const aggregate: EffectivenessMap = {};
+
+  for (const member of membersTypeRelations) {
+    const memberMap = computeDefensiveEffectiveness(member);
+    for (const [type, mult] of Object.entries(memberMap)) {
+      const current = aggregate[type] ?? 1;
+      // Peor caso: si algún miembro recibe más daño, ese es el multiplicador del equipo
+      if (mult > current) {
+        aggregate[type] = mult;
+      }
+    }
+  }
+
+  return categorizeEffectiveness(aggregate);
+}
+
 /** Etiqueta legible del multiplicador (x4, x2, x0.5, x0...). */
 export function formatMultiplier(mult: number): string {
   if (mult === 0) return "x0";

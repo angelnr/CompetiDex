@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import { Loader2 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 
 import { PokemonCard, PokemonCardSkeleton } from "@/components/pokemon/PokemonCard";
 import { usePokemonInfiniteList } from "@/lib/queries";
@@ -19,6 +20,9 @@ export interface PokemonGridProps {
  * entra en viewport. Renderiza skeletons mientras carga (AGENTS.md §4.5).
  */
 export function PokemonGrid({ pageSize = 24 }: PokemonGridProps) {
+  const searchParams = useSearchParams();
+  const searchQuery = searchParams.get("q")?.toLowerCase() ?? "";
+
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isError } =
     usePokemonInfiniteList(pageSize);
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -67,11 +71,13 @@ export function PokemonGrid({ pageSize = 24 }: PokemonGridProps) {
   }
 
   const all = data.pages.flatMap((p) => p.results);
+  const displayed = searchQuery ? all.filter((r) => r.name.includes(searchQuery)) : all;
+  const showSentinel = !searchQuery && hasNextPage;
 
   return (
     <>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-        {all.map((resource) => (
+        {displayed.map((resource) => (
           <PokemonCard
             key={resource.name}
             resource={resource}
@@ -86,9 +92,9 @@ export function PokemonGrid({ pageSize = 24 }: PokemonGridProps) {
           : null}
       </div>
 
-      <div ref={sentinelRef} className="h-1 w-full" aria-hidden />
+      {showSentinel && <div ref={sentinelRef} className="h-1 w-full" aria-hidden />}
 
-      {!hasNextPage && all.length > 0 && (
+      {!showSentinel && !searchQuery && all.length > 0 && (
         <p className="py-8 text-center text-sm text-muted-foreground">
           Has llegado al final de la Pokédex.
         </p>

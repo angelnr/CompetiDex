@@ -254,7 +254,7 @@ Antes de escribir código, todo agente debe seguir este orden:
 ```bash
 cp .env.example .env        # ajusta valores
 pnpm install                # dependencias host (para IDE/tests locales)
-docker compose up --build   # app en :3000 + Redis en :6379
+docker compose up --build   # app en :3100 + Redis en :6379
 ```
 
 - El `Dockerfile` es multi-stage: `deps` → `builder` → `runner`.
@@ -270,7 +270,7 @@ Solo `.env.example` se commitea. Variables mínimas esperadas:
 | Var                    | Descripción                         | Default dev                 |
 | ---------------------- | ----------------------------------- | --------------------------- |
 | `NODE_ENV`             | `development` / `production`        | `development`               |
-| `PORT`                 | Puerto de Next.js                   | `3000`                      |
+| `PORT`                 | Puerto de Next.js                   | `3100`                      |
 | `REDIS_URL`            | URL de conexión a Redis             | `redis://localhost:6379`    |
 | `POKEAPI_BASE`         | Base URL de PokeAPI                 | `https://pokeapi.co/api/v2` |
 | `POKEAPI_CACHE_TTL_S`  | TTL por defecto en Redis (segundos) | `86400`                     |
