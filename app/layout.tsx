@@ -28,8 +28,29 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        <Providers>{children}</Providers>
+        <Providers>
+          <NavBar />
+          {children}
+        </Providers>
       </body>
     </html>
+  );
+}
+
+function NavBar() {
+  return (
+    <nav className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container mx-auto flex h-12 items-center gap-6 px-4">
+        <a href="/" className="text-sm font-semibold tracking-tight">
+          CompetiDex
+        </a>
+        <a
+          href="/equipos"
+          className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          Equipos
+        </a>
+      </div>
+    </nav>
   );
 }
