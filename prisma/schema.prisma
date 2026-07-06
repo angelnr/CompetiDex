@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ------------------------------------------------------------
+// Modelos placeholder para fases futuras (favoritos / equipos).
+// No se usan aún en runtime. Mantener aquí para reflejar el
+// contrato descrito en AGENTS.md §12.
+// ------------------------------------------------------------
+
+model Favorite {
+  id         Int      @id @default(autoincrement())
+  pokemonId  Int
+  createdAt  DateTime @default(now())
+
+  @@unique([pokemonId])
+}
+
+model Team {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+
+  members TeamPokemon[]
+}
+
+model TeamPokemon {
+  id        Int  @id @default(autoincrement())
+  teamId    Int
+  pokemonId Int
+  slot      Int
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, slot])
+}
