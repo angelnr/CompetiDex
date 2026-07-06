@@ -43,6 +43,73 @@ export function getOfficialArtworkById(id: number): string {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
 }
 
+/**
+ * Fuzzy match estilo fzf para la barra de búsqueda.
+ * Retorna `null` si no hay match, o un score donde menor = mejor.
+ *
+ * El algoritmo verifica que todos los caracteres de `query` aparezcan
+ * en `target` en orden, y puntúa según:
+ *  - posición del primer match (más temprano = mejor)
+ *  - cantidad de caracteres consecutivos match
+ *  - proporción query/target
+ */
+export interface FuzzyMatchResult {
+  score: number;
+  highlights: number[];
+}
+
+export function fuzzyMatch(query: string, target: string): FuzzyMatchResult | null {
+  if (!query) return null;
+  const q = query.toLowerCase();
+  const t = target.toLowerCase();
+  if (q.length > t.length) return null;
+
+  let ti = 0;
+  let consecutive = 0;
+  let totalConsecutive = 0;
+  let firstMatch = -1;
+
+  for (let qi = 0; qi < q.length; qi++) {
+    const char = q[qi];
+    // eslint-disable-next-line no-constant-condition -- simple char search loop
+    while (true) {
+      if (ti >= t.length) return null;
+      if (t[ti] === char) {
+        if (qi === 0) firstMatch = ti;
+        if (qi > 0 && ti > 0 && t[ti - 1] === q[qi - 1]) {
+          consecutive++;
+        } else {
+          totalConsecutive += consecutive;
+          consecutive = 1;
+        }
+        ti++;
+        break;
+      }
+      ti++;
+    }
+  }
+  totalConsecutive += consecutive;
+
+  // Score: menor es mejor. Combina:
+  //  - posición del primer match (0-1, normalizado sobre target length)
+  //  - cobertura de query en target (más compacto = mejor)
+  //  - ratio de match (query más corta que target es mejor)
+  const posScore = firstMatch / t.length;
+  const compactScore = 1 - totalConsecutive / q.length;
+  const lengthRatio = 1 - q.length / t.length;
+  const score = posScore * 0.5 + compactScore * 0.3 + lengthRatio * 0.2;
+
+  return { score, highlights: [] };
+}
+
+/** Dato mínimo de un Pokémon para mostrar en cards y dropdowns. */
+export interface PokemonSummary {
+  id: number;
+  name: string;
+  types: string[];
+  sprite: string | null;
+}
+
 /** Capitaliza un nombre: "pikachu" -> "Pikachu". */
 export function capitalize(name: string): string {
   return name.charAt(0).toUpperCase() + name.slice(1);

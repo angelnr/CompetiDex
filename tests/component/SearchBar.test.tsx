@@ -2,10 +2,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { usePokemonInfiniteList } from "@/lib/queries";
 
-// Mock del router para no depender de next/navigation
-const push = vi.fn();
+// Mock del router / searchParams / pathname para no depender de next/navigation
+const replace = vi.fn();
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ push }),
+  useRouter: () => ({ replace, push: replace }),
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => "/",
 }));
 vi.mock("@/lib/queries", () => ({
   usePokemonInfiniteList: vi.fn(),

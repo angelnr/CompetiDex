@@ -243,7 +243,7 @@ class PokeAPIError extends Error {
   }
 }
 
-async function rawFetch<T>(endpoint: string): Promise<T> {
+async function rawFetch<T>(endpoint: string, retries = 2): Promise<T> {
   const url = endpoint.startsWith("http") ? endpoint : `${BASE_URL}${endpoint}`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
@@ -257,6 +257,12 @@ async function rawFetch<T>(endpoint: string): Promise<T> {
     });
   } finally {
     clearTimeout(timer);
+  }
+
+  if (res.status === 429 && retries > 0) {
+    const retryAfter = Number(res.headers.get("Retry-After")) || 2;
+    await new Promise((r) => setTimeout(r, retryAfter * 1_000));
+    return rawFetch(endpoint, retries - 1);
   }
 
   if (!res.ok) {

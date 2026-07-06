@@ -35,7 +35,7 @@ export const dynamic = "force-dynamic";
 
 const listSchema = z.object({
   offset: z.coerce.number().int().min(0).optional(),
-  limit: z.coerce.number().int().min(1).max(100).optional(),
+  limit: z.coerce.number().int().min(1).max(2000).optional(),
 });
 
 const idParam = z.union([z.coerce.number().int().positive(), z.string().min(1)]);

@@ -25,15 +25,8 @@ export interface PokemonCardProps {
  * Card de Pokémon con lazy-load de su detalle vía TanStack Query.
  *
  * La lista de PokeAPI solo incluye `{name, url}` — el sprite y tipos están
- * en el detalle. Para no meterlo todo en el SSR del listado, cada card hace
- * fetch del detalle bajo demanda usando `usePokemon` con `staleTime: Infinity`
- * (ya cacheado en Redis server-side; el primer render del grid dispara N
- * fetches paralelos hacia /api/pokemon?id=X que pegan caché).
- *
- * Patrones usados:
- *  - Server-friendly: cuando se reutilice en una ficha SSR, el detalle ya
- *    estará en el cliente porque usePokemon tiene staleTime Infinity.
- *  - Skeleton mientras carga (AGENTS.md §4.5).
+ * en el detalle. Cada card hace fetch del detalle bajo demanda usando
+ * `usePokemon` con `staleTime: Infinity`.
  */
 export function PokemonCard({ resource, eagerId }: PokemonCardProps) {
   const id = eagerId ?? extractIdFromUrl(resource.url);
