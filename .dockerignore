@@ -1,0 +1,82 @@
+# -----------------------------
+# Version control & metadata
+# -----------------------------
+.git
+.gitignore
+.gitattributes
+.github
+.husky
+
+# -----------------------------
+# Node / pnpm
+# -----------------------------
+node_modules
+.pnpm-store
+**/node_modules
+**/*.tgz
+
+# -----------------------------
+# Next.js build output (we re-build inside the container)
+# -----------------------------
+.next
+.next/**
+out
+.vercel
+
+# -----------------------------
+# Testing & coverage
+# -----------------------------
+coverage
+test-results
+playwright-report
+blob-report
+.nyc_output
+*.lcov
+
+# -----------------------------
+# Local databases / runtime data
+# -----------------------------
+prisma/*.db
+prisma/*.db-journal
+prisma/*.db-shm
+prisma/*.db-wal
+*.db
+*.db-journal
+docker-data
+
+# -----------------------------
+# Env & secrets (only ship example)
+# -----------------------------
+.env
+.env.*
+!.env.example
+
+# -----------------------------
+# Logs & caches
+# -----------------------------
+logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+.eslintcache
+.stylelintcache
+*.tsbuildinfo
+.cache
+.tmp
+
+# -----------------------------
+# Editor / OS
+# -----------------------------
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+*.swp
+
+# -----------------------------
+# Docs (not needed at runtime)
+# -----------------------------
+README.md
+AGENTS.md
+LICENSE
+docs
