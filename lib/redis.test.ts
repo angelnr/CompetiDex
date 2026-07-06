@@ -1,5 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+// Simular REDIS_URL para que getRedis() intente conectar (va al mock)
+process.env.REDIS_URL = "redis://test:6379";
+
 // --- Mock de ioredis antes de importar el módulo bajo test ---
 // El constructor devuelve una instancia compartida con métodos mocked.
 const redisCommands = {
@@ -20,11 +23,12 @@ import { closeRedis, getOrSet, invalidate, invalidatePattern } from "@/lib/redis
 
 beforeEach(() => {
   vi.clearAllMocks();
+  process.env.REDIS_URL = "redis://test:6379";
   globalThis.__competidexRedis = redisCommands as unknown as never;
 });
 
 afterEach(async () => {
-  // Limpia el singleton entre tests
+  delete process.env.REDIS_URL;
   globalThis.__competidexRedis = undefined;
 });
 

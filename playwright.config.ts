@@ -17,7 +17,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : 4,
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "html",
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: `http://localhost:${process.env.PORT ?? "3000"}`,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
@@ -32,7 +32,7 @@ export default defineConfig({
   ],
   webServer: {
     command: process.env.CI ? "pnpm start" : "pnpm dev",
-    url: "http://localhost:3000",
+    url: `http://localhost:${process.env.PORT ?? "3000"}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     ...(process.env.CI
