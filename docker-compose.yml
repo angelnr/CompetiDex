@@ -1,0 +1,44 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-CompetiDex}
+    container_name: competidex-app
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      POKEAPI_BASE: ${POKEAPI_BASE:-https://pokeapi.co/api/v2}
+      POKEAPI_CACHE_TTL_S: ${POKEAPI_CACHE_TTL_S:-86400}
+      DATABASE_URL: ${DATABASE_URL:-file:./prisma/dev.db}
+      NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-CompetiDex}
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - competidex
+
+  redis:
+    image: redis:7-alpine
+    container_name: competidex-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./docker-data/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - competidex
+
+networks:
+  competidex:
+    driver: bridge
