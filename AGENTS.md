@@ -283,12 +283,12 @@ Al añadir una nueva variable, documentarla aquí y en `.env.example`.
 ## 11. Roadmap / Fases (resumen)
 
 0. Bootstrap (Next + pnpm + Tailwind + shadcn + Husky) — **HECHO**
-1. Docker + Redis + .env
-2. Capa de datos PokeAPI (cliente tipado + proxy cacheado)
-3. Home (grid infinito + buscador con debounce)
-4. Ficha detallada del Pokémon
-5. Testing (Vitest + Testing Library + Playwright)
-6. CI/CD en GitHub Actions
+1. Docker + Redis + .env — **HECHO**
+2. Capa de datos PokeAPI (cliente tipado + proxy cacheado) — **HECHO**
+3. Home (grid infinito + buscador con debounce) — **HECHO**
+4. Ficha detallada del Pokémon — **HECHO**
+5. Testing (Vitest + Testing Library + Playwright) — **HECHO**
+6. CI/CD en GitHub Actions — **HECHO**
 7. _(futuro)_ Favoritos, equipos, comparador, calculadora de efectividades
 
 Al completar una fase, marcar aquí y actualizar CHANGELOG (cuando exista).
