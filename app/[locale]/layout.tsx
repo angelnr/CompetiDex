@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
 import localFont from "next/font/local";
-import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { ReactNode } from "react";
 
+import { IntlProvider } from "@/components/providers/IntlProvider";
 import { routing } from "@/i18n/routing";
 import "../globals.css";
 import { Providers } from "./providers";
@@ -50,12 +50,12 @@ export default async function LocaleLayout({ children, params: { locale } }: Loc
   return (
     <html lang={locale} suppressHydrationWarning>
       <body className={`${manrope.variable} ${geistMono.variable} antialiased`}>
-        <NextIntlClientProvider locale={locale} messages={messages}>
+        <IntlProvider locale={locale} messages={messages}>
           <Providers>
             <NavBar tNav={tNav} />
             {children}
           </Providers>
-        </NextIntlClientProvider>
+        </IntlProvider>
       </body>
     </html>
   );
