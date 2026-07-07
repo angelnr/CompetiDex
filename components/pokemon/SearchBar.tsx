@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
 
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -20,6 +21,7 @@ import { capitalize, extractIdFromUrl, fuzzyMatch } from "@/lib/pokemon-utils";
  * Navegación por teclado: flechas ↑/↓ + Enter + Escape.
  */
 export function SearchBar() {
+  const t = useTranslations("search");
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -102,9 +104,9 @@ export function SearchBar() {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           onBlur={() => setActiveIndex(-1)}
-          placeholder="Buscar Pokémon…"
+          placeholder={t("placeholder")}
           className="pl-9 pr-8"
-          aria-label="Buscar Pokémon por nombre"
+          aria-label={t("aria")}
           aria-expanded={suggestions.length > 0}
           aria-controls="search-suggestions"
           aria-activedescendant={
@@ -120,7 +122,7 @@ export function SearchBar() {
               setQuery("");
               inputRef.current?.focus();
             }}
-            aria-label="Limpiar búsqueda"
+            aria-label={t("clearAria")}
             className="absolute right-2 top-1/2 -translate-y-1/2 rounded-sm p-1 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
           >
             <X className="size-4" />

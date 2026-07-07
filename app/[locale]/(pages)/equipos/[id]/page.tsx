@@ -4,7 +4,8 @@ import { useCallback, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Search } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
 
 import { TeamSlot } from "@/components/pokemon/TeamSlot";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,9 @@ import { teamTypes } from "@/lib/team";
 import { capitalize, extractIdFromUrl } from "@/lib/pokemon-utils";
 
 export default function TeamEditorPage() {
+  const t = useTranslations("teams");
+  const tNav = useTranslations("nav");
+  const tSearch = useTranslations("search");
   const params = useParams();
   const teamId = params?.id as string | undefined;
   const { teams, loaded, addPokemon, removePokemon } = useTeams();
@@ -49,7 +53,7 @@ export default function TeamEditorPage() {
   if (!loaded) {
     return (
       <main className="container mx-auto py-10">
-        <p className="text-muted-foreground">Cargando equipos…</p>
+        <p className="text-muted-foreground">{t("loading")}</p>
       </main>
     );
   }
@@ -58,9 +62,9 @@ export default function TeamEditorPage() {
     return (
       <main className="container mx-auto py-10">
         <p className="text-muted-foreground">
-          Equipo no encontrado.{" "}
+          {t("notFound")}
           <Link href="/equipos" className="underline">
-            Volver a mis equipos
+            {t("backToTeams")}
           </Link>
         </p>
       </main>
@@ -74,7 +78,7 @@ export default function TeamEditorPage() {
           <Button asChild variant="ghost" size="sm">
             <Link href="/equipos">
               <ArrowLeft className="size-4" />
-              Equipos
+              {tNav("teams")}
             </Link>
           </Button>
           <h1 className="text-2xl font-bold">{team.name}</h1>
@@ -91,7 +95,9 @@ export default function TeamEditorPage() {
 
       {/* Slots del equipo */}
       <section className="mb-8 rounded-lg border bg-card p-6">
-        <h2 className="mb-4 text-lg font-semibold">Miembros ({team.members.length}/6)</h2>
+        <h2 className="mb-4 text-lg font-semibold">
+          {t("members", { count: team.members.length })}
+        </h2>
         <div className="flex flex-wrap gap-3">
           {Array.from({ length: 6 }).map((_, i) => {
             const member = team.members.find((m) => m.slot === i);
@@ -109,7 +115,7 @@ export default function TeamEditorPage() {
       {/* Buscador para añadir */}
       {team.members.length < 6 && (
         <section className="rounded-lg border bg-card p-6">
-          <h2 className="mb-4 text-lg font-semibold">Añadir Pokémon</h2>
+          <h2 className="mb-4 text-lg font-semibold">{t("addPokemon")}</h2>
           <PokemonSearch
             onSelect={handleAddById}
             excludeIds={team.members.map((m) => m.pokemonId)}
@@ -127,6 +133,7 @@ function PokemonSearch({
   onSelect: (id: number) => Promise<void>;
   excludeIds: number[];
 }) {
+  const tSearch = useTranslations("search");
   const [query, setQuery] = useState("");
   const { data } = usePokemonInfiniteList(1025);
 
@@ -147,9 +154,9 @@ function PokemonSearch({
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar Pokémon por nombre…"
+          placeholder={tSearch("forTeamPlaceholder")}
           className="pl-9"
-          aria-label="Buscar Pokémon para añadir al equipo"
+          aria-label={tSearch("forTeamAria")}
         />
       </div>
 
@@ -173,6 +180,7 @@ function PokemonSearchItem({
   url: string;
   onSelect: (id: number) => Promise<void>;
 }) {
+  const t = useTranslations("teams");
   const id = extractIdFromUrl(url);
   const { data } = usePokemon(id);
   const [adding, setAdding] = useState(false);
@@ -204,7 +212,7 @@ function PokemonSearchItem({
           #{String(id).padStart(4, "0")}
         </span>
         {capitalize(name)}
-        {adding && <span className="ml-auto text-xs text-muted-foreground">Añadiendo…</span>}
+        {adding && <span className="ml-auto text-xs text-muted-foreground">{t("adding")}</span>}
       </button>
     </li>
   );

@@ -1,6 +1,9 @@
+"use client";
+
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { X } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { TypeBadge } from "@/components/pokemon/TypeBadge";
 import { Button } from "@/components/ui/button";
@@ -19,10 +22,12 @@ export interface TeamSlotProps {
  * si está ocupado, o un placeholder "vacío" si no.
  */
 export function TeamSlot({ member, onRemove }: TeamSlotProps) {
+  const t = useTranslations("teams");
+
   if (!member) {
     return (
       <div className="flex size-28 items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30 bg-muted/30">
-        <span className="text-sm text-muted-foreground/50">Vacío</span>
+        <span className="text-sm text-muted-foreground/50">{t("emptySlot")}</span>
       </div>
     );
   }
@@ -36,7 +41,7 @@ export function TeamSlot({ member, onRemove }: TeamSlotProps) {
           size="icon"
           className="absolute right-0 top-0 size-5 opacity-0 transition-opacity group-hover:opacity-100"
           onClick={() => onRemove(member.pokemonId)}
-          aria-label={`Quitar a ${capitalize(member.name)} del equipo`}
+          aria-label={t("removeAria", { name: capitalize(member.name) })}
         >
           <X className="size-3" />
         </Button>

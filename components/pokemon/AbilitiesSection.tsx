@@ -1,11 +1,12 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Ability, PokemonAbilitySlot } from "@/lib/pokeapi";
 import { extractIdFromUrl } from "@/lib/pokemon-utils";
+import { useTranslations } from "next-intl";
 
 export interface AbilityEntry {
   slot: PokemonAbilitySlot;
@@ -17,6 +18,7 @@ export interface AbilitiesSectionProps {
 }
 
 export function AbilitiesSection({ abilities }: AbilitiesSectionProps) {
+  const t = useTranslations("abilities");
   return (
     <div className="flex flex-wrap gap-4">
       {abilities.map((entry) => {
@@ -36,7 +38,7 @@ export function AbilitiesSection({ abilities }: AbilitiesSectionProps) {
             null)
           : null;
 
-        const tagLabel = entry.slot.is_hidden ? "Habilidad oculta" : `Habilidad ${entry.slot.slot}`;
+        const tagLabel = entry.slot.is_hidden ? t("hidden") : t("slot", { slot: entry.slot.slot });
 
         return (
           <TooltipProvider key={entry.slot.ability.name} delayDuration={300}>
@@ -45,6 +47,7 @@ export function AbilitiesSection({ abilities }: AbilitiesSectionProps) {
                 <Link
                   href={`/habilidad/${abilityId}`}
                   className="group flex flex-col rounded-lg border bg-card p-3 transition-colors hover:bg-accent"
+                  aria-label={t("toolTipAria", { name: nameEs ?? "" })}
                 >
                   <span className="flex items-center gap-2 font-medium">
                     {nameEs ?? nameEn}

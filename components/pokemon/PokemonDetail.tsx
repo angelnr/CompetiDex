@@ -1,6 +1,7 @@
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 import { AbilitiesSection, type AbilityEntry } from "@/components/pokemon/AbilitiesSection";
 import { EncounterInfo } from "@/components/pokemon/EncounterInfo";
@@ -51,7 +52,7 @@ export interface PokemonDetailProps {
  * físicas info, flavor text, cadena evolutiva, efectividades, encuentros y movimientos.
  * La navegación prev/next son Links a fichas vecinas.
  */
-export function PokemonDetail({
+export async function PokemonDetail({
   pokemon,
   species,
   evolutionChain,
@@ -60,11 +61,14 @@ export function PokemonDetail({
   encounters,
   prevId,
   nextId,
-  locale: _locale,
+  locale,
 }: PokemonDetailProps) {
-  const displayName = getDisplayName(species.names, pokemon.name);
-  const flavorText = getFlavorText(species.flavor_text_entries);
-  const genus = getGenus(species.genera);
+  const t = await getTranslations({ locale, namespace: "pokemon" });
+  const tc = await getTranslations({ locale, namespace: "common" });
+
+  const displayName = getDisplayName(species.names, pokemon.name, locale);
+  const flavorText = getFlavorText(species.flavor_text_entries, locale);
+  const genus = getGenus(species.genera, locale);
   const artwork = getOfficialArtwork(pokemon);
   const artworkShiny = pokemon.sprites.other?.["official-artwork"]?.front_shiny ?? null;
   const defaultSprite = pokemon.sprites.front_default;
@@ -86,12 +90,12 @@ export function PokemonDetail({
       </div>
 
       {/* Navegación prev/next */}
-      <nav className="mb-6 flex items-center justify-between" aria-label="Navegación entre Pokémon">
+      <nav className="mb-6 flex items-center justify-between" aria-label={t("navAria")}>
         {prevId !== null ? (
           <Button asChild variant="ghost" size="sm">
             <Link href={`/pokemon/${prevId}`}>
               <ArrowLeft className="size-4" />
-              Anterior
+              {tc("previous")}
             </Link>
           </Button>
         ) : (
@@ -103,7 +107,7 @@ export function PokemonDetail({
         {nextId !== null ? (
           <Button asChild variant="ghost" size="sm">
             <Link href={`/pokemon/${nextId}`}>
-              Siguiente
+              {tc("next")}
               <ArrowRight className="size-4" />
             </Link>
           </Button>
@@ -129,11 +133,11 @@ export function PokemonDetail({
               <h1 className="text-3xl font-bold">{displayName}</h1>
               {(isLegendary || isMythical) && (
                 <span className="rounded-full bg-yellow-500/20 px-2 py-0.5 text-xs font-semibold text-yellow-600 dark:text-yellow-400">
-                  {isMythical ? "Mítico" : "Legendario"}
+                  {isMythical ? t("mythical") : t("legendary")}
                 </span>
               )}
             </div>
-            <p className="text-sm text-muted-foreground">{genus ?? "Pokémon"}</p>
+            <p className="text-sm text-muted-foreground">{genus}</p>
           </div>
 
           <div className="flex flex-wrap gap-1.5">
@@ -144,19 +148,19 @@ export function PokemonDetail({
 
           <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
             <div>
-              <dt className="text-muted-foreground">Altura</dt>
+              <dt className="text-muted-foreground">{t("height")}</dt>
               <dd className="font-medium">{formatHeight(pokemon.height)}</dd>
             </div>
             <div>
-              <dt className="text-muted-foreground">Peso</dt>
+              <dt className="text-muted-foreground">{t("weight")}</dt>
               <dd className="font-medium">{formatWeight(pokemon.weight)}</dd>
             </div>
             <div>
-              <dt className="text-muted-foreground">Exp. base</dt>
+              <dt className="text-muted-foreground">{t("baseExp")}</dt>
               <dd className="font-medium">{pokemon.base_experience ?? "—"}</dd>
             </div>
             <div>
-              <dt className="text-muted-foreground">Felicidad</dt>
+              <dt className="text-muted-foreground">{t("happiness")}</dt>
               <dd className="font-medium">{species.base_happiness}</dd>
             </div>
           </dl>
@@ -165,23 +169,23 @@ export function PokemonDetail({
 
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="outline" size="sm">
-              <Link href={`/comparar?ids=${pokemon.id}`}>Comparar</Link>
+              <Link href={`/comparar?ids=${pokemon.id}`}>{t("compare")}</Link>
             </Button>
             <Button asChild variant="outline" size="sm">
-              <Link href={`/efectividades?defender=${pokemon.id}`}>Calcular</Link>
+              <Link href={`/efectividades?defender=${pokemon.id}`}>{t("calculate")}</Link>
             </Button>
           </div>
         </div>
       </header>
 
       {/* Stats */}
-      <Section title="Stats base">
+      <Section title={t("sections.baseStats")}>
         <div className="flex flex-col gap-2">
           {pokemon.stats.map((s) => (
             <StatBar key={s.stat.name} statName={s.stat.name} value={s.base_stat} />
           ))}
           <div className="grid grid-cols-[5rem_2.5rem_1fr] items-center gap-2 border-t pt-2">
-            <span className="text-xs font-semibold">Total</span>
+            <span className="text-xs font-semibold">{t("statsTotal")}</span>
             <span className="text-right font-mono text-xs font-bold tabular-nums">
               {computeStatTotal(pokemon.stats)}
             </span>
@@ -191,7 +195,7 @@ export function PokemonDetail({
       </Section>
 
       {/* Habilidades */}
-      <Section title="Habilidades">
+      <Section title={t("sections.abilities")}>
         <AbilitiesSection
           abilities={abilityData.map((data, i) => ({
             slot: pokemon.abilities[i]!,
@@ -201,25 +205,25 @@ export function PokemonDetail({
       </Section>
 
       {/* Efectividades */}
-      <Section title="Efectividades defensivas">
+      <Section title={t("sections.defensiveEffectiveness")}>
         <TypeEffectiveness breakdown={effectiveness} />
       </Section>
 
       {/* Cadena evolutiva */}
       {evolutionChain.chain && (
-        <Section title="Cadena evolutiva">
+        <Section title={t("sections.evolutionChain")}>
           <EvolutionChain chain={evolutionChain.chain} />
         </Section>
       )}
 
       {/* Información de encuentro */}
-      <Section title="Información de encuentro">
+      <Section title={t("sections.encounterInfo")}>
         <EncounterInfo encounters={encounters} />
       </Section>
 
       {/* Movimientos */}
       {pokemon.moves.length > 0 && (
-        <Section title="Movimientos">
+        <Section title={t("sections.moves")}>
           <MovesSection moveSlots={pokemon.moves} />
         </Section>
       )}

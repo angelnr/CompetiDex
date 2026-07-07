@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import { TypeBadge } from "@/components/pokemon/TypeBadge";
 import type { EffectivenessBreakdown } from "@/lib/type-effectiveness";
 import { formatMultiplier } from "@/lib/type-effectiveness";
@@ -12,26 +15,25 @@ export interface TypeEffectivenessProps {
  * Server component — recibe el breakdown pre-computado en el servidor.
  */
 export function TypeEffectiveness({ breakdown }: TypeEffectivenessProps) {
+  const t = useTranslations("defensive");
   const { weaknesses, resistances, immunities } = breakdown;
   const isEmpty = weaknesses.length === 0 && resistances.length === 0 && immunities.length === 0;
 
   if (isEmpty) {
-    return (
-      <p className="text-sm text-muted-foreground">Sin datos de efectividad para este Pokémon.</p>
-    );
+    return <p className="text-sm text-muted-foreground">{t("noData")}</p>;
   }
 
   return (
     <div className="grid gap-4 sm:grid-cols-3">
       {weaknesses.length > 0 && (
         <Section
-          title="Debilidades"
+          title={t("weaknesses")}
           badges={weaknesses.map((w) => ({ type: w.type, suffix: formatMultiplier(w.multiplier) }))}
         />
       )}
       {resistances.length > 0 && (
         <Section
-          title="Resistencias"
+          title={t("resistances")}
           badges={resistances.map((r) => ({
             type: r.type,
             suffix: formatMultiplier(r.multiplier),
@@ -39,7 +41,10 @@ export function TypeEffectiveness({ breakdown }: TypeEffectivenessProps) {
         />
       )}
       {immunities.length > 0 && (
-        <Section title="Inmunidades" badges={immunities.map((t) => ({ type: t, suffix: "x0" }))} />
+        <Section
+          title={t("immunities")}
+          badges={immunities.map((i) => ({ type: i, suffix: "x0" }))}
+        />
       )}
     </div>
   );

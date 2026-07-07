@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
 
 import { TypeBadge } from "@/components/pokemon/TypeBadge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -29,13 +30,16 @@ export interface PokemonCardProps {
  * `usePokemon` con `staleTime: Infinity`.
  */
 export function PokemonCard({ resource, eagerId }: PokemonCardProps) {
+  const t = useTranslations("common");
   const id = eagerId ?? extractIdFromUrl(resource.url);
   const { data, isLoading, isError } = usePokemon(id);
 
   if (isError) {
     return (
       <Card className="flex h-full flex-col items-center justify-center p-6 text-muted-foreground">
-        <p className="text-sm">No se pudo cargar #{id}</p>
+        <p className="text-sm">
+          {t("error")} #{id}
+        </p>
       </Card>
     );
   }

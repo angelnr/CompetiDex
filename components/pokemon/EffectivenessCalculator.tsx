@@ -9,6 +9,7 @@ import { TypeBadge } from "@/components/pokemon/TypeBadge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
 import { useDebounce } from "@/hooks/useDebounce";
 import { usePokemon, usePokemonInfiniteList } from "@/lib/queries";
 import { POKEMON_TYPES_ES } from "@/lib/pokemon-types";
@@ -33,6 +34,8 @@ export function EffectivenessCalculator() {
     result,
   } = useEffectivenessCalculator();
 
+  const t = useTranslations("effectiveness");
+  const tc = useTranslations("common");
   const searchParams = useSearchParams();
   useEffect(() => {
     const defenderParam = searchParams.get("defender");
@@ -49,7 +52,7 @@ export function EffectivenessCalculator() {
     <div className="space-y-8">
       {/* Selector de tipo de movimiento */}
       <section>
-        <h2 className="mb-3 text-lg font-semibold">1. Selecciona el tipo del movimiento</h2>
+        <h2 className="mb-3 text-lg font-semibold">{t("step1")}</h2>
         <div className="flex flex-wrap gap-2">
           {POKEMON_TYPES_ES.map((t) => (
             <button
@@ -67,14 +70,14 @@ export function EffectivenessCalculator() {
 
       {/* Selector de defensores */}
       <section>
-        <h2 className="mb-3 text-lg font-semibold">2. Añade Pokémon defensores</h2>
+        <h2 className="mb-3 text-lg font-semibold">{t("step2")}</h2>
         <DefenderSearch onAdd={addDefender} />
       </section>
 
       {/* Lista de defensores */}
       {defenders.length > 0 && (
         <section>
-          <h2 className="mb-3 text-lg font-semibold">Defensores</h2>
+          <h2 className="mb-3 text-lg font-semibold">{t("defenders")}</h2>
           <div className="flex flex-wrap gap-3">
             {defenders.map((d) => (
               <DefenderCard
@@ -91,7 +94,7 @@ export function EffectivenessCalculator() {
       {/* Resultado */}
       {result && (
         <section>
-          <h2 className="mb-3 text-lg font-semibold">3. Resultado</h2>
+          <h2 className="mb-3 text-lg font-semibold">{t("step3")}</h2>
           <ResultDisplay result={result} />
         </section>
       )}
@@ -99,7 +102,7 @@ export function EffectivenessCalculator() {
       {(moveType || defenders.length > 0) && (
         <Button variant="ghost" size="sm" onClick={clear}>
           <X className="mr-1 size-3" />
-          Limpiar
+          {tc("clear")}
         </Button>
       )}
     </div>
@@ -107,6 +110,7 @@ export function EffectivenessCalculator() {
 }
 
 function DefenderSearch({ onAdd }: { onAdd: (info: DefendersInfo) => void }) {
+  const tSearch = useTranslations("search");
   const [query, setQuery] = useState("");
   const debounced = useDebounce(query.trim().toLowerCase(), 300);
   const { data } = usePokemonInfiniteList(1025);
@@ -136,15 +140,15 @@ function DefenderSearch({ onAdd }: { onAdd: (info: DefendersInfo) => void }) {
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar Pokémon defensor…"
+          placeholder={tSearch("forDefenderPlaceholder")}
           className="pl-9"
-          aria-label="Buscar Pokémon defensor"
+          aria-label={tSearch("forDefenderAria")}
         />
         {query && (
           <button
             type="button"
             onClick={() => setQuery("")}
-            aria-label="Limpiar búsqueda"
+            aria-label={tSearch("clearAria")}
             className="absolute right-2 top-1/2 -translate-y-1/2 rounded-sm p-1 text-muted-foreground hover:bg-accent"
           >
             <X className="size-4" />
@@ -185,6 +189,7 @@ function DefenderCard({
   onRemove: (id: number) => void;
   onTypesLoaded: (id: number, types: string[]) => void;
 }) {
+  const tc = useTranslations("common");
   const { data: pokemon, isLoading } = usePokemon(info.id);
   const types = pokemon?.types.map((t) => t.type.name) ?? info.types;
 
@@ -204,7 +209,7 @@ function DefenderCard({
         <div className="flex items-start justify-between">
           <div className="min-w-0">
             <p className="truncate text-sm font-medium">
-              {isLoading ? "Cargando…" : capitalize(pokemon?.name ?? info.name)}
+              {isLoading ? tc("loading") : capitalize(pokemon?.name ?? info.name)}
             </p>
             <div className="mt-1 flex flex-wrap gap-1">
               {types.map((t) => (
@@ -238,6 +243,7 @@ function DefenderCard({
 }
 
 function ResultDisplay({ result }: { result: CalculatorResult }) {
+  const t = useTranslations("effectiveness");
   const colorClass =
     result.worst === 0
       ? "text-muted-foreground line-through"
@@ -253,26 +259,26 @@ function ResultDisplay({ result }: { result: CalculatorResult }) {
     <div className="space-y-4">
       <Card className="p-8 text-center">
         <p className="mb-2 text-sm text-muted-foreground">
-          <TypeBadge type={result.moveType} size="md" /> vs {result.perDefender.length} defensor
-          {result.perDefender.length !== 1 ? "es" : ""}
+          <TypeBadge type={result.moveType} size="md" />{" "}
+          {t("result", { count: result.perDefender.length })}
         </p>
         <p className={`text-6xl font-bold ${colorClass}`}>{formatMultiplier(result.worst)}</p>
         <p className="mt-1 text-sm text-muted-foreground">
           {result.worst === 0
-            ? "No afecta"
+            ? t("noEffect")
             : result.worst >= 4
-              ? "Súper eficaz (x4)"
+              ? t("super4")
               : result.worst === 2
-                ? "Súper eficaz (x2)"
+                ? t("super2")
                 : result.worst < 1
-                  ? "Poco eficaz"
-                  : "Neutral"}
+                  ? t("half")
+                  : t("neutral")}
         </p>
       </Card>
 
       {result.perDefender.length > 1 && (
         <div className="space-y-2">
-          <h3 className="text-sm font-semibold">Desglose por defensor</h3>
+          <h3 className="text-sm font-semibold">{t("breakdown")}</h3>
           {result.perDefender.map((p) => (
             <div key={p.name} className="flex items-center gap-3 rounded-md border p-2">
               <span className="text-sm font-medium">{capitalize(p.name)}</span>

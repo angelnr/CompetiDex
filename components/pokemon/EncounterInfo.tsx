@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 import {
   Table,
@@ -20,7 +21,7 @@ import {
 import type { LocationAreaEncounter } from "@/lib/pokeapi";
 import { capitalize } from "@/lib/pokemon-utils";
 import { getLocationNameEs } from "@/lib/location-names";
-import { getVersionGroupLabel, isExcludedVersion, versionOrder } from "@/lib/version-names";
+import { isExcludedVersion, versionOrder } from "@/lib/version-names";
 
 export interface EncounterInfoProps {
   encounters?: LocationAreaEncounter[] | null;
@@ -28,13 +29,12 @@ export interface EncounterInfoProps {
 
 export function EncounterInfo({ encounters }: EncounterInfoProps) {
   const [selectedVersion, setSelectedVersion] = useState<string | undefined>();
+  const t = useTranslations("encounters");
+  const tMethods = useTranslations("encounterMethods");
+  const tVg = useTranslations("versionGroups");
 
   if (!encounters || encounters.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        No se encontraron datos de encuentro para este Pokémon.
-      </p>
-    );
+    return <p className="text-sm text-muted-foreground">{t("noEncounters")}</p>;
   }
 
   const versionNames = getUniqueVersions(encounters);
@@ -58,7 +58,7 @@ export function EncounterInfo({ encounters }: EncounterInfoProps) {
     <div className="space-y-4">
       <div className="flex items-center gap-3">
         <label htmlFor="version-select" className="text-sm font-medium">
-          Juego:
+          {t("gameLabel")}
         </label>
         <Select value={currentVersion ?? ""} onValueChange={setSelectedVersion}>
           <SelectTrigger id="version-select" className="w-56">
@@ -67,7 +67,7 @@ export function EncounterInfo({ encounters }: EncounterInfoProps) {
           <SelectContent>
             {versionNames.map((v) => (
               <SelectItem key={v} value={v}>
-                {getVersionGroupLabel(v)}
+                {tVg(v)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -75,25 +75,23 @@ export function EncounterInfo({ encounters }: EncounterInfoProps) {
       </div>
 
       {rows.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          No se encuentra en estado salvaje en este juego.
-        </p>
+        <p className="text-sm text-muted-foreground">{t("noWildInGame")}</p>
       ) : (
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Ruta</TableHead>
-              <TableHead>Método</TableHead>
-              <TableHead>Nivel mín.</TableHead>
-              <TableHead>Nivel máx.</TableHead>
-              <TableHead>Probabilidad</TableHead>
+              <TableHead>{t("table.route")}</TableHead>
+              <TableHead>{t("table.method")}</TableHead>
+              <TableHead>{t("table.minLevel")}</TableHead>
+              <TableHead>{t("table.maxLevel")}</TableHead>
+              <TableHead>{t("table.chance")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {rows.map((r, i) => (
               <TableRow key={i}>
                 <TableCell className="font-medium">{getLocationNameEs(r.location)}</TableCell>
-                <TableCell>{formatMethodName(r.method)}</TableCell>
+                <TableCell>{formatMethodName(r.method, tMethods)}</TableCell>
                 <TableCell>{r.minLevel}</TableCell>
                 <TableCell>{r.maxLevel}</TableCell>
                 <TableCell>{r.chance}%</TableCell>
@@ -118,33 +116,7 @@ function getUniqueVersions(encounters: LocationAreaEncounter[]): string[] {
   return Array.from(seen).sort(versionOrder);
 }
 
-function formatMethodName(name: string): string {
-  const labels: Record<string, string> = {
-    gift: "Regalo",
-    walk: "Caminando",
-    surf: "Surfeando",
-    headbutt: "Golpe cabeza",
-    "dark-grass": "Hierba (oscuridad)",
-    "tall-grass": "Hierba alta",
-    "bug-catching-contest": "Concurso caza-bichos",
-    fishing: "Pescar",
-    "super-rod": "Caña súper",
-    "good-rod": "Buena caña",
-    "old-rod": "Caña vieja",
-    "rock-smash": "Golpe roca",
-    "only-one": "Solo uno",
-    "safari-zone": "Zona Safari",
-    "game-corner": "Casino",
-    interaction: "Interacción",
-    "overworld-special": "Especial (escenario)",
-    "island-scan": "I.Escaner",
-    "max-raid": "Incursión Dinamax",
-    "raid-den": "Cueva incursión",
-    wandering: "Errante",
-    "distortion-world": "Mundo Distorsión",
-    "trophy-garden": "Jardín Trofeo",
-    "pal-park": "Parque Amigo",
-    "poke-radar": "Pokéradar",
-  };
-  return labels[name] ?? capitalize(name.replace(/-/g, " "));
+function formatMethodName(name: string, t: (key: string) => string): string {
+  const label = t(name);
+  return label !== name ? label : capitalize(name.replace(/-/g, " "));
 }

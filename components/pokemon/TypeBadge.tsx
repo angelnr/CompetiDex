@@ -1,5 +1,8 @@
+"use client";
+
 import { getTypeMeta } from "@/lib/pokemon-types";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 export interface TypeBadgeProps {
   /** Nombre del tipo en PokeAPI: "fire", "water"... */
@@ -19,6 +22,7 @@ export interface TypeBadgeProps {
  * de tipos viven en `lib/pokemon-types.ts` como fuente única de verdad.
  */
 export function TypeBadge({ type, size = "sm", className }: TypeBadgeProps) {
+  const t = useTranslations("pokemonTypes");
   const meta = getTypeMeta(type);
 
   return (
@@ -32,9 +36,9 @@ export function TypeBadge({ type, size = "sm", className }: TypeBadgeProps) {
         backgroundColor: meta.color,
         color: meta.text,
       }}
-      title={meta.label}
+      title={t(type)}
     >
-      {meta.label}
+      {t(type)}
     </span>
   );
 }

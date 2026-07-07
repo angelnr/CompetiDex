@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 import { POKEMON_STATS } from "@/lib/pokemon-utils";
 import { cn } from "@/lib/utils";
@@ -21,8 +22,9 @@ const STAT_MAX = 255;
  * El máximo de la barra es 255 (el stat real máximo en los juegos).
  */
 export function StatBar({ statName, value }: StatBarProps) {
+  const tStats = useTranslations("stats");
   const meta = POKEMON_STATS[statName];
-  const label = meta?.label ?? statName;
+  const label = tStats(statName);
   const color = (meta?.colorFor ?? (() => "#94a3b8"))(value);
   const widthPct = Math.min(100, (value / STAT_MAX) * 100);
 

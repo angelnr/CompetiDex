@@ -136,6 +136,8 @@
     "added": "✓ {name} añadido",
     "emptySlot": "Vacío",
     "adding": "Añadiendo…",
+    "removeAria": "Quitar a {name} del equipo",
+    "deleteTeamAria": "Eliminar equipo {name}",
     "errors": {
       "nameEmpty": "El nombre no puede estar vacío",
       "nameTooLong": "El nombre no puede tener más de 30 caracteres",

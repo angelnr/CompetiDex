@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import {
   Table,
   TableBody,
@@ -21,13 +22,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TypeBadge } from "@/components/pokemon/TypeBadge";
 import { useMove } from "@/lib/queries";
 import type { PokemonMoveSlot } from "@/lib/pokeapi";
-import { extractIdFromUrl, getNameEs } from "@/lib/pokemon-utils";
-import {
-  getVersionGroupLabel,
-  getMoveLearnMethodLabel,
-  isExcludedVersionGroup,
-  versionGroupOrder,
-} from "@/lib/version-names";
+import { extractIdFromUrl, getName } from "@/lib/pokemon-utils";
+import { isExcludedVersionGroup, versionGroupOrder } from "@/lib/version-names";
 import type { Move } from "@/lib/pokeapi";
 
 export interface MovesSectionProps {
@@ -36,7 +32,28 @@ export interface MovesSectionProps {
 
 const METHODS = ["level-up", "machine", "tutor", "egg"] as const;
 
+function capiCapitalize(str: string): string {
+  return str
+    .split("-")
+    .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+    .join(" ");
+}
+
 export function MovesSection({ moveSlots }: MovesSectionProps) {
+  const t = useTranslations("moves");
+  const tMethods = useTranslations("learnMethods");
+  const tVersionGroups = useTranslations("versionGroups");
+
+  const vgLabel = (vg: string) => {
+    const l = tVersionGroups(vg);
+    return l !== vg ? l : capiCapitalize(vg);
+  };
+
+  const methodLabel = (m: string) => {
+    const l = tMethods(m);
+    return l !== m ? l : capiCapitalize(m);
+  };
+
   const allVersionGroups = useMemo(() => {
     const set = new Set<string>();
     for (const slot of moveSlots) {
@@ -57,7 +74,7 @@ export function MovesSection({ moveSlots }: MovesSectionProps) {
     <div className="space-y-4">
       <div className="flex items-center gap-3">
         <label htmlFor="move-game-select" className="text-sm font-medium">
-          Juego:
+          {t("gameLabel")}
         </label>
         <Select value={selectedGame ?? ""} onValueChange={(v) => setSelectedGame(v)}>
           <SelectTrigger id="move-game-select" className="w-56">
@@ -66,7 +83,7 @@ export function MovesSection({ moveSlots }: MovesSectionProps) {
           <SelectContent>
             {allVersionGroups.map((vg) => (
               <SelectItem key={vg} value={vg}>
-                {getVersionGroupLabel(vg)}
+                {vgLabel(vg)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -77,7 +94,7 @@ export function MovesSection({ moveSlots }: MovesSectionProps) {
         <TabsList>
           {METHODS.map((m) => (
             <TabsTrigger key={m} value={m}>
-              {getMoveLearnMethodLabel(m)}
+              {methodLabel(m)}
             </TabsTrigger>
           ))}
         </TabsList>
@@ -88,22 +105,24 @@ export function MovesSection({ moveSlots }: MovesSectionProps) {
             <TabsContent key={method} value={method}>
               {filtered.length === 0 ? (
                 <p className="py-4 text-sm text-muted-foreground">
-                  No aprende movimientos por {getMoveLearnMethodLabel(method).toLowerCase()} en{" "}
-                  {getVersionGroupLabel(selectedGame ?? "")}.
+                  {t("noMoves", {
+                    method: methodLabel(method).toLowerCase(),
+                    version: vgLabel(selectedGame ?? ""),
+                  })}
                 </p>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-16">Nivel</TableHead>
-                      <TableHead>Nombre</TableHead>
-                      <TableHead>Tipo</TableHead>
-                      <TableHead>Efecto</TableHead>
-                      <TableHead>Categoría</TableHead>
-                      <TableHead className="w-16 text-right">Poder</TableHead>
-                      <TableHead className="w-14 text-right">PP</TableHead>
-                      <TableHead className="w-16 text-right">Precisión</TableHead>
-                      <TableHead className="w-16 text-right">Prioridad</TableHead>
+                      <TableHead className="w-16">{t("table.level")}</TableHead>
+                      <TableHead>{t("table.name")}</TableHead>
+                      <TableHead>{t("table.type")}</TableHead>
+                      <TableHead>{t("table.effect")}</TableHead>
+                      <TableHead>{t("table.category")}</TableHead>
+                      <TableHead className="w-16 text-right">{t("table.power")}</TableHead>
+                      <TableHead className="w-14 text-right">{t("table.pp")}</TableHead>
+                      <TableHead className="w-16 text-right">{t("table.accuracy")}</TableHead>
+                      <TableHead className="w-16 text-right">{t("table.priority")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -151,14 +170,12 @@ function filterMoves(
     });
 }
 
-function damageClassLabel(damageClass: { name: string } | undefined): string {
-  if (!damageClass) return "—";
-  const labels: Record<string, string> = {
-    physical: "Físico",
-    special: "Especial",
-    status: "Estado",
-  };
-  return labels[damageClass.name] ?? damageClass.name;
+function damageClassLabel(
+  damageClass: { name: string } | undefined,
+  t: (key: string) => string,
+): string {
+  if (!damageClass) return t("emptyFallback");
+  return t(`damageClass.${damageClass.name}`);
 }
 
 function MoveRow({
@@ -170,18 +187,20 @@ function MoveRow({
   level: number;
   game: string;
 }) {
+  const t = useTranslations("moves");
+  const locale = useLocale();
   const moveId = extractIdFromUrl(moveSlot.move.url);
   const { data: move, isLoading } = useMove(moveId);
 
-  const nameEs = move ? getNameEs(move.names, move.name) : null;
+  const nameEs = move ? getName(move.names, move.name, locale) : null;
   const typeName = move?.type?.name ?? null;
   const effect = move
     ? (move.flavor_text_entries
-        .find((e) => e.language.name === "es" && e.version_group.name === game)
+        .find((e) => e.language.name === locale && e.version_group.name === game)
         ?.flavor_text?.replace(/\f|\n/g, " ")
         .trim() ??
       move.flavor_text_entries
-        .find((e) => e.language.name === "es")
+        .find((e) => e.language.name === locale)
         ?.flavor_text?.replace(/\f|\n/g, " ")
         .trim() ??
       move.flavor_text_entries
@@ -204,7 +223,7 @@ function MoveRow({
         ) : typeName ? (
           <TypeBadge type={typeName} size="sm" />
         ) : (
-          <span className="text-xs text-muted-foreground">—</span>
+          <span className="text-xs text-muted-foreground">{t("emptyFallback")}</span>
         )}
       </TableCell>
       <TableCell className="max-w-xs">
@@ -213,21 +232,21 @@ function MoveRow({
         ) : effect ? (
           <span className="text-xs leading-relaxed text-muted-foreground">{effect}</span>
         ) : (
-          <span className="text-xs text-muted-foreground">—</span>
+          <span className="text-xs text-muted-foreground">{t("emptyFallback")}</span>
         )}
       </TableCell>
       <TableCell>
         {isLoading ? (
           <Skeleton className="h-5 w-14" />
         ) : (
-          <span className="text-xs">{damageClassLabel(move?.damage_class)}</span>
+          <span className="text-xs">{damageClassLabel(move?.damage_class, t)}</span>
         )}
       </TableCell>
       <TableCell className="text-right font-mono text-xs">
-        {isLoading ? <Skeleton className="ml-auto h-4 w-8" /> : (move?.power ?? "—")}
+        {isLoading ? <Skeleton className="ml-auto h-4 w-8" /> : (move?.power ?? t("emptyFallback"))}
       </TableCell>
       <TableCell className="text-right font-mono text-xs">
-        {isLoading ? <Skeleton className="ml-auto h-4 w-8" /> : (move?.pp ?? "—")}
+        {isLoading ? <Skeleton className="ml-auto h-4 w-8" /> : (move?.pp ?? t("emptyFallback"))}
       </TableCell>
       <TableCell className="text-right font-mono text-xs">
         {isLoading ? (
@@ -235,7 +254,7 @@ function MoveRow({
         ) : move?.accuracy !== null && move?.accuracy !== undefined ? (
           `${move.accuracy}%`
         ) : (
-          "—"
+          t("emptyFallback")
         )}
       </TableCell>
       <TableCell className="text-right font-mono text-xs">
@@ -248,7 +267,7 @@ function MoveRow({
             String(move.priority)
           )
         ) : (
-          "—"
+          t("emptyFallback")
         )}
       </TableCell>
     </TableRow>

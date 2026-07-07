@@ -136,6 +136,8 @@
     "added": "✓ {name}を追加",
     "emptySlot": "空",
     "adding": "追加中…",
+    "removeAria": "{name}をチームから外す",
+    "deleteTeamAria": "チーム{name}を削除",
     "errors": {
       "nameEmpty": "名前を入力してください",
       "nameTooLong": "名前は30文字以内で入力してください",

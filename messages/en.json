@@ -136,6 +136,8 @@
     "added": "✓ {name} added",
     "emptySlot": "Empty",
     "adding": "Adding…",
+    "removeAria": "Remove {name} from team",
+    "deleteTeamAria": "Delete team {name}",
     "errors": {
       "nameEmpty": "Name cannot be empty",
       "nameTooLong": "Name cannot be longer than 30 characters",

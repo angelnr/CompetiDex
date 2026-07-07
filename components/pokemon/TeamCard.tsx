@@ -1,6 +1,9 @@
+"use client";
+
 import Image from "next/image";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { TypeBadge } from "@/components/pokemon/TypeBadge";
 import { Button } from "@/components/ui/button";
@@ -18,6 +21,7 @@ export interface TeamCardProps {
  * únicos del equipo.
  */
 export function TeamCard({ team, onDelete }: TeamCardProps) {
+  const tc = useTranslations("common");
   const types = teamTypes(team.members);
 
   return (
@@ -29,7 +33,7 @@ export function TeamCard({ team, onDelete }: TeamCardProps) {
           size="icon"
           className="absolute right-2 top-2 size-6 opacity-0 transition-opacity group-hover:opacity-100"
           onClick={() => onDelete(team.id)}
-          aria-label={`Eliminar equipo ${team.name}`}
+          aria-label={`${tc("remove")} ${team.name}`}
         >
           <Trash2 className="size-3 text-destructive" />
         </Button>

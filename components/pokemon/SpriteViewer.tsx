@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Sparkles } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -24,10 +25,11 @@ export interface SpriteViewerProps {
  * desactivado si el sprite shiny no existe (p.ej. algunos Pokémon no tienen shiny).
  */
 export function SpriteViewer({ name, artwork, artworkShiny, defaultSprite }: SpriteViewerProps) {
+  const t = useTranslations("spriteViewer");
   const [shiny, setShiny] = useState(false);
 
   const src = (shiny ? artworkShiny : artwork) ?? defaultSprite;
-  const alt = `${capitalize(name)} ${shiny ? "shiny" : "normal"}`;
+  const alt = `${capitalize(name)} ${shiny ? t("shiny") : t("normal")}`;
 
   return (
     <div className="flex flex-col items-center gap-3">
@@ -35,7 +37,7 @@ export function SpriteViewer({ name, artwork, artworkShiny, defaultSprite }: Spr
         {src ? (
           <Image src={src} alt={alt} fill className="object-contain" priority sizes="256px" />
         ) : (
-          <span className="text-sm text-muted-foreground">Sin sprite</span>
+          <span className="text-sm text-muted-foreground">{t("noSprite")}</span>
         )}
       </div>
 
@@ -48,7 +50,7 @@ export function SpriteViewer({ name, artwork, artworkShiny, defaultSprite }: Spr
         aria-pressed={shiny}
       >
         <Sparkles className={cn(shiny && "text-yellow-500")} />
-        {shiny ? "Shiny" : "Normal"}
+        {shiny ? t("shiny") : t("normal")}
       </Button>
     </div>
   );

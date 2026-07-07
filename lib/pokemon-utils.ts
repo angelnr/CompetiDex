@@ -110,36 +110,33 @@ export interface PokemonSummary {
   sprite: string | null;
 }
 
-/** Nombre en español de un array de nombres traducibles (PokeAPI names[]); fallback a inglés y luego a `fallback`. */
-export function getNameEs(
+/**
+ * Selecciona un valor de un array de entradas lenguaje-dependentes.
+ * Busca primero el locale dado, luego fallbacks en orden (es, en).
+ */
+function pickByLocale<T extends { language: { name: string } }>(
+  arr: T[],
+  key: keyof T,
+  locale: string,
+  fallbacks = ["es", "en"],
+): T | undefined {
+  const fallback = locale === "es" || locale === "en" ? ["es", "en"] : [locale, ...fallbacks];
+  for (const l of fallback) {
+    const hit = arr.find((e) => e.language.name === l);
+    if (hit) return hit;
+  }
+  return undefined;
+}
+
+/** Nombre traducido de un array de nombres, con fallbacks. */
+export function getName(
   names: { name: string; language: { name: string } }[],
   fallback: string,
+  locale = "es",
 ): string {
-  const es = names.find((n) => n.language.name === "es");
-  if (es) return es.name;
-  const en = names.find((n) => n.language.name === "en");
-  return en?.name ?? capitalize(fallback);
-}
-
-/** Flavor text en español de flavor_text_entries; fallback a inglés. */
-export function getFlavorTextEs(
-  entries: { flavor_text: string; language: { name: string } }[],
-): string | null {
-  const es = entries.find((e) => e.language.name === "es");
-  if (es) return sanitizeFlavorText(es.flavor_text);
-  const en = entries.find((e) => e.language.name === "en");
-  if (en) return sanitizeFlavorText(en.flavor_text);
-  return null;
-}
-
-/** Efecto corto en español de effect_entries; fallback a inglés. */
-export function getShortEffectEs(
-  entries: { short_effect: string; language: { name: string } }[],
-): string | null {
-  const es = entries.find((e) => e.language.name === "es");
-  if (es) return es.short_effect;
-  const en = entries.find((e) => e.language.name === "en");
-  return en?.short_effect ?? null;
+  const pick = pickByLocale(names, "name", locale);
+  if (pick) return pick.name as string;
+  return capitalize(fallback);
 }
 
 /** Capitaliza un nombre: "pikachu" -> "Pikachu". */
@@ -161,7 +158,6 @@ export function formatWeight(hectograms: number): string {
 
 export interface StatMeta {
   key: string;
-  label: string;
   /** Color hex por rango de valor (verde/amarillo/rojo). */
   colorFor: (value: number) => string;
 }
@@ -179,12 +175,12 @@ function statColor(value: number): string {
 }
 
 export const POKEMON_STATS: Record<string, StatMeta> = {
-  hp: { key: "hp", label: "PS", colorFor: statColor },
-  attack: { key: "attack", label: "Ataque", colorFor: statColor },
-  defense: { key: "defense", label: "Defensa", colorFor: statColor },
-  "special-attack": { key: "special-attack", label: "At. Esp.", colorFor: statColor },
-  "special-defense": { key: "special-defense", label: "Def. Esp.", colorFor: statColor },
-  speed: { key: "speed", label: "Velocidad", colorFor: statColor },
+  hp: { key: "hp", colorFor: statColor },
+  attack: { key: "attack", colorFor: statColor },
+  defense: { key: "defense", colorFor: statColor },
+  "special-attack": { key: "special-attack", colorFor: statColor },
+  "special-defense": { key: "special-defense", colorFor: statColor },
+  speed: { key: "speed", colorFor: statColor },
 };
 
 /** Suma total de base_stats (para la barra de total). */
@@ -192,14 +188,13 @@ export function computeStatTotal(stats: Pokemon["stats"]): number {
   return stats.reduce((acc, s) => acc + s.base_stat, 0);
 }
 
-/** Texto de especie en español; fallback a inglés. */
+/** Flavor text traducido; fallback a es, luego en. */
 export function getFlavorText(
   entries: { flavor_text: string; language: { name: string } }[],
+  locale = "es",
 ): string | null {
-  const es = entries.find((e) => e.language.name === "es");
-  if (es) return sanitizeFlavorText(es.flavor_text);
-  const en = entries.find((e) => e.language.name === "en");
-  if (en) return sanitizeFlavorText(en.flavor_text);
+  const pick = pickByLocale(entries, "flavor_text", locale);
+  if (pick) return sanitizeFlavorText(pick.flavor_text as string);
   return null;
 }
 
@@ -210,21 +205,23 @@ function sanitizeFlavorText(text: string): string {
     .trim();
 }
 
-/** Género en español; fallback a inglés. */
-export function getGenus(genera: { genus: string; language: { name: string } }[]): string | null {
-  const es = genera.find((g) => g.language.name === "es");
-  if (es) return es.genus;
-  const en = genera.find((g) => g.language.name === "en");
-  return en?.genus ?? null;
+/** Género traducido; fallback a es, luego en. */
+export function getGenus(
+  genera: { genus: string; language: { name: string } }[],
+  locale = "es",
+): string | null {
+  const pick = pickByLocale(genera, "genus", locale);
+  if (pick) return pick.genus as string;
+  return null;
 }
 
-/** Nombre legible en español; fallback al nombre interno capitalizado. */
+/** Nombre legible traducido; fallback al nombre interno capitalizado. */
 export function getDisplayName(
   names: { name: string; language: { name: string } }[],
   fallback: string,
+  locale = "es",
 ): string {
-  const es = names.find((n) => n.language.name === "es");
-  if (es) return es.name;
-  const en = names.find((n) => n.language.name === "en");
-  return en?.name ?? capitalize(fallback);
+  const pick = pickByLocale(names, "name", locale);
+  if (pick) return pick.name as string;
+  return capitalize(fallback);
 }

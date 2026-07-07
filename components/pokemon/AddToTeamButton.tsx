@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useTeams } from "@/hooks/useTeams";
 import { capitalize } from "@/lib/pokemon-utils";
 import type { TeamMember } from "@/lib/team";
+import { useTranslations } from "next-intl";
 import { TeamSlot } from "@/components/pokemon/TeamSlot";
 
 export interface AddToTeamButtonProps {
@@ -24,6 +25,8 @@ export interface AddToTeamButtonProps {
  * elegir en cuál añadirlo.
  */
 export function AddToTeamButton({ pokemonId, name, sprite, types }: AddToTeamButtonProps) {
+  const t = useTranslations("teams");
+  const tc = useTranslations("common");
   const [open, setOpen] = useState(false);
   const { teams, createTeam, addPokemon, removePokemon } = useTeams();
   const [newTeamName, setNewTeamName] = useState("");
@@ -40,7 +43,7 @@ export function AddToTeamButton({ pokemonId, name, sprite, types }: AddToTeamBut
     setStatus(null);
     const result = await addPokemon(teamId, member);
     if (result.ok) {
-      setStatus(`✓ ${capitalize(name)} añadido`);
+      setStatus(t("addedSuccess", { name: capitalize(name) }));
     } else {
       setStatus(result.error);
     }
@@ -63,20 +66,16 @@ export function AddToTeamButton({ pokemonId, name, sprite, types }: AddToTeamBut
     <>
       <Button type="button" variant="secondary" onClick={() => setOpen(true)}>
         <Plus className="size-4" />
-        Añadir a equipo
+        {t("addToTeam")}
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Añadir {capitalize(name)} a un equipo</DialogTitle>
+            <DialogTitle>{t("addToTeamTitle", { name: capitalize(name) })}</DialogTitle>
           </DialogHeader>
 
-          {teams.length === 0 && (
-            <p className="text-sm text-muted-foreground">
-              Aún no tienes equipos. Crea uno para empezar.
-            </p>
-          )}
+          {teams.length === 0 && <p className="text-sm text-muted-foreground">{t("noTeams")}</p>}
 
           <div className="flex flex-col gap-3">
             {teams.map((team) => (
@@ -120,7 +119,7 @@ export function AddToTeamButton({ pokemonId, name, sprite, types }: AddToTeamBut
                     disabled={activeMembers(team.id).length >= 6}
                     onClick={() => handleAdd(team.id)}
                   >
-                    Añadir
+                    {tc("add")}
                   </Button>
                   {activeMembers(team.id).some((m) => m.pokemonId === pokemonId) && (
                     <Button
@@ -129,7 +128,7 @@ export function AddToTeamButton({ pokemonId, name, sprite, types }: AddToTeamBut
                       variant="ghost"
                       onClick={() => removePokemon(team.id, pokemonId)}
                     >
-                      Quitar
+                      {tc("remove")}
                     </Button>
                   )}
                 </div>
@@ -140,7 +139,7 @@ export function AddToTeamButton({ pokemonId, name, sprite, types }: AddToTeamBut
           <div className="flex items-center gap-2 border-t pt-3">
             <input
               type="text"
-              placeholder="Nuevo equipo…"
+              placeholder={t("newTeamPlaceholder")}
               value={newTeamName}
               onChange={(e) => setNewTeamName(e.target.value)}
               className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -152,7 +151,7 @@ export function AddToTeamButton({ pokemonId, name, sprite, types }: AddToTeamBut
               disabled={!newTeamName.trim()}
               onClick={handleCreateAndAdd}
             >
-              + Crear
+              {t("create")}
             </Button>
           </div>
 

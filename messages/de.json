@@ -136,6 +136,8 @@
     "added": "✓ {name} hinzugefügt",
     "emptySlot": "Leer",
     "adding": "Füge hinzu…",
+    "removeAria": "{name} aus dem Team entfernen",
+    "deleteTeamAria": "Team {name} löschen",
     "errors": {
       "nameEmpty": "Der Name darf nicht leer sein",
       "nameTooLong": "Der Name darf nicht länger als 30 Zeichen sein",
