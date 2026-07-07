@@ -63,6 +63,11 @@ export interface Team {
   updatedAt: number;
 }
 
+/** Campos editables de TeamMember (excluye campos de identidad). */
+export type TeamMemberPatch = Partial<
+  Pick<TeamMember, "level" | "heldItem" | "ability" | "nature" | "ivs" | "evs" | "moves">
+>;
+
 export function defaultStatSpread(value: number): StatSpread {
   const spread: StatSpread = {
     hp: 0,
