@@ -46,7 +46,7 @@ export function MovesSection({ moveSlots }: MovesSectionProps) {
 
   const vgLabel = (vg: string) => {
     const l = tVersionGroups(vg);
-    return l !== vg ? l : capiCapitalize(vg);
+    return l === `versionGroups.${vg}` || l === vg ? capiCapitalize(vg) : l;
   };
 
   const methodLabel = (m: string) => {

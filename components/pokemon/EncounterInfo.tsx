@@ -31,7 +31,12 @@ export function EncounterInfo({ encounters }: EncounterInfoProps) {
   const [selectedVersion, setSelectedVersion] = useState<string | undefined>();
   const t = useTranslations("encounters");
   const tMethods = useTranslations("encounterMethods");
-  const tVg = useTranslations("versionGroups");
+  const tVersions = useTranslations("versions");
+
+  const versionLabel = (v: string) => {
+    const label = tVersions(v);
+    return label === `versions.${v}` || label === v ? capitalize(v.replace(/-/g, " ")) : label;
+  };
 
   if (!encounters || encounters.length === 0) {
     return <p className="text-sm text-muted-foreground">{t("noEncounters")}</p>;
@@ -67,7 +72,7 @@ export function EncounterInfo({ encounters }: EncounterInfoProps) {
           <SelectContent>
             {versionNames.map((v) => (
               <SelectItem key={v} value={v}>
-                {tVg(v)}
+                {versionLabel(v)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -118,5 +123,7 @@ function getUniqueVersions(encounters: LocationAreaEncounter[]): string[] {
 
 function formatMethodName(name: string, t: (key: string) => string): string {
   const label = t(name);
-  return label !== name ? label : capitalize(name.replace(/-/g, " "));
+  return label === `encounterMethods.${name}` || label === name
+    ? capitalize(name.replace(/-/g, " "))
+    : label;
 }

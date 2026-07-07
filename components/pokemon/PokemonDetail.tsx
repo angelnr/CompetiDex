@@ -83,7 +83,7 @@ export async function PokemonDetail({
   const isMythical = species.is_mythical;
 
   return (
-    <article className="container mx-auto max-w-5xl py-8">
+    <article className="container mx-auto max-w-6xl py-8">
       {/* Buscador */}
       <div className="mb-6">
         <SearchBar />
@@ -116,105 +116,113 @@ export async function PokemonDetail({
         )}
       </nav>
 
-      {/* Header */}
-      <header className="mb-8 grid gap-6 rounded-lg border bg-card p-6 md:grid-cols-2">
-        <div className="flex flex-col items-center justify-center">
-          <SpriteViewer
-            name={pokemon.name}
-            artwork={artwork}
-            artworkShiny={artworkShiny}
-            defaultSprite={defaultSprite}
-          />
-        </div>
+      {/* Fila 1: header + efectividades + cadena | stats + habilidades */}
+      <div className="mb-8 grid items-start gap-6 lg:grid-cols-2">
+        {/* Columna izquierda: header */}
+        <header className="rounded-lg border bg-card p-6">
+          <div className="flex flex-col items-center justify-center">
+            <SpriteViewer
+              name={pokemon.name}
+              artwork={artwork}
+              artworkShiny={artworkShiny}
+              defaultSprite={defaultSprite}
+            />
+          </div>
 
-        <div className="flex flex-col justify-center gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-3xl font-bold">{displayName}</h1>
-              {(isLegendary || isMythical) && (
-                <span className="rounded-full bg-yellow-500/20 px-2 py-0.5 text-xs font-semibold text-yellow-600 dark:text-yellow-400">
-                  {isMythical ? t("mythical") : t("legendary")}
+          <div className="flex flex-col justify-center gap-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <h1 className="text-3xl font-bold">{displayName}</h1>
+                {(isLegendary || isMythical) && (
+                  <span className="rounded-full bg-yellow-500/20 px-2 py-0.5 text-xs font-semibold text-yellow-600 dark:text-yellow-400">
+                    {isMythical ? t("mythical") : t("legendary")}
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground">{genus}</p>
+            </div>
+
+            <div className="flex flex-wrap gap-1.5">
+              {pokemon.types.map(({ type }) => (
+                <TypeBadge key={type.name} type={type.name} size="md" />
+              ))}
+            </div>
+
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+              <div>
+                <dt className="text-muted-foreground">{t("height")}</dt>
+                <dd className="font-medium">{formatHeight(pokemon.height)}</dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">{t("weight")}</dt>
+                <dd className="font-medium">{formatWeight(pokemon.weight)}</dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">{t("baseExp")}</dt>
+                <dd className="font-medium">{pokemon.base_experience ?? "—"}</dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">{t("happiness")}</dt>
+                <dd className="font-medium">{species.base_happiness}</dd>
+              </div>
+            </dl>
+
+            {flavorText && (
+              <p className="text-sm italic text-muted-foreground">&ldquo;{flavorText}&rdquo;</p>
+            )}
+
+            <div className="flex flex-wrap gap-2">
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/comparar?ids=${pokemon.id}`}>{t("compare")}</Link>
+              </Button>
+              <Button asChild variant="outline" size="sm">
+                <Link href={`/efectividades?defender=${pokemon.id}`}>{t("calculate")}</Link>
+              </Button>
+            </div>
+          </div>
+        </header>
+
+        {/* Columna derecha: stats + habilidades + efectividades + cadena evolutiva */}
+        <div className="flex flex-col gap-6">
+          <section>
+            <h2 className="mb-4 text-xl font-semibold">{t("sections.baseStats")}</h2>
+            <div className="flex flex-col gap-2">
+              {pokemon.stats.map((s) => (
+                <StatBar key={s.stat.name} statName={s.stat.name} value={s.base_stat} />
+              ))}
+              <div className="grid grid-cols-[5rem_2.5rem_1fr] items-center gap-2 border-t pt-2">
+                <span className="text-xs font-semibold">{t("statsTotal")}</span>
+                <span className="text-right font-mono text-xs font-bold tabular-nums">
+                  {computeStatTotal(pokemon.stats)}
                 </span>
-              )}
+                <span />
+              </div>
             </div>
-            <p className="text-sm text-muted-foreground">{genus}</p>
-          </div>
+          </section>
 
-          <div className="flex flex-wrap gap-1.5">
-            {pokemon.types.map(({ type }) => (
-              <TypeBadge key={type.name} type={type.name} size="md" />
-            ))}
-          </div>
+          <section>
+            <h2 className="mb-4 text-xl font-semibold">{t("sections.abilities")}</h2>
+            <AbilitiesSection
+              abilities={abilityData.map((data, i) => ({
+                slot: pokemon.abilities[i]!,
+                data,
+              }))}
+            />
+          </section>
 
-          <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-            <div>
-              <dt className="text-muted-foreground">{t("height")}</dt>
-              <dd className="font-medium">{formatHeight(pokemon.height)}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">{t("weight")}</dt>
-              <dd className="font-medium">{formatWeight(pokemon.weight)}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">{t("baseExp")}</dt>
-              <dd className="font-medium">{pokemon.base_experience ?? "—"}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">{t("happiness")}</dt>
-              <dd className="font-medium">{species.base_happiness}</dd>
-            </div>
-          </dl>
+          <section>
+            <h2 className="mb-4 text-xl font-semibold">{t("sections.defensiveEffectiveness")}</h2>
+            <TypeEffectiveness breakdown={effectiveness} />
+          </section>
 
-          {flavorText && <p className="text-sm italic text-muted-foreground">“{flavorText}”</p>}
-
-          <div className="flex flex-wrap gap-2">
-            <Button asChild variant="outline" size="sm">
-              <Link href={`/comparar?ids=${pokemon.id}`}>{t("compare")}</Link>
-            </Button>
-            <Button asChild variant="outline" size="sm">
-              <Link href={`/efectividades?defender=${pokemon.id}`}>{t("calculate")}</Link>
-            </Button>
-          </div>
+          {evolutionChain.chain && (
+            <section>
+              <h2 className="mb-4 text-xl font-semibold">{t("sections.evolutionChain")}</h2>
+              <EvolutionChain chain={evolutionChain.chain} />
+            </section>
+          )}
         </div>
-      </header>
-
-      {/* Stats */}
-      <Section title={t("sections.baseStats")}>
-        <div className="flex flex-col gap-2">
-          {pokemon.stats.map((s) => (
-            <StatBar key={s.stat.name} statName={s.stat.name} value={s.base_stat} />
-          ))}
-          <div className="grid grid-cols-[5rem_2.5rem_1fr] items-center gap-2 border-t pt-2">
-            <span className="text-xs font-semibold">{t("statsTotal")}</span>
-            <span className="text-right font-mono text-xs font-bold tabular-nums">
-              {computeStatTotal(pokemon.stats)}
-            </span>
-            <span />
-          </div>
-        </div>
-      </Section>
-
-      {/* Habilidades */}
-      <Section title={t("sections.abilities")}>
-        <AbilitiesSection
-          abilities={abilityData.map((data, i) => ({
-            slot: pokemon.abilities[i]!,
-            data,
-          }))}
-        />
-      </Section>
-
-      {/* Efectividades */}
-      <Section title={t("sections.defensiveEffectiveness")}>
-        <TypeEffectiveness breakdown={effectiveness} />
-      </Section>
-
-      {/* Cadena evolutiva */}
-      {evolutionChain.chain && (
-        <Section title={t("sections.evolutionChain")}>
-          <EvolutionChain chain={evolutionChain.chain} />
-        </Section>
-      )}
+      </div>
 
       {/* Información de encuentro */}
       <Section title={t("sections.encounterInfo")}>

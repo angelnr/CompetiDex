@@ -30,7 +30,6 @@ import { cn } from "@/lib/utils";
 export function PokemonCompare() {
   const t = useTranslations("compare");
   const tc = useTranslations("common");
-  const tStats = useTranslations("stats");
   const tSearch = useTranslations("search");
   const { ids, add, remove, clear, isFull } = useCompareSelection();
 
@@ -105,9 +104,9 @@ function SlotAdder({ onAdd: add, disabled }: { onAdd: (id: number) => void; disa
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder={tSearch("addPlaceholder")}
+          placeholder={tSearch("forComparePlaceholder")}
           className="max-w-xs"
-          aria-label={tSearch("addAria")}
+          aria-label={tSearch("forCompareAria")}
           disabled={disabled}
         />
         {query && (
@@ -183,7 +182,6 @@ function CompareColumn({
 }) {
   const t = useTranslations("compare");
   const tc = useTranslations("common");
-  const tStats = useTranslations("stats");
   const { data: pokemon, isLoading, isError } = usePokemon(id);
 
   if (isError) {
@@ -257,15 +255,15 @@ function CompareColumn({
 
         <dl className="grid grid-cols-2 gap-2 text-sm">
           <div>
-            <dt className="text-muted-foreground">{tStats("height")}</dt>
+            <dt className="text-muted-foreground">{t("height")}</dt>
             <dd className="font-medium">{formatHeight(pokemon.height)}</dd>
           </div>
           <div>
-            <dt className="text-muted-foreground">{tStats("weight")}</dt>
+            <dt className="text-muted-foreground">{t("weight")}</dt>
             <dd className="font-medium">{formatWeight(pokemon.weight)}</dd>
           </div>
           <div>
-            <dt className="text-muted-foreground">{tStats("baseExperience")}</dt>
+            <dt className="text-muted-foreground">{t("baseExp")}</dt>
             <dd className="font-medium">{pokemon.base_experience ?? "—"}</dd>
           </div>
         </dl>
@@ -312,7 +310,6 @@ function CompareColumn({
 
 function CompareStatsPanel({ idA, idB }: { idA: number; idB: number }) {
   const t = useTranslations("compare");
-  const tStats = useTranslations("stats");
   const a = usePokemon(idA);
   const b = usePokemon(idB);
 
@@ -322,17 +319,17 @@ function CompareStatsPanel({ idA, idB }: { idA: number; idB: number }) {
 
   return (
     <section>
-      <h3 className="mb-3 text-lg font-semibold">{t("statsComparison")}</h3>
+      <h3 className="mb-3 text-lg font-semibold">{t("compareStats")}</h3>
       <p className="mb-3 text-sm text-muted-foreground">{summarizeAdvantage(a.data, b.data)}</p>
       <Card>
         <CardContent className="p-4">
-          <table className="w-full text-sm" aria-label={tStats("comparisonTable")}>
+          <table className="w-full text-sm" aria-label={t("matrixAria")}>
             <thead>
               <tr className="border-b text-muted-foreground">
-                <th className="pb-2 text-left font-medium">{tStats("stat")}</th>
+                <th className="pb-2 text-left font-medium">{t("statsTable.stat")}</th>
                 <th className="pb-2 text-center font-medium">A</th>
                 <th className="pb-2 text-center font-medium">B</th>
-                <th className="pb-2 text-right font-medium">{tStats("difference")}</th>
+                <th className="pb-2 text-right font-medium">{t("statsTable.diff")}</th>
               </tr>
             </thead>
             <tbody>
@@ -383,7 +380,7 @@ function CompareEffectivenessPanel({ idA, idB }: { idA: number; idB: number }) {
 
   return (
     <section>
-      <h3 className="mb-3 text-lg font-semibold">{t("typesComparison")}</h3>
+      <h3 className="mb-3 text-lg font-semibold">{t("compareTypes")}</h3>
       <Card>
         <CardContent className="space-y-3 p-4">
           {shared.length > 0 && (

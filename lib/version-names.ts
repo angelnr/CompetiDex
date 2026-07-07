@@ -15,12 +15,15 @@ export const EXCLUDED_VERSIONS = new Set([
   "crystal-japan",
 ]);
 
-/** Version-groups (movimientos) a filtrar: spinoffs tipo "Champions". */
+/** Version-groups (movimientos) a filtrar: japonesas, spinoffs. */
 export const EXCLUDED_VERSION_GROUPS = new Set([
   "colosseum",
   "xd",
   "pokemon-pinball-ruby-sapphire",
   "pokemon-tcg",
+  "red-green-japan",
+  "blue-japan",
+  "champions",
 ]);
 
 export function isExcludedVersion(name: string): boolean {
@@ -28,7 +31,7 @@ export function isExcludedVersion(name: string): boolean {
 }
 
 export function isExcludedVersionGroup(name: string): boolean {
-  return EXCLUDED_VERSION_GROUPS.has(name);
+  return EXCLUDED_VERSION_GROUPS.has(name) || name.endsWith("-japan");
 }
 
 // ---------------------------------------------------------------------------
