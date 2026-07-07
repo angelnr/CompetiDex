@@ -15,13 +15,15 @@ export interface TeamSlotProps {
   member: TeamMember | null;
   /** Elimina al Pokémon del slot. */
   onRemove?: ((pokemonId: number) => void) | undefined;
+  /** Callback al hacer click en el slot (para selección). */
+  onClick?: (() => void) | undefined;
 }
 
 /**
  * Slot individual de un equipo (0..5). Muestra el sprite, nombre, #id y tipos
  * si está ocupado, o un placeholder "vacío" si no.
  */
-export function TeamSlot({ member, onRemove }: TeamSlotProps) {
+export function TeamSlot({ member, onRemove, onClick }: TeamSlotProps) {
   const t = useTranslations("teams");
 
   if (!member) {
@@ -33,14 +35,32 @@ export function TeamSlot({ member, onRemove }: TeamSlotProps) {
   }
 
   return (
-    <div className="group relative flex size-28 flex-col items-center justify-center rounded-lg border bg-card p-1">
+    <div
+      className={`group relative flex size-28 flex-col items-center justify-center rounded-lg border bg-card p-1 ${onClick ? "cursor-pointer" : ""}`}
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={
+        onClick
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onClick();
+              }
+            }
+          : undefined
+      }
+    >
       {onRemove && (
         <Button
           type="button"
           variant="ghost"
           size="icon"
           className="absolute right-0 top-0 size-5 opacity-0 transition-opacity group-hover:opacity-100"
-          onClick={() => onRemove(member.pokemonId)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove(member.pokemonId);
+          }}
           aria-label={t("removeAria", { name: capitalize(member.name) })}
         >
           <X className="size-3" />
