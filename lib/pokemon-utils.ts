@@ -164,6 +164,125 @@ export function getMegaFormSuggestions(speciesName: string): { name: string; id:
 }
 
 // ---------------------------------------------------------------------------
+// Regional forms (Alola, Galar, Hisui, Paldea)
+// ---------------------------------------------------------------------------
+
+export type RegionalRegion = "alola" | "galar" | "hisui" | "paldea";
+
+export interface RegionalFormSuggestion {
+  id: number;
+  name: string;
+  baseSpecies: string;
+  region: RegionalRegion;
+  breed?: string;
+}
+
+const REGIONAL_FORM_RE = /^([a-z0-9-]+)-(alola|galar|hisui|paldea)(?:-([a-z-]+))?$/;
+
+/** Determina si un nombre corresponde a una forma regional. */
+export function isRegionalName(name: string): boolean {
+  return REGIONAL_FORM_RE.test(name);
+}
+
+/** Parsea "ninetales-alola" → { baseSpecies, region }. */
+export function parseRegionalForm(name: string, id: number): RegionalFormSuggestion | null {
+  const m = name.match(REGIONAL_FORM_RE);
+  if (!m || !m[1] || !m[2]) return null;
+  const breed = m[3];
+  return {
+    id,
+    name,
+    baseSpecies: m[1],
+    region: m[2] as RegionalRegion,
+    ...(breed ? { breed } : {}),
+  };
+}
+
+/**
+ * Mapa de especies con formas regionales → array de formas regionales conocidas.
+ * IDs verificados contra PokeAPI (rango 10091-10253).
+ * Excluye: gmax, mega, primal, totem, pikachu-caps, gender-specific.
+ */
+const REGIONAL_SPECIES_MAP: Record<string, { name: string; id: number }[]> = {
+  // ===== Alola (Gen 7) =====
+  diglett: [{ name: "diglett-alola", id: 10105 }],
+  dugtrio: [{ name: "dugtrio-alola", id: 10106 }],
+  exeggutor: [{ name: "exeggutor-alola", id: 10114 }],
+  geodude: [{ name: "geodude-alola", id: 10109 }],
+  golem: [{ name: "golem-alola", id: 10111 }],
+  graveler: [{ name: "graveler-alola", id: 10110 }],
+  grimer: [{ name: "grimer-alola", id: 10112 }],
+  marowak: [{ name: "marowak-alola", id: 10115 }],
+  meowth: [
+    { name: "meowth-alola", id: 10107 },
+    { name: "meowth-galar", id: 10161 },
+  ],
+  "mr-mime": [{ name: "mr-mime-galar", id: 10168 }],
+  muk: [{ name: "muk-alola", id: 10113 }],
+  ninetales: [{ name: "ninetales-alola", id: 10104 }],
+  persian: [{ name: "persian-alola", id: 10108 }],
+  raichu: [{ name: "raichu-alola", id: 10100 }],
+  raticate: [{ name: "raticate-alola", id: 10092 }],
+  rattata: [{ name: "rattata-alola", id: 10091 }],
+  sandshrew: [{ name: "sandshrew-alola", id: 10101 }],
+  sandslash: [{ name: "sandslash-alola", id: 10102 }],
+  vulpix: [{ name: "vulpix-alola", id: 10103 }],
+
+  // ===== Galar (Gen 8) =====
+  articuno: [{ name: "articuno-galar", id: 10169 }],
+  corsola: [{ name: "corsola-galar", id: 10173 }],
+  darmanitan: [
+    { name: "darmanitan-galar-standard", id: 10177 },
+    { name: "darmanitan-galar-zen", id: 10178 },
+  ],
+  darumaka: [{ name: "darumaka-galar", id: 10176 }],
+  farfetchd: [{ name: "farfetchd-galar", id: 10166 }],
+  linoone: [{ name: "linoone-galar", id: 10175 }],
+  moltres: [{ name: "moltres-galar", id: 10171 }],
+  ponyta: [{ name: "ponyta-galar", id: 10162 }],
+  rapidash: [{ name: "rapidash-galar", id: 10163 }],
+  slowbro: [{ name: "slowbro-galar", id: 10165 }],
+  slowking: [{ name: "slowking-galar", id: 10172 }],
+  slowpoke: [{ name: "slowpoke-galar", id: 10164 }],
+  stunfisk: [{ name: "stunfisk-galar", id: 10180 }],
+  weezing: [{ name: "weezing-galar", id: 10167 }],
+  yamask: [{ name: "yamask-galar", id: 10179 }],
+  zapdos: [{ name: "zapdos-galar", id: 10170 }],
+  zigzagoon: [{ name: "zigzagoon-galar", id: 10174 }],
+
+  // ===== Hisui (Legends Arceus) =====
+  arcanine: [{ name: "arcanine-hisui", id: 10230 }],
+  avalugg: [{ name: "avalugg-hisui", id: 10243 }],
+  braviary: [{ name: "braviary-hisui", id: 10240 }],
+  decidueye: [{ name: "decidueye-hisui", id: 10244 }],
+  electrode: [{ name: "electrode-hisui", id: 10232 }],
+  goodra: [{ name: "goodra-hisui", id: 10242 }],
+  growlithe: [{ name: "growlithe-hisui", id: 10229 }],
+  lilligant: [{ name: "lilligant-hisui", id: 10237 }],
+  qwilfish: [{ name: "qwilfish-hisui", id: 10234 }],
+  samurott: [{ name: "samurott-hisui", id: 10236 }],
+  sliggoo: [{ name: "sliggoo-hisui", id: 10241 }],
+  sneasel: [{ name: "sneasel-hisui", id: 10235 }],
+  typhlosion: [{ name: "typhlosion-hisui", id: 10233 }],
+  voltorb: [{ name: "voltorb-hisui", id: 10231 }],
+  zorua: [{ name: "zorua-hisui", id: 10238 }],
+  zoroark: [{ name: "zoroark-hisui", id: 10239 }],
+
+  // ===== Paldea (Gen 9) =====
+  tauros: [
+    { name: "tauros-paldea-combat-breed", id: 10250 },
+    { name: "tauros-paldea-blaze-breed", id: 10251 },
+    { name: "tauros-paldea-aqua-breed", id: 10252 },
+  ],
+  wooper: [{ name: "wooper-paldea", id: 10253 }],
+};
+
+/** Retorna las formas regionales conocidas para una especie. */
+export function getRegionalFormSuggestions(speciesName: string): { name: string; id: number }[] {
+  return REGIONAL_SPECIES_MAP[speciesName] ?? [];
+}
+
+// ---------------------------------------------------------------------------
 // Fuzzy match
 // ---------------------------------------------------------------------------
 

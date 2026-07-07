@@ -1,8 +1,15 @@
+import Image from "next/image";
 import { Link } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
 
 import { Badge } from "@/components/ui/badge";
 import type { Ability } from "@/lib/pokeapi";
-import { capitalize, extractIdFromUrl } from "@/lib/pokemon-utils";
+import {
+  capitalize,
+  extractIdFromUrl,
+  formatPokedexId,
+  getPixelSpriteById,
+} from "@/lib/pokemon-utils";
 
 export interface AbilityDetailProps {
   ability: Ability;
@@ -10,6 +17,7 @@ export interface AbilityDetailProps {
 }
 
 export function AbilityDetail({ ability, locale = "es" }: AbilityDetailProps) {
+  const t = useTranslations("abilities");
   const lang = locale;
   const nameEs =
     ability.names.find((n) => n.language.name === lang)?.name ??
@@ -44,42 +52,46 @@ export function AbilityDetail({ ability, locale = "es" }: AbilityDetailProps) {
 
       {descEs && (
         <section className="mb-8">
-          <h2 className="mb-2 text-lg font-semibold">Descripción</h2>
+          <h2 className="mb-2 text-lg font-semibold">{t("description")}</h2>
           <p className="text-sm leading-relaxed text-muted-foreground">{descEs}</p>
         </section>
       )}
 
       <section>
         <h2 className="mb-4 text-lg font-semibold">
-          Pokémon con esta habilidad ({pokemonList.length})
+          {t("pokemonWithAbility", { count: pokemonList.length })}
         </h2>
 
         {pokemonList.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Ningún Pokémon conocido tiene esta habilidad.
-          </p>
+          <p className="text-sm text-muted-foreground">{t("noPokemon")}</p>
         ) : (
           <ul className="space-y-2">
             {pokemonList.map((p) => {
               const id = extractIdFromUrl(p.pokemon.url);
-              const tagLabel = p.is_hidden ? "Habilidad oculta" : `Habilidad ${p.slot}`;
 
               return (
                 <li
                   key={p.pokemon.name}
                   className="flex items-center gap-3 rounded-md border px-4 py-2"
                 >
+                  <Image
+                    src={getPixelSpriteById(id)}
+                    alt=""
+                    width={32}
+                    height={32}
+                    className="size-8 shrink-0 object-contain"
+                  />
                   <Link
                     href={`/pokemon/${id}`}
                     className="flex items-center gap-2 text-sm font-medium hover:underline"
                   >
                     <span className="font-mono text-xs text-muted-foreground">
-                      #{String(id).padStart(4, "0")}
+                      {formatPokedexId(id)}
                     </span>
                     {capitalize(p.pokemon.name.replace(/-/g, " "))}
                   </Link>
                   <Badge variant={p.is_hidden ? "secondary" : "outline"} className="text-[10px]">
-                    {tagLabel}
+                    {p.is_hidden ? t("hidden") : t("slot", { slot: p.slot })}
                   </Badge>
                 </li>
               );
