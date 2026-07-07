@@ -1,12 +1,14 @@
 import type { Team, TeamMember } from "@/lib/team";
 import { normalizeMember, STAT_KEYS, totalEvs } from "@/lib/team";
-import { capitalize } from "@/lib/pokemon-utils";
 
 /**
  * Convierte un slug like "thunder-bolt" a "Thunder Bolt".
  */
 export function slugToTitle(slug: string): string {
-  return capitalize(slug.replace(/-/g, " "));
+  return slug
+    .split("-")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }
 
 /**
@@ -62,7 +64,7 @@ export function teamToPokepaste(team: Team): string {
 
     // ── Nature ──
     if (member.nature && member.nature !== "hardy") {
-      lines.push(`${capitalize(member.nature)} Nature`);
+      lines.push(`${slugToTitle(member.nature)} Nature`);
     }
 
     // ── EVs (solo stats no-cero) ──
