@@ -43,7 +43,7 @@ export function AddToTeamButton({ pokemonId, name, sprite, types }: AddToTeamBut
     setStatus(null);
     const result = await addPokemon(teamId, member);
     if (result.ok) {
-      setStatus(t("addedSuccess", { name: capitalize(name) }));
+      setStatus(t("added", { name: capitalize(name) }));
     } else {
       setStatus(result.error);
     }
@@ -75,7 +75,7 @@ export function AddToTeamButton({ pokemonId, name, sprite, types }: AddToTeamBut
             <DialogTitle>{t("addToTeamTitle", { name: capitalize(name) })}</DialogTitle>
           </DialogHeader>
 
-          {teams.length === 0 && <p className="text-sm text-muted-foreground">{t("noTeams")}</p>}
+          {teams.length === 0 && <p className="text-sm text-muted-foreground">{t("noTeamsYet")}</p>}
 
           <div className="flex flex-col gap-3">
             {teams.map((team) => (
