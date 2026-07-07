@@ -2,6 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { usePokemonInfiniteList } from "@/lib/queries";
 
+vi.mock("@/i18n/routing", () => ({
+  Link: ({ children, href }: { children: React.ReactNode; href: string }) => (
+    <a href={href}>{children}</a>
+  ),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  usePathname: () => "/",
+}));
+
 // Mock del router / searchParams / pathname para no depender de next/navigation
 const replace = vi.fn();
 vi.mock("next/navigation", () => ({
@@ -15,6 +23,11 @@ vi.mock("@/lib/queries", () => ({
 
 import { SearchBar } from "@/components/pokemon/SearchBar";
 import { makeResourceListFixture } from "@/tests/fixtures/pokemon";
+import { WithIntl } from "@/tests/component/with-intl";
+
+function setup(ui: React.ReactElement) {
+  return render(<WithIntl>{ui}</WithIntl>);
+}
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -30,7 +43,7 @@ describe("SearchBar", () => {
     vi.mocked(usePokemonInfiniteList).mockReturnValue({
       data: { pages: [makeResourceListFixture()] },
     } as never);
-    render(<SearchBar />);
+    setup(<SearchBar />);
     expect(screen.queryByRole("listbox")).toBeNull();
   });
 
@@ -50,7 +63,7 @@ describe("SearchBar", () => {
     } as never);
     vi.useRealTimers();
 
-    render(<SearchBar />);
+    setup(<SearchBar />);
     const input = screen.getByLabelText(/buscar/i);
     fireEvent.change(input, { target: { value: "pi" } });
 
@@ -66,7 +79,7 @@ describe("SearchBar", () => {
     vi.mocked(usePokemonInfiniteList).mockReturnValue({
       data: { pages: [makeResourceListFixture()] },
     } as never);
-    render(<SearchBar />);
+    setup(<SearchBar />);
     const input = screen.getByLabelText(/buscar/i) as HTMLInputElement;
     fireEvent.change(input, { target: { value: "pikachu" } });
     expect(input.value).toBe("pikachu");

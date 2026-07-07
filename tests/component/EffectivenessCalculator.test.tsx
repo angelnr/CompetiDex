@@ -1,6 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 
+vi.mock("@/i18n/routing", () => ({
+  Link: ({ children, href }: { children: React.ReactNode; href: string }) => (
+    <a href={href}>{children}</a>
+  ),
+}));
+
+vi.mock("next/navigation", () => ({
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 const mockHook = vi.fn();
 
 vi.mock("@/hooks/useEffectivenessCalculator", () => ({
@@ -13,6 +23,7 @@ vi.mock("@/lib/queries", () => ({
 }));
 
 import { EffectivenessCalculator } from "@/components/pokemon/EffectivenessCalculator";
+import { WithIntl } from "@/tests/component/with-intl";
 
 beforeEach(() => vi.clearAllMocks());
 afterEach(() => vi.restoreAllMocks());
@@ -33,7 +44,11 @@ function defaultHook() {
 describe("EffectivenessCalculator", () => {
   it("renderiza los 18 tipos como botones seleccionables", () => {
     mockHook.mockReturnValue(defaultHook());
-    render(<EffectivenessCalculator />);
+    render(
+      <WithIntl>
+        <EffectivenessCalculator />
+      </WithIntl>,
+    );
     expect(screen.getByText("Fuego")).toBeInTheDocument();
     expect(screen.getByText("Agua")).toBeInTheDocument();
     expect(screen.getByText("Planta")).toBeInTheDocument();
@@ -43,14 +58,22 @@ describe("EffectivenessCalculator", () => {
     const setMoveType = vi.fn();
     mockHook.mockReturnValue({ ...defaultHook(), setMoveType });
 
-    render(<EffectivenessCalculator />);
+    render(
+      <WithIntl>
+        <EffectivenessCalculator />
+      </WithIntl>,
+    );
     fireEvent.click(screen.getByText("Fuego"));
     expect(setMoveType).toHaveBeenCalledWith("fire");
   });
 
   it("renderiza el campo de búsqueda de defensores", () => {
     mockHook.mockReturnValue(defaultHook());
-    render(<EffectivenessCalculator />);
+    render(
+      <WithIntl>
+        <EffectivenessCalculator />
+      </WithIntl>,
+    );
     expect(screen.getByLabelText(/buscar.*defensor/i)).toBeInTheDocument();
   });
 
@@ -65,7 +88,11 @@ describe("EffectivenessCalculator", () => {
       },
     });
 
-    render(<EffectivenessCalculator />);
+    render(
+      <WithIntl>
+        <EffectivenessCalculator />
+      </WithIntl>,
+    );
     expect(screen.getByText("x2")).toBeInTheDocument();
     expect(screen.getByText(/súper eficaz \(x2\)/i)).toBeInTheDocument();
   });
@@ -81,7 +108,11 @@ describe("EffectivenessCalculator", () => {
       },
     });
 
-    render(<EffectivenessCalculator />);
+    render(
+      <WithIntl>
+        <EffectivenessCalculator />
+      </WithIntl>,
+    );
     expect(screen.getByText("x0")).toBeInTheDocument();
     expect(screen.getByText(/no afecta/i)).toBeInTheDocument();
   });
@@ -94,7 +125,11 @@ describe("EffectivenessCalculator", () => {
       clear,
     });
 
-    render(<EffectivenessCalculator />);
+    render(
+      <WithIntl>
+        <EffectivenessCalculator />
+      </WithIntl>,
+    );
     const clearBtn = screen.getByText(/limpiar/i);
     fireEvent.click(clearBtn);
     expect(clear).toHaveBeenCalled();

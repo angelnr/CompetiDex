@@ -1,6 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 
+vi.mock("@/i18n/routing", () => ({
+  Link: ({ children, href }: { children: React.ReactNode; href: string }) => (
+    <a href={href}>{children}</a>
+  ),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
+  usePathname: () => "/comparar",
+}));
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: vi.fn() }),
   useSearchParams: vi.fn(() => new URLSearchParams("ids=25,26")),
@@ -15,6 +23,7 @@ vi.mock("@/lib/queries", () => ({
 import { usePokemon } from "@/lib/queries";
 import { PokemonCompare } from "@/components/pokemon/PokemonCompare";
 import { makePokemonFixture } from "@/tests/fixtures/pokemon";
+import { WithIntl } from "@/tests/component/with-intl";
 
 beforeEach(() => vi.clearAllMocks());
 afterEach(() => vi.restoreAllMocks());
@@ -44,10 +53,14 @@ describe("PokemonCompare", () => {
       return { data: undefined, isLoading: true } as never;
     });
 
-    render(<PokemonCompare />);
+    render(
+      <WithIntl>
+        <PokemonCompare />
+      </WithIntl>,
+    );
     expect(screen.getAllByText("Pikachu").length).toBeGreaterThanOrEqual(1);
     expect(screen.getAllByText("Raichu").length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText("Comparativa de stats")).toBeInTheDocument();
+    expect(screen.getAllByText("Stats base").length).toBe(2);
   });
 
   it("renderiza boton limpiar", () => {
@@ -61,7 +74,11 @@ describe("PokemonCompare", () => {
       return { data: undefined, isLoading: true } as never;
     });
 
-    render(<PokemonCompare />);
+    render(
+      <WithIntl>
+        <PokemonCompare />
+      </WithIntl>,
+    );
     expect(screen.getByText("Limpiar")).toBeInTheDocument();
   });
 
@@ -72,7 +89,11 @@ describe("PokemonCompare", () => {
       isError: true,
     } as never);
 
-    render(<PokemonCompare />);
+    render(
+      <WithIntl>
+        <PokemonCompare />
+      </WithIntl>,
+    );
     expect(screen.getAllByText(/Error al cargar/i).length).toBe(2);
   });
 });

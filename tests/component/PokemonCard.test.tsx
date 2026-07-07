@@ -1,6 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 
+vi.mock("@/i18n/routing", () => ({
+  Link: ({ children, href }: { children: React.ReactNode; href: string }) => (
+    <a href={href}>{children}</a>
+  ),
+}));
+
 vi.mock("@/lib/queries", () => ({
   usePokemon: vi.fn(),
 }));
@@ -8,6 +14,7 @@ vi.mock("@/lib/queries", () => ({
 import { usePokemon } from "@/lib/queries";
 import { PokemonCard } from "@/components/pokemon/PokemonCard";
 import { makePokemonFixture } from "@/tests/fixtures/pokemon";
+import { WithIntl } from "@/tests/component/with-intl";
 
 beforeEach(() => vi.clearAllMocks());
 afterEach(() => vi.restoreAllMocks());
@@ -20,7 +27,9 @@ describe("PokemonCard", () => {
       isError: false,
     } as never);
     const { container } = render(
-      <PokemonCard resource={{ name: "pikachu", url: "https://pokeapi.co/api/v2/pokemon/25/" }} />,
+      <WithIntl>
+        <PokemonCard resource={{ name: "pikachu", url: "https://pokeapi.co/api/v2/pokemon/25/" }} />
+      </WithIntl>,
     );
     expect(container.querySelectorAll(".animate-pulse").length).toBeGreaterThan(0);
   });
@@ -32,7 +41,9 @@ describe("PokemonCard", () => {
       isError: false,
     } as never);
     render(
-      <PokemonCard resource={{ name: "pikachu", url: "https://pokeapi.co/api/v2/pokemon/25/" }} />,
+      <WithIntl>
+        <PokemonCard resource={{ name: "pikachu", url: "https://pokeapi.co/api/v2/pokemon/25/" }} />
+      </WithIntl>,
     );
     expect(screen.getByText("Pikachu")).toBeInTheDocument();
     expect(screen.getByText("#0025")).toBeInTheDocument();
@@ -46,10 +57,12 @@ describe("PokemonCard", () => {
       isError: true,
     } as never);
     render(
-      <PokemonCard
-        resource={{ name: "missingno", url: "https://pokeapi.co/api/v2/pokemon/9999/" }}
-      />,
+      <WithIntl>
+        <PokemonCard
+          resource={{ name: "missingno", url: "https://pokeapi.co/api/v2/pokemon/9999/" }}
+        />
+      </WithIntl>,
     );
-    expect(screen.getByText(/No se pudo cargar/i)).toBeInTheDocument();
+    expect(screen.getByText(/Error/i)).toBeInTheDocument();
   });
 });

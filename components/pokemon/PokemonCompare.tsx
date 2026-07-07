@@ -271,14 +271,14 @@ function CompareColumn({
         </dl>
 
         <div>
-          <h4 className="mb-2 text-sm font-semibold">{tStats("baseStats")}</h4>
+          <h4 className="mb-2 text-sm font-semibold">{t("baseStats")}</h4>
           {pokemon.stats.map((s) => (
             <StatBar key={s.stat.name} statName={s.stat.name} value={s.base_stat} />
           ))}
         </div>
 
         <div>
-          <h4 className="mb-2 text-sm font-semibold">{tStats("effectiveness")}</h4>
+          <h4 className="mb-2 text-sm font-semibold">{t("effectiveness")}</h4>
           {effectiveness.weaknesses.length > 0 && (
             <div className="mb-1">
               <span className="text-xs text-muted-foreground">{t("weaknesses")}: </span>
