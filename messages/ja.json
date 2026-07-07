@@ -395,7 +395,17 @@
     "distortion-world": "やぶれたせかい",
     "gift-3": "プレゼント",
     "pal-park": "パルパーク",
-    "poke-radar": "ポケトレ"
+    "poke-radar": "ポケトレ",
+    "overworld-flying": "森を飛ぶ",
+    "overworld-flying-special": "特殊な飛行",
+    "headbutt-low": "あたまつき（低）",
+    "headbutt-normal": "あたまつき（中）",
+    "headbutt-high": "あたまつき（高）",
+    "surf-spots": "なみのり（スポット）",
+    "super-rod-spots": "すごいつりざお（スポット）",
+    "npc-trade": "NPC交換",
+    "wanderer": "さまよう",
+    "pokeflute": "ポケモンのふえ"
   },
   "lang": {
     "switcherAria": "言語を変更",

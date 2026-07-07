@@ -66,26 +66,49 @@ export function TeamSlot({ member, onRemove, onClick }: TeamSlotProps) {
           <X className="size-3" />
         </Button>
       )}
-      <Link href={`/pokemon/${member.pokemonId}`} className="flex flex-col items-center gap-0.5">
-        {member.sprite && (
-          <Image
-            src={member.sprite}
-            alt={member.name}
-            width={48}
-            height={48}
-            className="size-12 object-contain"
-          />
-        )}
-        <span className="text-[0.6rem] font-medium leading-tight">{capitalize(member.name)}</span>
-        <span className="text-[0.55rem] text-muted-foreground">
-          {formatPokedexId(member.pokemonId)}
-        </span>
-        <div className="flex gap-0.5">
-          {member.types.map((t) => (
-            <TypeBadge key={t} type={t} />
-          ))}
+      {onClick ? (
+        <div className="flex flex-col items-center gap-0.5">
+          {member.sprite && (
+            <Image
+              src={member.sprite}
+              alt={member.name}
+              width={48}
+              height={48}
+              className="size-12 object-contain"
+            />
+          )}
+          <span className="text-[0.6rem] font-medium leading-tight">{capitalize(member.name)}</span>
+          <span className="text-[0.55rem] text-muted-foreground">
+            {formatPokedexId(member.pokemonId)}
+          </span>
+          <div className="flex gap-0.5">
+            {member.types.map((t) => (
+              <TypeBadge key={t} type={t} />
+            ))}
+          </div>
         </div>
-      </Link>
+      ) : (
+        <Link href={`/pokemon/${member.pokemonId}`} className="flex flex-col items-center gap-0.5">
+          {member.sprite && (
+            <Image
+              src={member.sprite}
+              alt={member.name}
+              width={48}
+              height={48}
+              className="size-12 object-contain"
+            />
+          )}
+          <span className="text-[0.6rem] font-medium leading-tight">{capitalize(member.name)}</span>
+          <span className="text-[0.55rem] text-muted-foreground">
+            {formatPokedexId(member.pokemonId)}
+          </span>
+          <div className="flex gap-0.5">
+            {member.types.map((t) => (
+              <TypeBadge key={t} type={t} />
+            ))}
+          </div>
+        </Link>
+      )}
     </div>
   );
 }

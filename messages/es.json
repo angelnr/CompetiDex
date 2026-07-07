@@ -395,7 +395,17 @@
     "distortion-world": "Mundo Distorsión",
     "gift-3": "Jardín Trofeo",
     "pal-park": "Parque Amigo",
-    "poke-radar": "Pokéradar"
+    "poke-radar": "Pokéradar",
+    "overworld-flying": "Volando en el mundo",
+    "overworld-flying-special": "Volando (especial)",
+    "headbutt-low": "Golpe cabeza (árbol bajo)",
+    "headbutt-normal": "Golpe cabeza (árbol normal)",
+    "headbutt-high": "Golpe cabeza (árbol alto)",
+    "surf-spots": "Surf (puntos)",
+    "super-rod-spots": "Supercaña (puntos)",
+    "npc-trade": "Intercambio NPC",
+    "wanderer": "Errante",
+    "pokeflute": "Poké Flauta"
   },
   "lang": {
     "switcherAria": "Cambiar idioma",

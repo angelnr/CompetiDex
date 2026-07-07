@@ -395,7 +395,17 @@
     "distortion-world": "Verzerrte Welt",
     "gift-3": "Geschenk",
     "pal-park": "Freundes-Park",
-    "poke-radar": "Poké Radar"
+    "poke-radar": "Poké Radar",
+    "overworld-flying": "Fliegend (Welt)",
+    "overworld-flying-special": "Fliegend (speziell)",
+    "headbutt-low": "Kopfnuss (niedrig)",
+    "headbutt-normal": "Kopfnuss (normal)",
+    "headbutt-high": "Kopfnuss (hoch)",
+    "surf-spots": "Surfen (Spots)",
+    "super-rod-spots": "Superangel (Spots)",
+    "npc-trade": "NPC-Tausch",
+    "wanderer": "Wanderer",
+    "pokeflute": "Pokéflöte"
   },
   "lang": {
     "switcherAria": "Sprache wechseln",

@@ -395,7 +395,17 @@
     "distortion-world": "Monde Distorsion",
     "gift-3": "Cadeau",
     "pal-park": "Parc des Amis",
-    "poke-radar": "Poké Radar"
+    "poke-radar": "Poké Radar",
+    "overworld-flying": "Vol (monde)",
+    "overworld-flying-special": "Vol (spécial)",
+    "headbutt-low": "Coup d'Boule (bas)",
+    "headbutt-normal": "Coup d'Boule (normal)",
+    "headbutt-high": "Coup d'Boule (haut)",
+    "surf-spots": "Surf (points)",
+    "super-rod-spots": "Super Canne (points)",
+    "npc-trade": "Échange PNJ",
+    "wanderer": "Errant",
+    "pokeflute": "Poké Flûte"
   },
   "lang": {
     "switcherAria": "Changer la langue",

@@ -395,7 +395,17 @@
     "distortion-world": "Distortion World",
     "gift-3": "Gift",
     "pal-park": "Pal Park",
-    "poke-radar": "Poké Radar"
+    "poke-radar": "Poké Radar",
+    "overworld-flying": "Flying (overworld)",
+    "overworld-flying-special": "Flying (special)",
+    "headbutt-low": "Headbutt (low tree)",
+    "headbutt-normal": "Headbutt (normal tree)",
+    "headbutt-high": "Headbutt (high tree)",
+    "surf-spots": "Surf (spots)",
+    "super-rod-spots": "Super Rod (spots)",
+    "npc-trade": "NPC trade",
+    "wanderer": "Wandering",
+    "pokeflute": "Poké Flute"
   },
   "lang": {
     "switcherAria": "Change language",
