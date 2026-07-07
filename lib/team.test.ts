@@ -1,13 +1,21 @@
 import { describe, it, expect } from "vitest";
 import {
   addMember,
+  DEFAULT_EVS,
+  DEFAULT_IVS,
   findFreeSlot,
   generateTeamId,
   isPokemonInTeam,
+  MAX_EV_PER_STAT,
+  MAX_EV_TOTAL,
   MAX_TEAM_SIZE,
+  normalizeMember,
   reindexSlots,
   removeMember,
   teamTypes,
+  totalEvs,
+  validateEvs,
+  validateIvs,
   validateTeamName,
 } from "@/lib/team";
 import type { TeamMember } from "@/lib/team";
@@ -136,5 +144,133 @@ describe("generateTeamId", () => {
   it("genera ids unicos", () => {
     const ids = new Set(Array.from({ length: 100 }, () => generateTeamId()));
     expect(ids.size).toBe(100);
+  });
+});
+
+describe("normalizeMember", () => {
+  it("rellena campos faltantes con defaults", () => {
+    const raw: TeamMember = {
+      pokemonId: 25,
+      name: "pikachu",
+      slot: 0,
+      sprite: null,
+      types: ["electric"],
+    };
+    const n = normalizeMember(raw);
+    expect(n.level).toBe(100);
+    expect(n.heldItem).toBeNull();
+    expect(n.ability).toBeNull();
+    expect(n.nature).toBe("hardy");
+    expect(n.ivs).toEqual(DEFAULT_IVS);
+    expect(n.evs).toEqual(DEFAULT_EVS);
+    expect(n.moves).toEqual([]);
+  });
+
+  it("preserva campos existentes", () => {
+    const raw: TeamMember = {
+      pokemonId: 25,
+      name: "pikachu",
+      slot: 0,
+      sprite: null,
+      types: ["electric"],
+      level: 50,
+      nature: "jolly",
+      moves: ["thunderbolt"],
+    };
+    const n = normalizeMember(raw);
+    expect(n.level).toBe(50);
+    expect(n.nature).toBe("jolly");
+    expect(n.moves).toEqual(["thunderbolt"]);
+    expect(n.ivs).toEqual(DEFAULT_IVS);
+  });
+});
+
+describe("totalEvs", () => {
+  it("suma correctamente", () => {
+    expect(totalEvs(DEFAULT_EVS)).toBe(0);
+    expect(
+      totalEvs({
+        hp: 252,
+        attack: 252,
+        defense: 0,
+        "special-attack": 0,
+        "special-defense": 0,
+        speed: 6,
+      }),
+    ).toBe(510);
+  });
+});
+
+describe("validateEvs", () => {
+  it("acepta valores válidos", () => {
+    expect(validateEvs(DEFAULT_EVS)).toBeNull();
+    expect(
+      validateEvs({
+        hp: 252,
+        attack: 252,
+        defense: 0,
+        "special-attack": 0,
+        "special-defense": 0,
+        speed: 6,
+      }),
+    ).toBeNull();
+  });
+
+  it("rechaza stat > 252", () => {
+    expect(
+      validateEvs({
+        hp: 300,
+        attack: 0,
+        defense: 0,
+        "special-attack": 0,
+        "special-defense": 0,
+        speed: 0,
+      }),
+    ).not.toBeNull();
+  });
+
+  it("rechaza total > 510", () => {
+    expect(
+      validateEvs({
+        hp: 252,
+        attack: 252,
+        defense: 252,
+        "special-attack": 0,
+        "special-defense": 0,
+        speed: 0,
+      }),
+    ).not.toBeNull();
+  });
+});
+
+describe("validateIvs", () => {
+  it("acepta valores válidos", () => {
+    expect(validateIvs(DEFAULT_IVS)).toBeNull();
+  });
+
+  it("rechaza > 31", () => {
+    expect(
+      validateIvs({
+        hp: 31,
+        attack: 99,
+        defense: 31,
+        "special-attack": 31,
+        "special-defense": 31,
+        speed: 31,
+      }),
+    ).not.toBeNull();
+  });
+
+  it("rechaza negativo", () => {
+    expect(
+      validateIvs({
+        hp: 0,
+        attack: -1,
+        defense: 31,
+        "special-attack": 31,
+        "special-defense": 31,
+        speed: 31,
+      }),
+    ).not.toBeNull();
   });
 });

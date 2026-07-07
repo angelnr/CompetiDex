@@ -1,16 +1,58 @@
-/**
- * Tipos y helpers puros para el sistema de Equipos (Team Builder).
- * Sin dependencias de React ni del DOM — seguro en Server y cliente.
- */
+import type { StatKey } from "@/lib/natures";
 
 export const MAX_TEAM_SIZE = 6;
+export const MAX_EV_PER_STAT = 252;
+export const MAX_EV_TOTAL = 510;
+
+export interface StatSpread {
+  hp: number;
+  attack: number;
+  defense: number;
+  "special-attack": number;
+  "special-defense": number;
+  speed: number;
+}
+
+export const STAT_KEYS: StatKey[] = [
+  "hp",
+  "attack",
+  "defense",
+  "special-attack",
+  "special-defense",
+  "speed",
+];
+
+export const DEFAULT_IVS: StatSpread = {
+  hp: 31,
+  attack: 31,
+  defense: 31,
+  "special-attack": 31,
+  "special-defense": 31,
+  speed: 31,
+};
+
+export const DEFAULT_EVS: StatSpread = {
+  hp: 0,
+  attack: 0,
+  defense: 0,
+  "special-attack": 0,
+  "special-defense": 0,
+  speed: 0,
+};
 
 export interface TeamMember {
   pokemonId: number;
   name: string;
-  slot: number; // 0..5
+  slot: number;
   sprite: string | null;
   types: string[];
+  level?: number;
+  heldItem?: string | null;
+  ability?: string | null;
+  nature?: string;
+  ivs?: StatSpread;
+  evs?: StatSpread;
+  moves?: string[];
 }
 
 export interface Team {
@@ -19,6 +61,78 @@ export interface Team {
   members: TeamMember[];
   createdAt: number;
   updatedAt: number;
+}
+
+export function defaultStatSpread(value: number): StatSpread {
+  const spread: StatSpread = {
+    hp: 0,
+    attack: 0,
+    defense: 0,
+    "special-attack": 0,
+    "special-defense": 0,
+    speed: 0,
+  };
+  for (const k of STAT_KEYS) spread[k] = value;
+  return spread;
+}
+
+export function normalizeMember(member: TeamMember): TeamMember {
+  return {
+    ...member,
+    level: member.level ?? 100,
+    heldItem: member.heldItem ?? null,
+    ability: member.ability ?? null,
+    nature: member.nature ?? "hardy",
+    ivs: member.ivs ?? { ...DEFAULT_IVS },
+    evs: member.evs ?? { ...DEFAULT_EVS },
+    moves: member.moves ?? [],
+  };
+}
+
+export function totalEvs(spread: StatSpread): number {
+  return STAT_KEYS.reduce((sum, k) => sum + spread[k], 0);
+}
+
+export function validateEvs(spread: StatSpread): string | null {
+  for (const k of STAT_KEYS) {
+    if (!Number.isInteger(spread[k]) || spread[k] < 0 || spread[k] > MAX_EV_PER_STAT) {
+      return `EVs in ${k} must be between 0 and ${MAX_EV_PER_STAT}`;
+    }
+  }
+  if (totalEvs(spread) > MAX_EV_TOTAL) {
+    return `Total EVs cannot exceed ${MAX_EV_TOTAL}`;
+  }
+  return null;
+}
+
+export function validateIvs(spread: StatSpread): string | null {
+  for (const k of STAT_KEYS) {
+    if (!Number.isInteger(spread[k]) || spread[k] < 0 || spread[k] > 31) {
+      return `IVs in ${k} must be between 0 and 31`;
+    }
+  }
+  return null;
+}
+
+export function capEvs(spread: StatSpread): StatSpread {
+  const capped = { ...spread };
+  for (const k of STAT_KEYS) {
+    capped[k] = Math.min(Math.max(Math.round(capped[k]), 0), MAX_EV_PER_STAT);
+  }
+  let total = totalEvs(capped);
+  while (total > MAX_EV_TOTAL) {
+    for (const k of STAT_KEYS) {
+      if (total <= MAX_EV_TOTAL) break;
+      const diff = Math.min(capped[k], total - MAX_EV_TOTAL);
+      capped[k] -= diff;
+      total -= diff;
+    }
+  }
+  return capped;
+}
+
+export function clampStat(value: number, min: number, max: number): number {
+  return Math.min(Math.max(Math.round(value), min), max);
 }
 
 /** Valida que el nombre no esté vacío y tenga ≤ 30 caracteres. */
@@ -58,7 +172,10 @@ export function addMember(
   if (slot === -1) {
     return { ok: false, error: "No hay slots libres" };
   }
-  return { ok: true, members: [...members, { ...member, slot }] };
+  return {
+    ok: true,
+    members: [...members, normalizeMember({ ...member, slot })],
+  };
 }
 
 /** Elimina un miembro del equipo por pokemonId. */

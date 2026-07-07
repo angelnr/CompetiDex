@@ -1,21 +1,31 @@
-/**
- * Capa de persistencia para equipos.
- *
- * Actual: localStorage del navegador.
- * Futuro: Prisma + SQLite/Postgres (cuando haya autenticación).
- *
- * La interfaz `TeamStorage` permite intercambiar implementaciones sin
- * cambiar el hook `useTeams` ni los componentes.
- */
-
-import type { Team } from "@/lib/team";
+import type { Team, TeamMember } from "@/lib/team";
+import { normalizeMember } from "@/lib/team";
 
 const STORAGE_KEY = "competidex:teams";
-const CURRENT_VERSION = 1;
+const CURRENT_VERSION = 2;
 
 interface StoredData {
   version: number;
   teams: Team[];
+}
+
+// ---------------------------------------------------------------------------
+// Migraciones
+// ---------------------------------------------------------------------------
+
+function migrateV1toV2(teams: Team[]): Team[] {
+  return teams.map((team) => ({
+    ...team,
+    members: team.members.map(normalizeMember),
+  }));
+}
+
+function migrateData(data: StoredData): StoredData {
+  let teams = data.teams;
+  if (!data.version || data.version < 2) {
+    teams = migrateV1toV2(teams);
+  }
+  return { version: CURRENT_VERSION, teams };
 }
 
 // ---------------------------------------------------------------------------
@@ -40,7 +50,12 @@ function readData(): StoredData {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { version: CURRENT_VERSION, teams: [] };
-    return JSON.parse(raw) as StoredData;
+    const parsed = JSON.parse(raw) as StoredData;
+    const migrated = migrateData(parsed);
+    if (migrated.version !== parsed.version) {
+      writeData(migrated);
+    }
+    return migrated;
   } catch {
     return { version: CURRENT_VERSION, teams: [] };
   }
