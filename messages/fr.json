@@ -47,13 +47,33 @@
     "compare": "Comparer",
     "calculate": "Calculer",
     "statsTotal": "Total",
+    "mega": {
+      "base": "Base",
+      "badge": "MEGA"
+    },
     "sections": {
       "baseStats": "Stats de base",
       "abilities": "Talents",
       "defensiveEffectiveness": "Efficacités défensives",
       "evolutionChain": "Chaîne d'évolution",
       "encounterInfo": "Infos de rencontre",
-      "moves": "Capacités"
+      "moves": "Capacités",
+      "statsCalculator": "Calculateur de stats"
+    }
+  },
+  "statCalc": {
+    "title": "Calculateur de stats",
+    "level": "Niveau",
+    "nature": "Nature",
+    "reset": "Réinitialiser",
+    "hint": "IV: 0-31 | EV: 0-252 (multiples de 4). Le total des EV ne peut pas dépasser 508.",
+    "stats": {
+      "hp": "PV",
+      "attack": "Attaque",
+      "defense": "Défense",
+      "special-attack": "Atq. Spé.",
+      "special-defense": "Déf. Spé.",
+      "speed": "Vitesse"
     }
   },
   "abilities": {

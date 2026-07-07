@@ -3,7 +3,7 @@
  * Sin JSX ni dependencias — seguro en Server y cliente.
  */
 
-import type { Pokemon } from "@/lib/pokeapi";
+import type { Pokemon, PokemonSpecies } from "@/lib/pokeapi";
 
 /** Extrae el id numérico de una URL de PokeAPI: /api/v2/pokemon/25/ -> 25 */
 export function extractIdFromUrl(url: string): number {
@@ -42,6 +42,130 @@ export function getDefaultSprite(pokemon: Pick<Pokemon, "sprites">): string | nu
 export function getOfficialArtworkById(id: number): string {
   return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`;
 }
+
+/**
+ * URL determinista del sprite pixel-art (front_default) dado un id.
+ * Sin fetch extra — la URL está dentro de remotePatterns de next.config.
+ * Tamaño nativo 96×96, sirve para thumbnails en dropdowns de búsqueda.
+ */
+export function getPixelSpriteById(id: number): string {
+  return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`;
+}
+
+// ---------------------------------------------------------------------------
+// Mega Evolution helpers
+// ---------------------------------------------------------------------------
+
+export interface MegaVarietyInfo {
+  id: number;
+  name: string;
+  /** Nombre "Mega Charizard X" legible. */
+  label: string;
+  /** "mega-x" | "mega-y" | "mega" */
+  suffix: string;
+}
+
+const MEGA_NAME_RE = /^([a-z0-9-]+)-mega(-[xy])?$/;
+
+/** Determina si un nombre de Pokémon corresponde a una forma Mega. */
+export function isMegaName(name: string): boolean {
+  return MEGA_NAME_RE.test(name);
+}
+
+/** Extrae el sufijo mega de un nombre: "charizard-mega-x" → "mega-x" */
+export function getMegaSuffix(name: string): string | null {
+  const m = name.match(/-(mega-?([xy])?)$/);
+  return m?.[1] ?? null;
+}
+
+/** Genera etiqueta legible: "charizard-mega-x" → "Mega Charizard X" */
+export function getMegaFormLabel(name: string): string {
+  const m = name.match(/^(.+)-mega-?([xy])?$/);
+  if (!m) return capitalize(name);
+  const base = capitalize(m[1]!);
+  const variant = m[2] ? ` ${m[2].toUpperCase()}` : "";
+  return `Mega ${base}${variant}`;
+}
+
+/** Filtra las variedades mega de una especie. */
+export function getMegaVarieties(species: PokemonSpecies): MegaVarietyInfo[] {
+  return species.varieties
+    .filter((v) => !v.is_default && isMegaName(v.pokemon.name))
+    .map((v) => {
+      const name = v.pokemon.name;
+      const id = extractIdFromUrl(v.pokemon.url);
+      const suffix = getMegaSuffix(name) ?? "mega";
+      return { id, name, label: getMegaFormLabel(name), suffix };
+    });
+}
+
+/**
+ * Mapa de especies que tienen formas Mega → array de formas mega conocidas.
+ * ID numérico obtenido de PokeAPI (aprox. 10034+ para megas).
+ */
+const MEGA_SPECIES_MAP: Record<string, { name: string; id: number }[]> = {
+  venusaur: [{ name: "venusaur-mega", id: 10033 }],
+  charizard: [
+    { name: "charizard-mega-x", id: 10034 },
+    { name: "charizard-mega-y", id: 10035 },
+  ],
+  blastoise: [{ name: "blastoise-mega", id: 10036 }],
+  beedrill: [{ name: "beedrill-mega", id: 10090 }],
+  pidgeot: [{ name: "pidgeot-mega", id: 10091 }],
+  alakazam: [{ name: "alakazam-mega", id: 10037 }],
+  slowbro: [{ name: "slowbro-mega", id: 10071 }],
+  gengar: [{ name: "gengar-mega", id: 10038 }],
+  kangaskhan: [{ name: "kangaskhan-mega", id: 10039 }],
+  pinsir: [{ name: "pinsir-mega", id: 10040 }],
+  gyarados: [{ name: "gyarados-mega", id: 10041 }],
+  aerodactyl: [{ name: "aerodactyl-mega", id: 10042 }],
+  mewtwo: [
+    { name: "mewtwo-mega-x", id: 10043 },
+    { name: "mewtwo-mega-y", id: 10044 },
+  ],
+  ampharos: [{ name: "ampharos-mega", id: 10045 }],
+  steelix: [{ name: "steelix-mega", id: 10072 }],
+  scizor: [{ name: "scizor-mega", id: 10046 }],
+  heracross: [{ name: "heracross-mega", id: 10047 }],
+  houndoom: [{ name: "houndoom-mega", id: 10048 }],
+  tyranitar: [{ name: "tyranitar-mega", id: 10049 }],
+  sceptile: [{ name: "sceptile-mega", id: 10073 }],
+  blaziken: [{ name: "blaziken-mega", id: 10050 }],
+  swampert: [{ name: "swampert-mega", id: 10074 }],
+  gardevoir: [{ name: "gardevoir-mega", id: 10051 }],
+  sableye: [{ name: "sableye-mega", id: 10075 }],
+  mawile: [{ name: "mawile-mega", id: 10076 }],
+  aggron: [{ name: "aggron-mega", id: 10052 }],
+  medicham: [{ name: "medicham-mega", id: 10077 }],
+  manectric: [{ name: "manectric-mega", id: 10078 }],
+  banette: [{ name: "banette-mega", id: 10079 }],
+  absol: [{ name: "absol-mega", id: 10080 }],
+  garchomp: [{ name: "garchomp-mega", id: 10053 }],
+  lucario: [{ name: "lucario-mega", id: 10054 }],
+  abomasnow: [{ name: "abomasnow-mega", id: 10081 }],
+  gallade: [{ name: "gallade-mega", id: 10082 }],
+  audino: [{ name: "audino-mega", id: 10083 }],
+  diancie: [{ name: "diancie-mega", id: 10084 }],
+  lopunny: [{ name: "lopunny-mega", id: 10085 }],
+  salamence: [{ name: "salamence-mega", id: 10055 }],
+  metagross: [{ name: "metagross-mega", id: 10057 }],
+  latios: [{ name: "latios-mega", id: 10059 }],
+  latias: [{ name: "latias-mega", id: 10058 }],
+  rayquaza: [{ name: "rayquaza-mega", id: 10060 }],
+  sharpedo: [{ name: "sharpedo-mega", id: 10086 }],
+  camerupt: [{ name: "camerupt-mega", id: 10087 }],
+  altaria: [{ name: "altaria-mega", id: 10088 }],
+  glalie: [{ name: "glalie-mega", id: 10089 }],
+};
+
+/** Retorna las formas mega conocidas para una especie dada su nombre. */
+export function getMegaFormSuggestions(speciesName: string): { name: string; id: number }[] {
+  return MEGA_SPECIES_MAP[speciesName] ?? [];
+}
+
+// ---------------------------------------------------------------------------
+// Fuzzy match
+// ---------------------------------------------------------------------------
 
 /**
  * Fuzzy match estilo fzf para la barra de búsqueda.
@@ -186,6 +310,34 @@ export const POKEMON_STATS: Record<string, StatMeta> = {
 /** Suma total de base_stats (para la barra de total). */
 export function computeStatTotal(stats: Pokemon["stats"]): number {
   return stats.reduce((acc, s) => acc + s.base_stat, 0);
+}
+
+export interface ComputeStatInput {
+  base: number;
+  iv: number;
+  ev: number;
+  level: number;
+  isHp: boolean;
+  natureMultiplier: number;
+}
+
+/**
+ * Calcula la estadística real según la fórmula estándar de la saga.
+ * HP:  floor((2*base + iv + floor(ev/4)) * level / 100) + level + 10
+ * Non-HP: (floor((2*base + iv + floor(ev/4)) * level / 100) + 5) * natureMultiplier
+ */
+export function computeStat({
+  base,
+  iv,
+  ev,
+  level,
+  isHp,
+  natureMultiplier,
+}: ComputeStatInput): number {
+  const a = Math.floor(ev / 4);
+  const b = Math.floor(((2 * base + iv + a) * level) / 100);
+  if (isHp) return b + level + 10;
+  return Math.floor((b + 5) * natureMultiplier);
 }
 
 /** Flavor text traducido; fallback a es, luego en. */

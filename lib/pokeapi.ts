@@ -126,6 +126,7 @@ export interface Pokemon {
   stats: PokemonStat[];
   sprites: PokemonSprites;
   moves: PokemonMoveSlot[];
+  forms?: NamedAPIResource[];
   cries?: { latest: string | null; legacy: string | null };
   location_area_encounters?: string | null;
 }
@@ -150,6 +151,11 @@ export interface PokemonSpeciesName {
   language: NamedAPIResource;
 }
 
+export interface PokemonVariety {
+  is_default: boolean;
+  pokemon: NamedAPIResource;
+}
+
 export interface PokemonSpecies {
   id: number;
   name: string;
@@ -169,6 +175,7 @@ export interface PokemonSpecies {
   genera: PokemonSpeciesGenus[];
   flavor_text_entries: PokemonSpeciesFlavorText[];
   habitat: NamedAPIResource | null;
+  varieties: PokemonVariety[];
 }
 
 // ---------------------------------------------------------------------------

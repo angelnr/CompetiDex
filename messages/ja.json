@@ -47,13 +47,33 @@
     "compare": "比較",
     "calculate": "計算",
     "statsTotal": "合計",
+    "mega": {
+      "base": "ベース",
+      "badge": "MEGA"
+    },
     "sections": {
       "baseStats": "基礎ステータス",
       "abilities": "特性",
       "defensiveEffectiveness": "防御効果",
       "evolutionChain": "進化チェーン",
       "encounterInfo": "出現情報",
-      "moves": "技"
+      "moves": "技",
+      "statsCalculator": "ステータス計算機"
+    }
+  },
+  "statCalc": {
+    "title": "ステータス計算機",
+    "level": "レベル",
+    "nature": "性格",
+    "reset": "リセット",
+    "hint": "個体値: 0-31 | 努力値: 0-252 (4の倍数)。努力値の合計は508を超えられません。",
+    "stats": {
+      "hp": "HP",
+      "attack": "攻撃",
+      "defense": "防御",
+      "special-attack": "特攻",
+      "special-defense": "特防",
+      "speed": "素早さ"
     }
   },
   "abilities": {

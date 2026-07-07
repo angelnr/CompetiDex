@@ -13,7 +13,12 @@ import {
   getType,
   PokeAPIError,
 } from "@/lib/pokeapi";
-import { extractIdFromUrl, capitalize, getOfficialArtworkById } from "@/lib/pokemon-utils";
+import {
+  extractIdFromUrl,
+  capitalize,
+  getOfficialArtworkById,
+  getMegaVarieties,
+} from "@/lib/pokemon-utils";
 
 const STATIC_RANGE = { min: 1, max: 151 };
 export const revalidate = 86_400;
@@ -105,6 +110,7 @@ export default async function PokemonPage({ params }: PageProps) {
 
   const prevId = id > 1 ? id - 1 : null;
   const nextId = id + 1;
+  const megaVarieties = getMegaVarieties(species);
 
   return (
     <PokemonDetail
@@ -117,6 +123,7 @@ export default async function PokemonPage({ params }: PageProps) {
       prevId={prevId}
       nextId={nextId}
       locale={params.locale}
+      megaVarieties={megaVarieties}
     />
   );
 }

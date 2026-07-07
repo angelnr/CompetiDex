@@ -1,28 +1,20 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import Image from "next/image";
 import { X, Plus } from "lucide-react";
 
+import { SearchBar } from "@/components/pokemon/SearchBar";
 import { TypeBadge } from "@/components/pokemon/TypeBadge";
 import { TypeCoverageMatrix } from "@/components/pokemon/TypeCoverageMatrix";
 import { StatBar } from "@/components/pokemon/StatBar";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCompareSelection } from "@/hooks/useCompareSelection";
-import { useDebounce } from "@/hooks/useDebounce";
-import { usePokemon, usePokemonInfiniteList } from "@/lib/queries";
+import { usePokemon } from "@/lib/queries";
 import { compareStats, compareTypes, summarizeAdvantage } from "@/lib/compare";
 import { computeDefensiveBreakdownFromTypes } from "@/lib/type-chart";
-import {
-  capitalize,
-  extractIdFromUrl,
-  formatHeight,
-  formatWeight,
-  getOfficialArtwork,
-} from "@/lib/pokemon-utils";
+import { capitalize, formatHeight, formatWeight, getOfficialArtwork } from "@/lib/pokemon-utils";
 import { formatMultiplier } from "@/lib/type-effectiveness";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
@@ -41,7 +33,13 @@ export function PokemonCompare() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div className="flex gap-2">
-          <SlotAdder onAdd={add} disabled={isFull} />
+          <SearchBar
+            showSprite
+            onSelect={(id) => add(id)}
+            disabled={isFull}
+            placeholderKey="forComparePlaceholder"
+            ariaKey="forCompareAria"
+          />
         </div>
         <Button variant="ghost" size="sm" onClick={clear}>
           <X className="mr-1 size-3" />
@@ -77,74 +75,6 @@ export function PokemonCompare() {
   );
 }
 
-function SlotAdder({ onAdd: add, disabled }: { onAdd: (id: number) => void; disabled: boolean }) {
-  const tSearch = useTranslations("search");
-  const [query, setQuery] = useState("");
-  const debounced = useDebounce(query.trim().toLowerCase(), 300);
-  const { data } = usePokemonInfiniteList(1025);
-
-  const suggestions = useMemo(() => {
-    if (!debounced || !data) return [];
-    const all = data.pages.flatMap((p) => p.results);
-    return all
-      .filter((r) => r.name.includes(debounced))
-      .slice(0, 6)
-      .map((r) => ({ name: r.name, url: r.url, id: extractIdFromUrl(r.url) }));
-  }, [debounced, data]);
-
-  const submit = (id: number) => {
-    add(id);
-    setQuery("");
-  };
-
-  return (
-    <div className="relative">
-      <div className="flex items-center gap-2">
-        <Input
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={tSearch("forComparePlaceholder")}
-          className="max-w-xs"
-          aria-label={tSearch("forCompareAria")}
-          disabled={disabled}
-        />
-        {query && (
-          <button
-            type="button"
-            onClick={() => setQuery("")}
-            aria-label={tSearch("clearAria")}
-            className="rounded-sm p-1 text-muted-foreground hover:bg-accent"
-          >
-            <X className="size-4" />
-          </button>
-        )}
-      </div>
-      {suggestions.length > 0 && (
-        <ul
-          role="listbox"
-          className="absolute z-10 mt-1 w-full max-w-xs overflow-hidden rounded-md border bg-popover py-1 shadow-md"
-        >
-          {suggestions.map((s) => (
-            <li key={s.id}>
-              <button
-                type="button"
-                onClick={() => submit(s.id)}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-accent"
-              >
-                <span className="font-mono text-xs text-muted-foreground">
-                  #{String(s.id).padStart(4, "0")}
-                </span>
-                {capitalize(s.name)}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-
 function EmptyState({ onAdd: add }: { onAdd: (id: number) => void }) {
   const t = useTranslations("compare");
   return (
@@ -154,7 +84,12 @@ function EmptyState({ onAdd: add }: { onAdd: (id: number) => void }) {
         <h2 className="text-xl font-semibold">{t("title")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{t("emptyHint")}</p>
       </div>
-      <SlotAdder onAdd={add} disabled={false} />
+      <SearchBar
+        showSprite
+        onSelect={(id) => add(id)}
+        placeholderKey="forComparePlaceholder"
+        ariaKey="forCompareAria"
+      />
     </div>
   );
 }
@@ -165,7 +100,12 @@ function EmptySlot({ onAdd: add }: { onAdd: (id: number) => void }) {
     <Card className="flex items-center justify-center p-8">
       <div className="text-center">
         <p className="mb-3 text-sm text-muted-foreground">{t("emptySlot")}</p>
-        <SlotAdder onAdd={add} disabled={false} />
+        <SearchBar
+          showSprite
+          onSelect={(id) => add(id)}
+          placeholderKey="forComparePlaceholder"
+          ariaKey="forCompareAria"
+        />
       </div>
     </Card>
   );

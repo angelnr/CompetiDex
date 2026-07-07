@@ -1,20 +1,17 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Search } from "lucide-react";
-import Image from "next/image";
+import { ArrowLeft } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 
+import { SearchBar } from "@/components/pokemon/SearchBar";
 import { TeamSlot } from "@/components/pokemon/TeamSlot";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { TypeBadge } from "@/components/pokemon/TypeBadge";
 import { useTeams } from "@/hooks/useTeams";
-import { usePokemon, usePokemonInfiniteList } from "@/lib/queries";
 import { teamTypes } from "@/lib/team";
-import { capitalize, extractIdFromUrl } from "@/lib/pokemon-utils";
 
 export default function TeamEditorPage() {
   const t = useTranslations("teams");
@@ -116,104 +113,15 @@ export default function TeamEditorPage() {
       {team.members.length < 6 && (
         <section className="rounded-lg border bg-card p-6">
           <h2 className="mb-4 text-lg font-semibold">{t("addPokemon")}</h2>
-          <PokemonSearch
+          <SearchBar
+            showSprite
             onSelect={handleAddById}
             excludeIds={team.members.map((m) => m.pokemonId)}
+            placeholderKey="forTeamPlaceholder"
+            ariaKey="forTeamAria"
           />
         </section>
       )}
     </main>
-  );
-}
-
-function PokemonSearch({
-  onSelect,
-  excludeIds,
-}: {
-  onSelect: (id: number) => Promise<void>;
-  excludeIds: number[];
-}) {
-  const tSearch = useTranslations("search");
-  const [query, setQuery] = useState("");
-  const { data } = usePokemonInfiniteList(1025);
-
-  const suggestions = useMemo(() => {
-    if (!query || !data) return [];
-    const q = query.toLowerCase();
-    const all = data.pages.flatMap((p) => p.results);
-    return all
-      .filter((r) => r.name.includes(q) && !excludeIds.includes(extractIdFromUrl(r.url)))
-      .slice(0, 8);
-  }, [query, data, excludeIds]);
-
-  return (
-    <div className="space-y-3">
-      <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={tSearch("forTeamPlaceholder")}
-          className="pl-9"
-          aria-label={tSearch("forTeamAria")}
-        />
-      </div>
-
-      {suggestions.length > 0 && (
-        <ul className="divide-y rounded-md border" role="listbox">
-          {suggestions.map((r) => (
-            <PokemonSearchItem key={r.name} name={r.name} url={r.url} onSelect={onSelect} />
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-
-function PokemonSearchItem({
-  name,
-  url,
-  onSelect,
-}: {
-  name: string;
-  url: string;
-  onSelect: (id: number) => Promise<void>;
-}) {
-  const t = useTranslations("teams");
-  const id = extractIdFromUrl(url);
-  const { data } = usePokemon(id);
-  const [adding, setAdding] = useState(false);
-
-  const handleClick = async () => {
-    setAdding(true);
-    await onSelect(id);
-    setAdding(false);
-  };
-
-  return (
-    <li>
-      <button
-        type="button"
-        disabled={adding}
-        onClick={handleClick}
-        className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-accent"
-      >
-        {data?.sprites.front_default && (
-          <Image
-            src={data.sprites.front_default}
-            alt=""
-            width={32}
-            height={32}
-            className="size-8 object-contain"
-          />
-        )}
-        <span className="font-mono text-xs text-muted-foreground">
-          #{String(id).padStart(4, "0")}
-        </span>
-        {capitalize(name)}
-        {adding && <span className="ml-auto text-xs text-muted-foreground">{t("adding")}</span>}
-      </button>
-    </li>
   );
 }

@@ -1,19 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { X, Search } from "lucide-react";
+import { X } from "lucide-react";
 
+import { SearchBar } from "@/components/pokemon/SearchBar";
 import { TypeBadge } from "@/components/pokemon/TypeBadge";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
-import { useDebounce } from "@/hooks/useDebounce";
-import { usePokemon, usePokemonInfiniteList } from "@/lib/queries";
+import { usePokemon } from "@/lib/queries";
 import { POKEMON_TYPES_ES } from "@/lib/pokemon-types";
-import { capitalize, extractIdFromUrl, getOfficialArtwork } from "@/lib/pokemon-utils";
+import { capitalize, getOfficialArtwork } from "@/lib/pokemon-utils";
 import { formatMultiplier } from "@/lib/type-effectiveness";
 import { getDefensiveMultiplier } from "@/lib/type-chart";
 import type { DefendersInfo } from "@/hooks/useEffectivenessCalculator";
@@ -71,7 +70,12 @@ export function EffectivenessCalculator() {
       {/* Selector de defensores */}
       <section>
         <h2 className="mb-3 text-lg font-semibold">{t("step2")}</h2>
-        <DefenderSearch onAdd={addDefender} />
+        <SearchBar
+          showSprite
+          onSelect={(id, name) => addDefender({ id, name, types: [] })}
+          placeholderKey="forDefenderPlaceholder"
+          ariaKey="forDefenderAria"
+        />
       </section>
 
       {/* Lista de defensores */}
@@ -104,77 +108,6 @@ export function EffectivenessCalculator() {
           <X className="mr-1 size-3" />
           {tc("clear")}
         </Button>
-      )}
-    </div>
-  );
-}
-
-function DefenderSearch({ onAdd }: { onAdd: (info: DefendersInfo) => void }) {
-  const tSearch = useTranslations("search");
-  const [query, setQuery] = useState("");
-  const debounced = useDebounce(query.trim().toLowerCase(), 300);
-  const { data } = usePokemonInfiniteList(1025);
-
-  const suggestions = (() => {
-    if (!debounced || !data) return [];
-    const all = data.pages.flatMap((p) => p.results);
-    return all
-      .filter((r) => r.name.includes(debounced))
-      .slice(0, 6)
-      .map((r) => ({ name: r.name, url: r.url, id: extractIdFromUrl(r.url) }));
-  })();
-
-  const handleSelect = async (id: number, name: string) => {
-    setQuery("");
-    onAdd({ id, name, types: [] });
-  };
-
-  return (
-    <div className="relative max-w-xs">
-      <div className="relative">
-        <Search
-          className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-          aria-hidden
-        />
-        <Input
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={tSearch("forDefenderPlaceholder")}
-          className="pl-9"
-          aria-label={tSearch("forDefenderAria")}
-        />
-        {query && (
-          <button
-            type="button"
-            onClick={() => setQuery("")}
-            aria-label={tSearch("clearAria")}
-            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-sm p-1 text-muted-foreground hover:bg-accent"
-          >
-            <X className="size-4" />
-          </button>
-        )}
-      </div>
-      {suggestions.length > 0 && (
-        <ul
-          role="listbox"
-          className="absolute z-10 mt-1 w-full overflow-hidden rounded-md border bg-popover py-1 shadow-md"
-        >
-          {suggestions.map((s) => (
-            <li key={s.id}>
-              <button
-                type="button"
-                onClick={() => handleSelect(s.id, s.name)}
-                className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-accent"
-              >
-                <span className="font-mono text-xs text-muted-foreground">
-                  #{String(s.id).padStart(4, "0")}
-                </span>
-                {capitalize(s.name)}
-              </button>
-            </li>
-          ))}
-        </ul>
       )}
     </div>
   );

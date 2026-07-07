@@ -2,16 +2,46 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
 import { usePokemonInfiniteList } from "@/lib/queries";
-import { capitalize, extractIdFromUrl, fuzzyMatch } from "@/lib/pokemon-utils";
+import {
+  capitalize,
+  extractIdFromUrl,
+  fuzzyMatch,
+  getMegaFormLabel,
+  getMegaFormSuggestions,
+  getPixelSpriteById,
+} from "@/lib/pokemon-utils";
+
+export interface SearchBarProps {
+  /** Muestra el sprite pixel-art junto a cada sugerencia. */
+  showSprite?: boolean;
+  /** Callback alternativo: en lugar de navegar a /pokemon/{id}, llama a esta función. */
+  onSelect?: (id: number, name: string) => void | Promise<void>;
+  /** IDs a excluir de las sugerencias (para equipos). */
+  excludeIds?: number[];
+  /** Clave i18n personalizada para el placeholder (namespace "search"). */
+  placeholderKey?: string;
+  /** Clave i18n personalizada para el aria-label (namespace "search"). */
+  ariaKey?: string;
+  /** Deshabilita el input. */
+  disabled?: boolean;
+}
 
 /**
- * Buscador con debounce y fuzzy finder.
+ * Buscador universal con debounce y fuzzy finder.
+ *
+ * Props opcionales:
+ * - `showSprite`: pinta el thumbnail pixel-art en cada sugerencia.
+ * - `onSelect`: cuando se selecciona una sugerencia, llama a esta función
+ *   en lugar de navegar a /pokemon/{id}.
+ * - `excludeIds`: array de ids a filtrar de las sugerencias.
+ * - `placeholderKey` / `ariaKey`: sobrescriben las claves i18n por defecto.
  *
  * Estrategia: trae toda la lista de nombres (PokeAPI permite hasta 1025+ en
  * una sola petición; cacheada en Redis 1h) y filtra client-side con fuzzy
@@ -20,7 +50,14 @@ import { capitalize, extractIdFromUrl, fuzzyMatch } from "@/lib/pokemon-utils";
  *
  * Navegación por teclado: flechas ↑/↓ + Enter + Escape.
  */
-export function SearchBar() {
+export function SearchBar({
+  showSprite = false,
+  onSelect,
+  excludeIds,
+  placeholderKey = "placeholder",
+  ariaKey = "aria",
+  disabled = false,
+}: SearchBarProps = {}) {
   const t = useTranslations("search");
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -40,25 +77,40 @@ export function SearchBar() {
   const suggestions = useMemo(() => {
     if (!debounced || !data) return [];
     const all = data.pages.flatMap((p) => p.results);
-    return all
+    const matched = all
       .map((r) => {
         const name = r.name;
         const result = fuzzyMatch(debounced, name);
         if (!result) return null;
         return {
           name,
-          url: r.url,
           id: extractIdFromUrl(r.url),
           score: result.score,
+          isMega: false,
         };
       })
       .filter((r): r is NonNullable<typeof r> => r !== null)
+      .filter((r) => !excludeIds?.includes(r.id))
       .sort((a, b) => a.score - b.score)
       .slice(0, 8);
-  }, [debounced, data]);
+    // Añadir formas mega de especies coincidentes
+    const megaForms = matched.flatMap((m) =>
+      getMegaFormSuggestions(m.name).map((mega) => ({
+        name: mega.name,
+        id: mega.id,
+        score: -1, // aparecen antes que los match fuzzy
+        isMega: true as const,
+      })),
+    );
+    return [...megaForms, ...matched].slice(0, 12);
+  }, [debounced, data, excludeIds]);
 
-  const submit = (id: number) => {
-    router.push(`/pokemon/${id}`);
+  const submit = (id: number, name: string) => {
+    if (onSelect) {
+      onSelect(id, name);
+    } else {
+      router.push(`/pokemon/${id}`);
+    }
     setQuery("");
     inputRef.current?.blur();
   };
@@ -77,9 +129,10 @@ export function SearchBar() {
         break;
       case "Enter": {
         const idx = activeIndex >= 0 ? activeIndex : 0;
-        if (suggestions[idx]) {
+        const suggestion = suggestions[idx];
+        if (suggestion) {
           e.preventDefault();
-          submit(suggestions[idx].id);
+          submit(suggestion.id, suggestion.name);
         }
         break;
       }
@@ -104,9 +157,9 @@ export function SearchBar() {
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           onBlur={() => setActiveIndex(-1)}
-          placeholder={t("placeholder")}
+          placeholder={t(placeholderKey)}
           className="pl-9 pr-8"
-          aria-label={t("aria")}
+          aria-label={t(ariaKey)}
           aria-expanded={suggestions.length > 0}
           aria-controls="search-suggestions"
           aria-activedescendant={
@@ -114,6 +167,7 @@ export function SearchBar() {
           }
           role="combobox"
           autoComplete="off"
+          disabled={disabled}
         />
         {query && (
           <button
@@ -136,31 +190,49 @@ export function SearchBar() {
           role="listbox"
           className="absolute z-10 mt-1 w-full overflow-hidden rounded-md border bg-popover py-1 shadow-md"
         >
-          {suggestions.map((s, i) => (
-            <li
-              key={s.name}
-              id={`suggestion-${s.id}`}
-              role="option"
-              aria-selected={i === activeIndex}
-            >
-              <button
-                type="button"
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  submit(s.id);
-                }}
-                onMouseEnter={() => setActiveIndex(i)}
-                className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm ${
-                  i === activeIndex ? "bg-accent text-accent-foreground" : ""
-                } hover:bg-accent hover:text-accent-foreground`}
+          {suggestions.map((s, i) => {
+            const displayName = s.isMega ? getMegaFormLabel(s.name) : capitalize(s.name);
+            return (
+              <li
+                key={s.name}
+                id={`suggestion-${s.id}`}
+                role="option"
+                aria-selected={i === activeIndex}
               >
-                <span className="font-mono text-xs text-muted-foreground">
-                  #{String(s.id).padStart(4, "0")}
-                </span>
-                {capitalize(s.name)}
-              </button>
-            </li>
-          ))}
+                <button
+                  type="button"
+                  onPointerDown={(e) => {
+                    e.preventDefault();
+                    submit(s.id, s.name);
+                  }}
+                  onMouseEnter={() => setActiveIndex(i)}
+                  className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm ${
+                    i === activeIndex ? "bg-accent text-accent-foreground" : ""
+                  } hover:bg-accent hover:text-accent-foreground`}
+                >
+                  {showSprite && (
+                    <Image
+                      src={getPixelSpriteById(s.id)}
+                      alt=""
+                      width={32}
+                      height={32}
+                      className="size-8 shrink-0 object-contain"
+                    />
+                  )}
+                  <span className="font-mono text-xs text-muted-foreground">
+                    {s.isMega ? "" : `#${String(s.id).padStart(4, "0")}`}
+                  </span>
+                  {s.isMega ? (
+                    <span className="text-xs font-medium text-purple-600 dark:text-purple-400">
+                      {displayName}
+                    </span>
+                  ) : (
+                    displayName
+                  )}
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

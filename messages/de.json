@@ -47,13 +47,33 @@
     "compare": "Vergleichen",
     "calculate": "Berechnen",
     "statsTotal": "Gesamt",
+    "mega": {
+      "base": "Basis",
+      "badge": "MEGA"
+    },
     "sections": {
       "baseStats": "Basisstatuswerte",
       "abilities": "Fähigkeiten",
       "defensiveEffectiveness": "Defensive Effektivität",
       "evolutionChain": "Entwicklungsreihe",
       "encounterInfo": "Begegnungsinfo",
-      "moves": "Attacken"
+      "moves": "Attacken",
+      "statsCalculator": "Statusrechner"
+    }
+  },
+  "statCalc": {
+    "title": "Statusrechner",
+    "level": "Level",
+    "nature": "Wesen",
+    "reset": "Zurücksetzen",
+    "hint": "IS: 0-31 | FP: 0-252 (Vielfache von 4). FP-Gesamtsumme darf 508 nicht überschreiten.",
+    "stats": {
+      "hp": "KP",
+      "attack": "Angriff",
+      "defense": "Verteidigung",
+      "special-attack": "Spezial-Angriff",
+      "special-defense": "Spezial-Verteidigung",
+      "speed": "Initiative"
     }
   },
   "abilities": {

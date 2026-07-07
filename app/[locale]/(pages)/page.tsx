@@ -21,7 +21,7 @@ export default async function HomePage({ params: { locale } }: HomePageProps) {
       </header>
 
       <Suspense fallback={null}>
-        <SearchBar />
+        <SearchBar showSprite />
       </Suspense>
 
       <section className="mt-16 flex flex-col items-center gap-4 text-center text-muted-foreground">
