@@ -1,8 +1,15 @@
 import { Suspense } from "react";
 import { Search, Sparkles } from "lucide-react";
+import { setRequestLocale } from "next-intl/server";
 import { SearchBar } from "@/components/pokemon/SearchBar";
 
-export default function HomePage() {
+interface HomePageProps {
+  params: { locale: string };
+}
+
+export default async function HomePage({ params: { locale } }: HomePageProps) {
+  setRequestLocale(locale);
+
   return (
     <main className="container mx-auto flex flex-col items-center py-20">
       <header className="mb-12 space-y-4 text-center">

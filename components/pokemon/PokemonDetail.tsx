@@ -42,6 +42,7 @@ export interface PokemonDetailProps {
   encounters: LocationAreaEncounter[] | null;
   prevId: number | null;
   nextId: number | null;
+  locale: string;
 }
 
 /**
@@ -59,6 +60,7 @@ export function PokemonDetail({
   encounters,
   prevId,
   nextId,
+  locale: _locale,
 }: PokemonDetailProps) {
   const displayName = getDisplayName(species.names, pokemon.name);
   const flavorText = getFlavorText(species.flavor_text_entries);

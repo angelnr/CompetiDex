@@ -6,17 +6,21 @@ import { capitalize, extractIdFromUrl } from "@/lib/pokemon-utils";
 
 export interface AbilityDetailProps {
   ability: Ability;
+  locale?: string;
 }
 
-export function AbilityDetail({ ability }: AbilityDetailProps) {
-  const nameEs = ability.names.find((n) => n.language.name === "es")?.name ?? null;
+export function AbilityDetail({ ability, locale = "es" }: AbilityDetailProps) {
+  const lang = locale;
+  const nameEs =
+    ability.names.find((n) => n.language.name === lang)?.name ??
+    ability.names.find((n) => n.language.name === "es")?.name ??
+    ability.names.find((n) => n.language.name === "en")?.name ??
+    ability.name;
   const nameEn = ability.names.find((n) => n.language.name === "en")?.name ?? ability.name;
 
-  const descEs =
-    ability.flavor_text_entries
-      .find((e) => e.language.name === "es")
-      ?.flavor_text?.replace(/\f|\n/g, " ")
-      .trim() ?? null;
+  const flavorEs = ability.flavor_text_entries.find((e) => e.language.name === lang);
+  const flavorEn = ability.flavor_text_entries.find((e) => e.language.name === "es");
+  const descEs = (flavorEs ?? flavorEn)?.flavor_text?.replace(/\f|\n/g, " ").trim() ?? null;
 
   const pokemonList = ability.pokemon
     .filter((p) => {
