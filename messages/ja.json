@@ -51,6 +51,20 @@
       "base": "ベース",
       "badge": "MEGA"
     },
+    "regional": {
+      "alola": "アローラのすがた",
+      "galar": "ガラルのすがた",
+      "hisui": "ヒスイのすがた",
+      "paldea": "パルデアのすがた",
+      "withBreed": "{name}（{breed}）",
+      "breeds": {
+        "combat": "コンバット種",
+        "blaze": "ブレイズ種",
+        "aqua": "アクア種",
+        "standard": "ノーマルモード",
+        "zen": "ダルマモード"
+      }
+    },
     "sections": {
       "baseStats": "基礎ステータス",
       "abilities": "特性",

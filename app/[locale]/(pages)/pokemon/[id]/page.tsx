@@ -40,7 +40,8 @@ export async function generateStaticParams(): Promise<{ locale: string; id: stri
 async function loadPokemonData(id: number) {
   try {
     const pokemon = await getPokemon(id);
-    const species = await getPokemonSpecies(id);
+    const speciesId = extractIdFromUrl(pokemon.species.url);
+    const species = await getPokemonSpecies(speciesId);
     const evolutionChainId = extractIdFromUrl(species.evolution_chain.url);
     const evolutionChain = await getEvolutionChain(evolutionChainId);
     const typeData = await Promise.all(pokemon.types.map((t) => getType(t.type.name)));
@@ -63,7 +64,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   try {
     const pokemon = await getPokemon(id);
-    const species = await getPokemonSpecies(id);
+    const speciesId = extractIdFromUrl(pokemon.species.url);
+    const species = await getPokemonSpecies(speciesId);
     const lang = params.locale;
     const name =
       species.names.find((n) => n.language.name === lang)?.name ??

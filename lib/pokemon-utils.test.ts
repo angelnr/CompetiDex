@@ -15,6 +15,9 @@ import {
   getMegaSuffix,
   getMegaFormLabel,
   getMegaVarieties,
+  isRegionalName,
+  parseRegionalForm,
+  getRegionalFormSuggestions,
   type MegaVarietyInfo,
 } from "@/lib/pokemon-utils";
 import type { PokemonSpecies } from "@/lib/pokeapi";
@@ -300,5 +303,86 @@ describe("getMegaVarieties", () => {
       ],
     };
     expect(getMegaVarieties(noMega)).toHaveLength(0);
+  });
+});
+
+describe("isRegionalName", () => {
+  it("true para formas regionales", () => {
+    expect(isRegionalName("ninetales-alola")).toBe(true);
+    expect(isRegionalName("samurott-hisui")).toBe(true);
+    expect(isRegionalName("darmanitan-galar-standard")).toBe(true);
+    expect(isRegionalName("tauros-paldea-combat-breed")).toBe(true);
+  });
+
+  it("false para no regionales", () => {
+    expect(isRegionalName("charizard")).toBe(false);
+    expect(isRegionalName("charizard-mega-x")).toBe(false);
+    expect(isRegionalName("venusaur-mega")).toBe(false);
+    expect(isRegionalName("pikachu")).toBe(false);
+  });
+});
+
+describe("parseRegionalForm", () => {
+  it("parsea alola simple", () => {
+    const r = parseRegionalForm("ninetales-alola", 10104);
+    expect(r).not.toBeNull();
+    expect(r!.id).toBe(10104);
+    expect(r!.baseSpecies).toBe("ninetales");
+    expect(r!.region).toBe("alola");
+    expect(r!.breed).toBeUndefined();
+  });
+
+  it("parsea base con guion interno (mr-mime-galar)", () => {
+    expect(parseRegionalForm("mr-mime-galar", 10168)).toEqual({
+      id: 10168,
+      name: "mr-mime-galar",
+      baseSpecies: "mr-mime",
+      region: "galar",
+      breed: undefined,
+    });
+  });
+
+  it("parsea con breed subfijo (tauros-paldea-combat-breed)", () => {
+    const r = parseRegionalForm("tauros-paldea-combat-breed", 10250);
+    expect(r).not.toBeNull();
+    expect(r!.baseSpecies).toBe("tauros");
+    expect(r!.region).toBe("paldea");
+    expect(r!.breed).toBe("combat-breed");
+  });
+
+  it("parsea darmanitan-galar-zen", () => {
+    const r = parseRegionalForm("darmanitan-galar-zen", 10178);
+    expect(r).not.toBeNull();
+    expect(r!.baseSpecies).toBe("darmanitan");
+    expect(r!.region).toBe("galar");
+    expect(r!.breed).toBe("zen");
+  });
+
+  it("retorna null para no regional", () => {
+    expect(parseRegionalForm("charizard", 6)).toBeNull();
+    expect(parseRegionalForm("charizard-mega-x", 10034)).toBeNull();
+  });
+});
+
+describe("getRegionalFormSuggestions", () => {
+  it("vacio para especie sin forma regional", () => {
+    expect(getRegionalFormSuggestions("pikachu")).toEqual([]);
+  });
+
+  it("una forma para ninetales", () => {
+    expect(getRegionalFormSuggestions("ninetales")).toEqual([
+      { name: "ninetales-alola", id: 10104 },
+    ]);
+  });
+
+  it("multiple formas para meowth (alola + galar)", () => {
+    const forms = getRegionalFormSuggestions("meowth");
+    expect(forms).toHaveLength(2);
+    expect(forms.map((f) => f.name)).toContain("meowth-alola");
+    expect(forms.map((f) => f.name)).toContain("meowth-galar");
+  });
+
+  it("tres razas para tauros paldea", () => {
+    expect(getRegionalFormSuggestions("tauros")).toHaveLength(3);
   });
 });

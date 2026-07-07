@@ -51,6 +51,20 @@
       "base": "Base",
       "badge": "MEGA"
     },
+    "regional": {
+      "alola": "{base} d'Alola",
+      "galar": "{base} de Galar",
+      "hisui": "{base} de Hisui",
+      "paldea": "{base} de Paldea",
+      "withBreed": "{name} ({breed})",
+      "breeds": {
+        "combat": "Race Combat",
+        "blaze": "Race Flammes",
+        "aqua": "Race Eau",
+        "standard": "Mode Standard",
+        "zen": "Mode Transe"
+      }
+    },
     "sections": {
       "baseStats": "Stats de base",
       "abilities": "Talents",

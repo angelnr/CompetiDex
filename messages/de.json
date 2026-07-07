@@ -51,6 +51,20 @@
       "base": "Basis",
       "badge": "MEGA"
     },
+    "regional": {
+      "alola": "Alola-{base}",
+      "galar": "Galar-{base}",
+      "hisui": "Hisui-{base}",
+      "paldea": "Paldea-{base}",
+      "withBreed": "{name} ({breed})",
+      "breeds": {
+        "combat": "Kampfrasse",
+        "blaze": "Flammenrasse",
+        "aqua": "Wasserrasse",
+        "standard": "Standard-Modus",
+        "zen": "Zen-Modus"
+      }
+    },
     "sections": {
       "baseStats": "Basisstatuswerte",
       "abilities": "Fähigkeiten",

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "@/i18n/routing";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -16,6 +16,8 @@ import {
   getMegaFormLabel,
   getMegaFormSuggestions,
   getPixelSpriteById,
+  getRegionalFormSuggestions,
+  parseRegionalForm,
 } from "@/lib/pokemon-utils";
 
 export interface SearchBarProps {
@@ -59,6 +61,8 @@ export function SearchBar({
   disabled = false,
 }: SearchBarProps = {}) {
   const t = useTranslations("search");
+  const tReg = useTranslations("pokemon.regional");
+  const locale = useLocale();
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -86,24 +90,49 @@ export function SearchBar({
           name,
           id: extractIdFromUrl(r.url),
           score: result.score,
-          isMega: false,
+          kind: "default" as const,
         };
       })
       .filter((r): r is NonNullable<typeof r> => r !== null)
       .filter((r) => !excludeIds?.includes(r.id))
       .sort((a, b) => a.score - b.score)
       .slice(0, 8);
-    // Añadir formas mega de especies coincidentes
-    const megaForms = matched.flatMap((m) =>
-      getMegaFormSuggestions(m.name).map((mega) => ({
-        name: mega.name,
-        id: mega.id,
+    // Añadir formas alternativas de especies coincidentes (mega + regional)
+    const altForms = matched.flatMap((m) => {
+      const mega = getMegaFormSuggestions(m.name).map((mf) => ({
+        name: mf.name,
+        id: mf.id,
         score: -1, // aparecen antes que los match fuzzy
-        isMega: true as const,
-      })),
-    );
-    return [...megaForms, ...matched].slice(0, 12);
+        kind: "mega" as const,
+      }));
+      const regional = getRegionalFormSuggestions(m.name).map((rf) => ({
+        name: rf.name,
+        id: rf.id,
+        score: -1,
+        kind: "regional" as const,
+      }));
+      return [...mega, ...regional];
+    });
+    return [...altForms, ...matched].slice(0, 12);
   }, [debounced, data, excludeIds]);
+
+  const formatRegionalLabel = (name: string): string => {
+    const info = parseRegionalForm(name, 0);
+    if (!info) return capitalize(name);
+    const base = capitalize(info.baseSpecies);
+    if (locale === "ja") {
+      return `${base} ${tReg(info.region)}`;
+    }
+    const regionLabel = tReg(info.region, { base });
+    const breedKey = info.breed?.replace(/-breed$/, "");
+    if (breedKey) {
+      return tReg("withBreed", {
+        name: regionLabel,
+        breed: tReg(`breeds.${breedKey}`),
+      });
+    }
+    return regionLabel;
+  };
 
   const submit = (id: number, name: string) => {
     if (onSelect) {
@@ -191,7 +220,12 @@ export function SearchBar({
           className="absolute z-10 mt-1 w-full overflow-hidden rounded-md border bg-popover py-1 shadow-md"
         >
           {suggestions.map((s, i) => {
-            const displayName = s.isMega ? getMegaFormLabel(s.name) : capitalize(s.name);
+            const displayName =
+              s.kind === "mega"
+                ? getMegaFormLabel(s.name)
+                : s.kind === "regional"
+                  ? formatRegionalLabel(s.name)
+                  : capitalize(s.name);
             return (
               <li
                 key={s.name}
@@ -201,10 +235,7 @@ export function SearchBar({
               >
                 <button
                   type="button"
-                  onPointerDown={(e) => {
-                    e.preventDefault();
-                    submit(s.id, s.name);
-                  }}
+                  onClick={() => submit(s.id, s.name)}
                   onMouseEnter={() => setActiveIndex(i)}
                   className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm ${
                     i === activeIndex ? "bg-accent text-accent-foreground" : ""
@@ -220,10 +251,14 @@ export function SearchBar({
                     />
                   )}
                   <span className="font-mono text-xs text-muted-foreground">
-                    {s.isMega ? "" : `#${String(s.id).padStart(4, "0")}`}
+                    {s.kind === "default" ? `#${String(s.id).padStart(4, "0")}` : ""}
                   </span>
-                  {s.isMega ? (
+                  {s.kind === "mega" ? (
                     <span className="text-xs font-medium text-purple-600 dark:text-purple-400">
+                      {displayName}
+                    </span>
+                  ) : s.kind === "regional" ? (
+                    <span className="text-xs font-medium text-sky-600 dark:text-sky-400">
                       {displayName}
                     </span>
                   ) : (
