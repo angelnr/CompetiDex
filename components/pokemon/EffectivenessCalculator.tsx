@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { X, Search } from "lucide-react";
 
 import { TypeBadge } from "@/components/pokemon/TypeBadge";
@@ -31,6 +32,18 @@ export function EffectivenessCalculator() {
     clear,
     result,
   } = useEffectivenessCalculator();
+
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const defenderParam = searchParams.get("defender");
+    if (defenderParam) {
+      const id = Number(defenderParam);
+      if (Number.isFinite(id) && id > 0) {
+        addDefender({ id, name: "", types: [] });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="space-y-8">

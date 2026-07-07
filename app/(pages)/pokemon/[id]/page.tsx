@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 
 import { PokemonDetail } from "@/components/pokemon/PokemonDetail";
 import {
+  getAbility,
+  getEncounters,
   getEvolutionChain,
   getPokemon,
   getPokemonSpecies,
@@ -42,7 +44,11 @@ async function loadPokemonData(id: number) {
     const evolutionChainId = extractIdFromUrl(species.evolution_chain.url);
     const evolutionChain = await getEvolutionChain(evolutionChainId);
     const typeData = await Promise.all(pokemon.types.map((t) => getType(t.type.name)));
-    return { pokemon, species, evolutionChain, typeData };
+    const abilityData = await Promise.all(
+      pokemon.abilities.map((a) => getAbility(extractIdFromUrl(a.ability.url)).catch(() => null)),
+    );
+    const encounters = await getEncounters(id).catch(() => null);
+    return { pokemon, species, evolutionChain, typeData, abilityData, encounters };
   } catch (err) {
     if (err instanceof PokeAPIError && err.status === 404) {
       return null;
@@ -94,7 +100,7 @@ export default async function PokemonPage({ params }: PageProps) {
   const data = await loadPokemonData(id);
   if (!data) notFound();
 
-  const { pokemon, species, evolutionChain, typeData } = data;
+  const { pokemon, species, evolutionChain, typeData, abilityData, encounters } = data;
 
   // Navegación prev/next.
   // PokeAPI lista Pokémon por orden de Pokédex nacional, ids secuenciales 1..N.
@@ -109,6 +115,8 @@ export default async function PokemonPage({ params }: PageProps) {
       species={species}
       evolutionChain={evolutionChain}
       typeData={typeData}
+      abilityData={abilityData}
+      encounters={encounters}
       prevId={prevId}
       nextId={nextId}
     />

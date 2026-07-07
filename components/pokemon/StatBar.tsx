@@ -10,8 +10,6 @@ export interface StatBarProps {
   statName: string;
   /** Valor base (0-255). */
   value: number;
-  /** Ancho máximo de la barra en píxeles (default 200). */
-  maxWidth?: number;
 }
 
 const STAT_MAX = 255;
@@ -20,8 +18,9 @@ const STAT_MAX = 255;
  * Barra de stat animada. Se "rellena" al montarse con una transición CSS
  * controlada por el observer de visibilidad para que la animación sea percibida
  * en scroll. Color por rango de valor (verde/amarillo/naranja/rojo).
+ * El máximo de la barra es 255 (el stat real máximo en los juegos).
  */
-export function StatBar({ statName, value, maxWidth = 200 }: StatBarProps) {
+export function StatBar({ statName, value }: StatBarProps) {
   const meta = POKEMON_STATS[statName];
   const label = meta?.label ?? statName;
   const color = (meta?.colorFor ?? (() => "#94a3b8"))(value);
@@ -66,7 +65,6 @@ export function StatBar({ statName, value, maxWidth = 200 }: StatBarProps) {
           className={cn("h-full rounded-full transition-[width] duration-700 ease-out")}
           style={{
             width: visible ? `${widthPct}%` : "0%",
-            maxWidth,
             backgroundColor: color,
           }}
         />

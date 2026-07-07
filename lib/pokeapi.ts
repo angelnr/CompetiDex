@@ -26,6 +26,9 @@ const CACHE_TTL = {
   evolution: 86_400,
   types: 604_800, // 7d
   list: 86_400,
+  ability: 86_400,
+  move: 604_800, // 7d
+  encounters: 86_400,
 } as const;
 
 const FETCH_TIMEOUT_MS = 8_000;
@@ -124,6 +127,7 @@ export interface Pokemon {
   sprites: PokemonSprites;
   moves: PokemonMoveSlot[];
   cries?: { latest: string | null; legacy: string | null };
+  location_area_encounters?: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -225,6 +229,110 @@ export interface Type {
   move_damage_class: NamedAPIResource | null;
   names: { name: string; language: NamedAPIResource }[];
   generation: NamedAPIResource;
+}
+
+// ---------------------------------------------------------------------------
+// Ability
+// ---------------------------------------------------------------------------
+
+export interface AbilityFlavorText {
+  flavor_text: string;
+  language: NamedAPIResource;
+  version_group: NamedAPIResource;
+}
+
+export interface AbilityEffectEntry {
+  effect: string;
+  short_effect: string;
+  language: NamedAPIResource;
+}
+
+export interface AbilityPokemonSlot {
+  is_hidden: boolean;
+  slot: number;
+  pokemon: NamedAPIResource;
+}
+
+export interface Ability {
+  id: number;
+  name: string;
+  names: { name: string; language: NamedAPIResource }[];
+  effect_entries: AbilityEffectEntry[];
+  flavor_text_entries: AbilityFlavorText[];
+  pokemon: AbilityPokemonSlot[];
+  generation: NamedAPIResource;
+}
+
+// ---------------------------------------------------------------------------
+// Move
+// ---------------------------------------------------------------------------
+
+export interface MoveFlavorText {
+  flavor_text: string;
+  language: NamedAPIResource;
+  version_group: NamedAPIResource;
+}
+
+export interface MoveEffectEntry {
+  effect: string;
+  short_effect: string;
+  language: NamedAPIResource;
+}
+
+export interface MoveMeta {
+  ailment: NamedAPIResource;
+  ailment_chance: number;
+  category: NamedAPIResource;
+  crit_rate: number;
+  drain: number;
+  flinch_chance: number;
+  healing: number;
+  max_hits: number | null;
+  max_turns: number | null;
+  min_hits: number | null;
+  min_turns: number | null;
+  stat_chance: number;
+}
+
+export interface Move {
+  id: number;
+  name: string;
+  names: { name: string; language: NamedAPIResource }[];
+  flavor_text_entries: MoveFlavorText[];
+  effect_entries: MoveEffectEntry[];
+  effect_chance: number | null;
+  power: number | null;
+  pp: number | null;
+  accuracy: number | null;
+  priority: number;
+  type: NamedAPIResource;
+  damage_class: NamedAPIResource;
+  meta: MoveMeta | null;
+  target: NamedAPIResource;
+  generation: NamedAPIResource;
+}
+
+// ---------------------------------------------------------------------------
+// Location Area Encounter
+// ---------------------------------------------------------------------------
+
+export interface EncounterDetail {
+  chance: number;
+  condition_values: NamedAPIResource[];
+  max_level: number;
+  method: NamedAPIResource;
+  min_level: number;
+}
+
+export interface VersionEncounterDetail {
+  encounter_details: EncounterDetail[];
+  max_chance: number;
+  version: NamedAPIResource;
+}
+
+export interface LocationAreaEncounter {
+  location_area: NamedAPIResource;
+  version_details: VersionEncounterDetail[];
 }
 
 // ---------------------------------------------------------------------------
@@ -333,6 +441,24 @@ export function getType(idOrName: number | string): Promise<Type> {
 /** Lista paginada de tipos: /type?offset=0&limit=20 */
 export function getTypeList(opts: ListOptions = { limit: 20 }): Promise<NamedAPIResourceList> {
   return pokeapiFetch<NamedAPIResourceList>(withQuery("/type", opts), CACHE_TTL.types);
+}
+
+/** Detalle de una habilidad: /ability/{idOrName} */
+export function getAbility(idOrName: number | string): Promise<Ability> {
+  const id = typeof idOrName === "number" ? String(idOrName) : idOrName;
+  return pokeapiFetch<Ability>(`/ability/${id}`, CACHE_TTL.ability);
+}
+
+/** Detalle de un movimiento: /move/{idOrName} */
+export function getMove(idOrName: number | string): Promise<Move> {
+  const id = typeof idOrName === "number" ? String(idOrName) : idOrName;
+  return pokeapiFetch<Move>(`/move/${id}`, CACHE_TTL.move);
+}
+
+/** Encuentros de un Pokémon por id: /pokemon/{id}/encounters */
+export function getEncounters(idOrName: number | string): Promise<LocationAreaEncounter[]> {
+  const id = typeof idOrName === "number" ? String(idOrName) : idOrName;
+  return pokeapiFetch<LocationAreaEncounter[]>(`/pokemon/${id}/encounters`, CACHE_TTL.encounters);
 }
 
 export { PokeAPIError };

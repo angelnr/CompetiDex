@@ -257,6 +257,10 @@ pnpm install                # dependencias host (para IDE/tests locales)
 docker compose up --build   # app en :3100 + Redis en :6379
 ```
 
+### 9.1. Reiniciar el servidor de desarrollo
+
+Cuando quieras reiniciar el servidor, usa `fuser -k 3100/tcp` en lugar de `kill` normal, que a veces no mata el proceso completo de Next.js.
+
 - El `Dockerfile` es multi-stage: `deps` → `builder` → `runner`.
 - Imagen final basada en `node:20-alpine`, usuario non-root, standalone output.
 - Redis persiste en volumen `docker-data/redis` (ignorado por git).

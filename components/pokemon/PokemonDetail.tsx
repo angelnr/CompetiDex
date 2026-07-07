@@ -2,7 +2,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 
+import { AbilitiesSection, type AbilityEntry } from "@/components/pokemon/AbilitiesSection";
+import { EncounterInfo } from "@/components/pokemon/EncounterInfo";
 import { EvolutionChain } from "@/components/pokemon/EvolutionChain";
+import { MovesSection } from "@/components/pokemon/MovesSection";
+import { SearchBar } from "@/components/pokemon/SearchBar";
 import { SpriteViewer } from "@/components/pokemon/SpriteViewer";
 import { StatBar } from "@/components/pokemon/StatBar";
 import { TypeBadge } from "@/components/pokemon/TypeBadge";
@@ -13,6 +17,8 @@ import type {
   PokemonSpecies,
   EvolutionChain as EvolutionChainType,
   Type,
+  LocationAreaEncounter,
+  Ability,
 } from "@/lib/pokeapi";
 import {
   capitalize,
@@ -32,6 +38,8 @@ export interface PokemonDetailProps {
   species: PokemonSpecies;
   evolutionChain: EvolutionChainType;
   typeData: Type[];
+  abilityData: (Ability | null)[];
+  encounters: LocationAreaEncounter[] | null;
   prevId: number | null;
   nextId: number | null;
 }
@@ -39,14 +47,16 @@ export interface PokemonDetailProps {
 /**
  * Ficha detallada del Pokémon (server component).
  * Orquesta todas las secciones: header con sprite, tipos, stats, habilidades,
- * физических info, flavor text, cadena evolutiva y efectividades.
- * La navegación prev/next son Links Oven a fichas vecinas.
+ * físicas info, flavor text, cadena evolutiva, efectividades, encuentros y movimientos.
+ * La navegación prev/next son Links a fichas vecinas.
  */
 export function PokemonDetail({
   pokemon,
   species,
   evolutionChain,
   typeData,
+  abilityData,
+  encounters,
   prevId,
   nextId,
 }: PokemonDetailProps) {
@@ -68,6 +78,11 @@ export function PokemonDetail({
 
   return (
     <article className="container mx-auto max-w-5xl py-8">
+      {/* Buscador */}
+      <div className="mb-6">
+        <SearchBar />
+      </div>
+
       {/* Navegación prev/next */}
       <nav className="mb-6 flex items-center justify-between" aria-label="Navegación entre Pokémon">
         {prevId !== null ? (
@@ -175,14 +190,12 @@ export function PokemonDetail({
 
       {/* Habilidades */}
       <Section title="Habilidades">
-        <div className="flex flex-wrap gap-3">
-          {pokemon.abilities.map((a) => (
-            <div key={a.ability.name} className="flex flex-col">
-              <span className="font-medium">{capitalize(a.ability.name.replace(/-/g, " "))}</span>
-              {a.is_hidden && <span className="text-xs text-muted-foreground">(oculta)</span>}
-            </div>
-          ))}
-        </div>
+        <AbilitiesSection
+          abilities={abilityData.map((data, i) => ({
+            slot: pokemon.abilities[i]!,
+            data,
+          }))}
+        />
       </Section>
 
       {/* Efectividades */}
@@ -194,6 +207,18 @@ export function PokemonDetail({
       {evolutionChain.chain && (
         <Section title="Cadena evolutiva">
           <EvolutionChain chain={evolutionChain.chain} />
+        </Section>
+      )}
+
+      {/* Información de encuentro */}
+      <Section title="Información de encuentro">
+        <EncounterInfo encounters={encounters} />
+      </Section>
+
+      {/* Movimientos */}
+      {pokemon.moves.length > 0 && (
+        <Section title="Movimientos">
+          <MovesSection moveSlots={pokemon.moves} />
         </Section>
       )}
     </article>

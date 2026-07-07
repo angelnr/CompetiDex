@@ -16,6 +16,9 @@ import type {
   PokemonSpecies,
   EvolutionChain,
   Type,
+  Ability,
+  Move,
+  LocationAreaEncounter,
 } from "@/lib/pokeapi";
 
 const STALE_STATIC = Infinity;
@@ -33,6 +36,33 @@ async function fetchJson<T>(url: string): Promise<T> {
 // ---------------------------------------------------------------------------
 // Lista paginada simple
 // ---------------------------------------------------------------------------
+
+export function useAbility(idOrName: number | string | undefined) {
+  return useQuery<Ability>({
+    queryKey: ["ability", idOrName],
+    queryFn: () => fetchJson<Ability>(`/api/pokemon?ability=${idOrName}`),
+    enabled: idOrName !== undefined && idOrName !== "",
+    staleTime: STALE_STATIC,
+  });
+}
+
+export function useMove(idOrName: number | string | undefined) {
+  return useQuery<Move>({
+    queryKey: ["move", idOrName],
+    queryFn: () => fetchJson<Move>(`/api/pokemon?move=${idOrName}`),
+    enabled: idOrName !== undefined && idOrName !== "",
+    staleTime: STALE_STATIC,
+  });
+}
+
+export function useEncounters(id: number | undefined) {
+  return useQuery<LocationAreaEncounter[]>({
+    queryKey: ["encounters", id],
+    queryFn: () => fetchJson<LocationAreaEncounter[]>(`/api/pokemon?encounters=${id}`),
+    enabled: id !== undefined,
+    staleTime: STALE_STATIC,
+  });
+}
 
 export function usePokemonList(opts: { offset?: number; limit?: number } = {}) {
   const params = new URLSearchParams();

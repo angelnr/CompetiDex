@@ -26,6 +26,9 @@ import {
   getEvolutionChain,
   getType,
   getTypeList,
+  getAbility,
+  getMove,
+  getEncounters,
   PokeAPIError,
   type ListOptions,
 } from "@/lib/pokeapi";
@@ -90,6 +93,24 @@ export async function GET(request: Request): Promise<NextResponse> {
         limit: searchParams.get("limit") ?? undefined,
       });
       const data = await getTypeList(opts as ListOptions);
+      return NextResponse.json(data);
+    }
+
+    if (searchParams.has("ability")) {
+      const id = idParam.parse(searchParams.get("ability"));
+      const data = await getAbility(id);
+      return NextResponse.json(data);
+    }
+
+    if (searchParams.has("move")) {
+      const id = idParam.parse(searchParams.get("move"));
+      const data = await getMove(id);
+      return NextResponse.json(data);
+    }
+
+    if (searchParams.has("encounters")) {
+      const id = idParam.parse(searchParams.get("encounters"));
+      const data = await getEncounters(id);
       return NextResponse.json(data);
     }
 

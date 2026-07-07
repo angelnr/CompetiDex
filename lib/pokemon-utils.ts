@@ -110,6 +110,38 @@ export interface PokemonSummary {
   sprite: string | null;
 }
 
+/** Nombre en español de un array de nombres traducibles (PokeAPI names[]); fallback a inglés y luego a `fallback`. */
+export function getNameEs(
+  names: { name: string; language: { name: string } }[],
+  fallback: string,
+): string {
+  const es = names.find((n) => n.language.name === "es");
+  if (es) return es.name;
+  const en = names.find((n) => n.language.name === "en");
+  return en?.name ?? capitalize(fallback);
+}
+
+/** Flavor text en español de flavor_text_entries; fallback a inglés. */
+export function getFlavorTextEs(
+  entries: { flavor_text: string; language: { name: string } }[],
+): string | null {
+  const es = entries.find((e) => e.language.name === "es");
+  if (es) return sanitizeFlavorText(es.flavor_text);
+  const en = entries.find((e) => e.language.name === "en");
+  if (en) return sanitizeFlavorText(en.flavor_text);
+  return null;
+}
+
+/** Efecto corto en español de effect_entries; fallback a inglés. */
+export function getShortEffectEs(
+  entries: { short_effect: string; language: { name: string } }[],
+): string | null {
+  const es = entries.find((e) => e.language.name === "es");
+  if (es) return es.short_effect;
+  const en = entries.find((e) => e.language.name === "en");
+  return en?.short_effect ?? null;
+}
+
 /** Capitaliza un nombre: "pikachu" -> "Pikachu". */
 export function capitalize(name: string): string {
   return name.charAt(0).toUpperCase() + name.slice(1);
