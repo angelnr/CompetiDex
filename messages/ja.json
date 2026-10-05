@@ -3,7 +3,9 @@
     "brand": "CompetiDex",
     "teams": "チーム",
     "compare": "比較",
-    "effectiveness": "効果"
+    "effectiveness": "効果",
+    "openMenu": "メニューを開く",
+    "closeMenu": "メニューを閉じる"
   },
   "home": {
     "title": "CompetiDex",

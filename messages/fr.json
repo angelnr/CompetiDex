@@ -3,7 +3,9 @@
     "brand": "CompetiDex",
     "teams": "Équipes",
     "compare": "Comparer",
-    "effectiveness": "Efficacités"
+    "effectiveness": "Efficacités",
+    "openMenu": "Ouvrir le menu",
+    "closeMenu": "Fermer le menu"
   },
   "home": {
     "title": "CompetiDex",
