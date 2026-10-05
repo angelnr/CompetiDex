@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { Team, TeamMember, TeamMemberPatch } from "@/lib/team";
 import {
   addMember,
+  DEFAULT_EVS,
   generateTeamId,
   normalizeMember,
   reindexSlots,
@@ -26,6 +27,9 @@ export interface UseTeamsResult {
     teamId: string,
     pokemonId: number,
     patch: TeamMemberPatch,
+  ) => Promise<{ ok: true; team: Team } | { ok: false; error: string }>;
+  toggleChampions: (
+    teamId: string,
   ) => Promise<{ ok: true; team: Team } | { ok: false; error: string }>;
 }
 
@@ -53,6 +57,7 @@ export function useTeams(storage: TeamStorage = localStorageTeamStorage): UseTea
         id: generateTeamId(),
         name: name.trim(),
         members: [],
+        champions: false,
         createdAt: Date.now(),
         updatedAt: Date.now(),
       };
@@ -136,5 +141,37 @@ export function useTeams(storage: TeamStorage = localStorageTeamStorage): UseTea
     [teams, storage],
   );
 
-  return { teams, loaded, createTeam, deleteTeam, addPokemon, removePokemon, updateMember };
+  const toggleChampions = useCallback(
+    async (teamId: string): ReturnType<UseTeamsResult["toggleChampions"]> => {
+      const team = teams.find((t) => t.id === teamId);
+      if (!team) return { ok: false, error: "Equipo no encontrado" };
+
+      const newChampions = !team.champions;
+      const updated: Team = {
+        ...team,
+        champions: newChampions,
+        members: team.members.map((m) => ({
+          ...m,
+          evs: { ...DEFAULT_EVS },
+        })),
+        updatedAt: Date.now(),
+      };
+
+      setTeams((prev) => prev.map((t) => (t.id === teamId ? updated : t)));
+      await storage.save(updated);
+      return { ok: true, team: updated };
+    },
+    [teams, storage],
+  );
+
+  return {
+    teams,
+    loaded,
+    createTeam,
+    deleteTeam,
+    addPokemon,
+    removePokemon,
+    updateMember,
+    toggleChampions,
+  };
 }

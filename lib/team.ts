@@ -3,6 +3,8 @@ import type { StatKey } from "@/lib/natures";
 export const MAX_TEAM_SIZE = 6;
 export const MAX_EV_PER_STAT = 252;
 export const MAX_EV_TOTAL = 510;
+export const MAX_EV_PER_STAT_CHAMPIONS = 32;
+export const MAX_EV_TOTAL_CHAMPIONS = 68;
 
 export interface StatSpread {
   hp: number;
@@ -59,6 +61,7 @@ export interface Team {
   id: string;
   name: string;
   members: TeamMember[];
+  champions?: boolean;
   createdAt: number;
   updatedAt: number;
 }
@@ -98,14 +101,16 @@ export function totalEvs(spread: StatSpread): number {
   return STAT_KEYS.reduce((sum, k) => sum + spread[k], 0);
 }
 
-export function validateEvs(spread: StatSpread): string | null {
+export function validateEvs(spread: StatSpread, champions?: boolean): string | null {
+  const maxPerStat = champions ? MAX_EV_PER_STAT_CHAMPIONS : MAX_EV_PER_STAT;
+  const maxTotal = champions ? MAX_EV_TOTAL_CHAMPIONS : MAX_EV_TOTAL;
   for (const k of STAT_KEYS) {
-    if (!Number.isInteger(spread[k]) || spread[k] < 0 || spread[k] > MAX_EV_PER_STAT) {
-      return `EVs in ${k} must be between 0 and ${MAX_EV_PER_STAT}`;
+    if (!Number.isInteger(spread[k]) || spread[k] < 0 || spread[k] > maxPerStat) {
+      return `EVs in ${k} must be between 0 and ${maxPerStat}`;
     }
   }
-  if (totalEvs(spread) > MAX_EV_TOTAL) {
-    return `Total EVs cannot exceed ${MAX_EV_TOTAL}`;
+  if (totalEvs(spread) > maxTotal) {
+    return `Total EVs cannot exceed ${maxTotal}`;
   }
   return null;
 }
@@ -119,16 +124,18 @@ export function validateIvs(spread: StatSpread): string | null {
   return null;
 }
 
-export function capEvs(spread: StatSpread): StatSpread {
+export function capEvs(spread: StatSpread, champions?: boolean): StatSpread {
+  const maxPerStat = champions ? MAX_EV_PER_STAT_CHAMPIONS : MAX_EV_PER_STAT;
+  const maxTotal = champions ? MAX_EV_TOTAL_CHAMPIONS : MAX_EV_TOTAL;
   const capped = { ...spread };
   for (const k of STAT_KEYS) {
-    capped[k] = Math.min(Math.max(Math.round(capped[k]), 0), MAX_EV_PER_STAT);
+    capped[k] = Math.min(Math.max(Math.round(capped[k]), 0), maxPerStat);
   }
   let total = totalEvs(capped);
-  while (total > MAX_EV_TOTAL) {
+  while (total > maxTotal) {
     for (const k of STAT_KEYS) {
-      if (total <= MAX_EV_TOTAL) break;
-      const diff = Math.min(capped[k], total - MAX_EV_TOTAL);
+      if (total <= maxTotal) break;
+      const diff = Math.min(capped[k], total - maxTotal);
       capped[k] -= diff;
       total -= diff;
     }

@@ -16,7 +16,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { TeamMember, TeamMemberPatch } from "@/lib/team";
-import { STAT_KEYS, MAX_EV_TOTAL, totalEvs } from "@/lib/team";
+import {
+  STAT_KEYS,
+  MAX_EV_TOTAL,
+  MAX_EV_TOTAL_CHAMPIONS,
+  MAX_EV_PER_STAT_CHAMPIONS,
+  totalEvs,
+} from "@/lib/team";
 import type { Pokemon } from "@/lib/pokeapi";
 import { capitalize, formatPokedexId, getPixelSpriteById } from "@/lib/pokemon-utils";
 import { NATURES } from "@/lib/natures";
@@ -26,6 +32,7 @@ export interface TeamMemberEditorProps {
   pokemon: Pokemon;
   onChange: (patch: TeamMemberPatch) => void;
   onRemove: () => void;
+  champions: boolean;
 }
 
 const STAT_LABEL_KEYS: Record<string, string> = {
@@ -37,11 +44,17 @@ const STAT_LABEL_KEYS: Record<string, string> = {
   speed: "spe",
 };
 
-const MAX_EV_PER_STAT = 252;
-
-export function TeamMemberEditor({ member, pokemon, onChange, onRemove }: TeamMemberEditorProps) {
+export function TeamMemberEditor({
+  member,
+  pokemon,
+  onChange,
+  onRemove,
+  champions = false,
+}: TeamMemberEditorProps) {
   const t = useTranslations("teams.member");
   const tTeams = useTranslations("teams");
+  const maxEvPerStat = champions ? MAX_EV_PER_STAT_CHAMPIONS : 252;
+  const maxEvTotal = champions ? MAX_EV_TOTAL_CHAMPIONS : MAX_EV_TOTAL;
   const evTotal = totalEvs(
     member.evs ?? {
       hp: 0,
@@ -52,7 +65,7 @@ export function TeamMemberEditor({ member, pokemon, onChange, onRemove }: TeamMe
       speed: 0,
     },
   );
-  const evOver = evTotal > MAX_EV_TOTAL;
+  const evOver = evTotal > maxEvTotal;
 
   const abilities = useMemo(
     () =>
@@ -93,7 +106,7 @@ export function TeamMemberEditor({ member, pokemon, onChange, onRemove }: TeamMe
   const handleEV = (stat: string, val: string) => {
     const n = parseInt(val, 10);
     if (isNaN(n)) return;
-    const clamped = Math.min(Math.max(n, 0), MAX_EV_PER_STAT);
+    const clamped = Math.min(Math.max(n, 0), maxEvPerStat);
     patch({ evs: { ...member.evs!, [stat]: clamped } });
   };
 
@@ -237,10 +250,12 @@ export function TeamMemberEditor({ member, pokemon, onChange, onRemove }: TeamMe
           <span
             className={`text-xs ${evOver ? "font-bold text-destructive" : "text-muted-foreground"}`}
           >
-            {evTotal}/{MAX_EV_TOTAL}
+            {evTotal}/{maxEvTotal}
           </span>
         </div>
-        {evOver && <p className="mb-1 text-[10px] text-destructive">{t("evOver")}</p>}
+        {evOver && (
+          <p className="mb-1 text-[10px] text-destructive">{t("evOver", { max: maxEvTotal })}</p>
+        )}
         <div className="grid grid-cols-6 gap-2">
           {STAT_KEYS.map((k) => (
             <div key={k}>
@@ -250,7 +265,7 @@ export function TeamMemberEditor({ member, pokemon, onChange, onRemove }: TeamMe
               <Input
                 type="number"
                 min={0}
-                max={MAX_EV_PER_STAT}
+                max={maxEvPerStat}
                 value={member.evs?.[k] ?? 0}
                 onChange={(e) => handleEV(k, e.target.value)}
                 className="h-8 text-center text-xs"

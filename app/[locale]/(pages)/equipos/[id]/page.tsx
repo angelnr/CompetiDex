@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Copy, Download } from "lucide-react";
+import { ArrowLeft, Copy, Download, Swords } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 
@@ -28,7 +28,7 @@ export default function TeamEditorPage() {
   const tNav = useTranslations("nav");
   const params = useParams();
   const teamId = params?.id as string | undefined;
-  const { teams, loaded, addPokemon, removePokemon, updateMember } = useTeams();
+  const { teams, loaded, addPokemon, removePokemon, updateMember, toggleChampions } = useTeams();
   const [activeSlot, setActiveSlot] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -103,6 +103,16 @@ export default function TeamEditorPage() {
               </Link>
             </Button>
             <h1 className="text-2xl font-bold">{team.name}</h1>
+            <Button
+              variant={team.champions ? "default" : "outline"}
+              size="sm"
+              onClick={() => toggleChampions(team.id)}
+              aria-label={team.champions ? t("standardMode") : t("championsMode")}
+              className="gap-1"
+            >
+              <Swords className="size-4" />
+              {team.champions ? t("standardMode") : t("championsMode")}
+            </Button>
           </div>
 
           {/* ── Botón Exportar ── */}
@@ -181,6 +191,7 @@ export default function TeamEditorPage() {
           <TeamMemberEditor
             member={activeMember}
             pokemon={activePokemon}
+            champions={!!team.champions}
             onChange={(patch) => {
               updateMember(team.id, activeMember.pokemonId, patch);
             }}
