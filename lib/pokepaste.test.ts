@@ -104,8 +104,6 @@ describe("teamToPokepaste", () => {
   it("serializa equipo completo correctamente", () => {
     const output = teamToPokepaste(fullTeam);
     const expected = [
-      "My Competitive Team",
-      "",
       "Charizard @ Life Orb",
       "Ability: Blaze",
       "Timid Nature",
@@ -132,16 +130,11 @@ describe("teamToPokepaste", () => {
 
   it("serializa miembro minimalista sin campos extra", () => {
     const output = teamToPokepaste(minimalTeam);
-    const lines = output.split("\n");
-    expect(lines[0]).toBe("Minimal");
-    expect(lines[1]).toBe("");
-    expect(lines[2]).toBe("Pikachu");
-    // No ability, no item, no nature (hardy se omite), no EVs, no IVs (31s omitidos), no moves
-    expect(lines[3]).toBeUndefined(); // solo 3 líneas (header + blank + species)
+    expect(output).toBe("Pikachu");
   });
 
-  it("equipo vacío produce solo el nombre", () => {
+  it("equipo vacío produce cadena vacía", () => {
     const output = teamToPokepaste(emptyNameTeam);
-    expect(output).toBe("Untitled Team");
+    expect(output).toBe("");
   });
 });

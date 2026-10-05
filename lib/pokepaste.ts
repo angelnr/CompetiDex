@@ -34,14 +34,12 @@ export function slugToTitle(slug: string): string {
  */
 export function teamToPokepaste(team: Team): string {
   const lines: string[] = [];
+  const rawMembers = team.members;
 
-  // Línea del nombre del equipo (sin espacios extra si el nombre está vacío)
-  const trimmedName = team.name.trim();
-  lines.push(trimmedName || "Untitled Team");
-
-  for (const rawMember of team.members) {
+  for (let i = 0; i < rawMembers.length; i++) {
+    const rawMember = rawMembers[i]!;
     const member = normalizeMember(rawMember);
-    lines.push(""); // línea en blanco separadora
+    if (i > 0) lines.push(""); // línea en blanco separadora entre miembros
 
     // ── Nickname + especie + objeto ──
     // Showdown: "Pokémon @ Item" (sin nick a menos que haya uno)
