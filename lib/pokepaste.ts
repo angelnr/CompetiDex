@@ -1,5 +1,6 @@
 import type { Team, TeamMember } from "@/lib/team";
 import { normalizeMember, STAT_KEYS, totalEvs } from "@/lib/team";
+import { findItem } from "@/lib/items";
 
 /**
  * Convierte un slug like "thunder-bolt" a "Thunder Bolt".
@@ -45,7 +46,10 @@ export function teamToPokepaste(team: Team): string {
     // Showdown: "Pokémon @ Item" (sin nick a menos que haya uno)
     const speciesLine = slugToTitle(member.name);
     if (member.heldItem) {
-      lines.push(`${speciesLine} @ ${slugToTitle(member.heldItem)}`);
+      // Preserva el nombre canónico del catálogo (p. ej. "Never-Melt Ice");
+      // si no se reconoce, asume slug y lo formatea.
+      const itemName = findItem(member.heldItem)?.name ?? slugToTitle(member.heldItem);
+      lines.push(`${speciesLine} @ ${itemName}`);
     } else {
       lines.push(speciesLine);
     }

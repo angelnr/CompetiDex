@@ -196,7 +196,16 @@
       "moves": "Movimientos",
       "movePlaceholder": "Escribe un movimiento…",
       "moveLabel": "Movimiento {slot}",
-      "removeMove": "Quitar movimiento"
+      "removeMove": "Quitar movimiento",
+      "itemSearch": "Buscar objeto…",
+      "itemNoResults": "Sin resultados",
+      "itemClear": "Quitar objeto"
+    },
+    "itemCategories": {
+      "popular": "Populares",
+      "battle": "Objetos",
+      "pokemon": "Específicos de Pokémon",
+      "useless": "Poco útiles"
     },
     "errors": {
       "nameEmpty": "El nombre no puede estar vacío",

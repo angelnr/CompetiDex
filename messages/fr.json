@@ -196,7 +196,16 @@
       "moves": "Capacités",
       "movePlaceholder": "Tapez un nom de capacité…",
       "moveLabel": "Capacité {slot}",
-      "removeMove": "Retirer la capacité"
+      "removeMove": "Retirer la capacité",
+      "itemSearch": "Rechercher un objet…",
+      "itemNoResults": "Aucun résultat",
+      "itemClear": "Retirer l'objet"
+    },
+    "itemCategories": {
+      "popular": "Populaires",
+      "battle": "Objets",
+      "pokemon": "Spécifiques à un Pokémon",
+      "useless": "Peu utiles"
     },
     "errors": {
       "nameEmpty": "Le nom ne peut pas être vide",

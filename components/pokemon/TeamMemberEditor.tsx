@@ -8,6 +8,8 @@ import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ItemPicker } from "@/components/pokemon/ItemPicker";
+import { ItemSprite } from "@/components/pokemon/ItemSprite";
 import {
   Select,
   SelectContent,
@@ -25,6 +27,7 @@ import {
 } from "@/lib/team";
 import type { Pokemon } from "@/lib/pokeapi";
 import { capitalize, formatPokedexId, getPixelSpriteById } from "@/lib/pokemon-utils";
+import { findItem } from "@/lib/items";
 import { NATURES } from "@/lib/natures";
 
 export interface TeamMemberEditorProps {
@@ -66,6 +69,7 @@ export function TeamMemberEditor({
     },
   );
   const evOver = evTotal > maxEvTotal;
+  const selectedItem = useMemo(() => findItem(member.heldItem), [member.heldItem]);
 
   const abilities = useMemo(
     () =>
@@ -168,13 +172,16 @@ export function TeamMemberEditor({
         {/* ── Objeto equipado ── */}
         <div>
           <label className="mb-1 block text-xs font-medium">{t("heldItem")}</label>
-          <Input
-            type="text"
-            value={member.heldItem ?? ""}
-            onChange={(e) => patch({ heldItem: e.target.value || null })}
-            placeholder={t("heldItemPlaceholder")}
-            aria-label={t("heldItem")}
+          <ItemPicker
+            value={member.heldItem ?? null}
+            onChange={(item) => patch({ heldItem: item?.name ?? null })}
           />
+          {selectedItem && (
+            <p className="mt-1 flex items-start gap-1.5 text-[10px] text-muted-foreground">
+              <ItemSprite slug={selectedItem.slug} alt="" className="mt-0.5 size-4" />
+              <span>{selectedItem.description}</span>
+            </p>
+          )}
         </div>
       </div>
 

@@ -196,7 +196,16 @@
       "moves": "わざ",
       "movePlaceholder": "わざ名を入力…",
       "moveLabel": "わざ{slot}",
-      "removeMove": "わざを削除"
+      "removeMove": "わざを削除",
+      "itemSearch": "道具を検索…",
+      "itemNoResults": "結果なし",
+      "itemClear": "道具を外す"
+    },
+    "itemCategories": {
+      "popular": "人気",
+      "battle": "道具",
+      "pokemon": "ポケモン専用",
+      "useless": "あまり使われない"
     },
     "errors": {
       "nameEmpty": "名前を入力してください",

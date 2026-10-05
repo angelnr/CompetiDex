@@ -6,9 +6,11 @@ import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { TypeBadge } from "@/components/pokemon/TypeBadge";
+import { ItemSprite } from "@/components/pokemon/ItemSprite";
 import { Button } from "@/components/ui/button";
 import type { TeamMember } from "@/lib/team";
 import { formatPokedexId, capitalize } from "@/lib/pokemon-utils";
+import { findItem, itemSlug } from "@/lib/items";
 
 export interface TeamSlotProps {
   /** Miembro asignado al slot, o null si vacío. */
@@ -108,6 +110,16 @@ export function TeamSlot({ member, onRemove, onClick }: TeamSlotProps) {
             ))}
           </div>
         </Link>
+      )}
+
+      {member.heldItem && (
+        <span className="absolute bottom-0.5 right-0.5 rounded bg-background/70 p-px">
+          <ItemSprite
+            slug={findItem(member.heldItem)?.slug ?? itemSlug(member.heldItem)}
+            alt={member.heldItem}
+            className="size-6"
+          />
+        </span>
       )}
     </div>
   );

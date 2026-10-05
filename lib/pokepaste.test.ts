@@ -137,4 +137,34 @@ describe("teamToPokepaste", () => {
     const output = teamToPokepaste(emptyNameTeam);
     expect(output).toBe("");
   });
+
+  it("preserva el nombre canónico de objetos con guion o variante", () => {
+    const team: Team = {
+      id: "test-4",
+      name: "",
+      members: [
+        {
+          pokemonId: 6,
+          name: "charizard",
+          slot: 0,
+          sprite: null,
+          types: ["fire"],
+          heldItem: "Never-Melt Ice",
+        },
+        {
+          pokemonId: 6,
+          name: "charizard",
+          slot: 1,
+          sprite: null,
+          types: ["fire"],
+          heldItem: "Charizardite X",
+        },
+      ],
+      createdAt: 0,
+      updatedAt: 0,
+    };
+    const output = teamToPokepaste(team);
+    expect(output).toContain("Charizard @ Never-Melt Ice");
+    expect(output).toContain("Charizard @ Charizardite X");
+  });
 });

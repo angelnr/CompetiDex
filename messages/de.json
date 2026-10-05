@@ -196,7 +196,16 @@
       "moves": "Attacken",
       "movePlaceholder": "Attacke eingeben…",
       "moveLabel": "Attacke {slot}",
-      "removeMove": "Attacke entfernen"
+      "removeMove": "Attacke entfernen",
+      "itemSearch": "Item suchen…",
+      "itemNoResults": "Keine Ergebnisse",
+      "itemClear": "Item entfernen"
+    },
+    "itemCategories": {
+      "popular": "Beliebt",
+      "battle": "Items",
+      "pokemon": "Pokémon-spezifisch",
+      "useless": "Kaum nützlich"
     },
     "errors": {
       "nameEmpty": "Der Name darf nicht leer sein",

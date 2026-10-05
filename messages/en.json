@@ -196,7 +196,16 @@
       "moves": "Moves",
       "movePlaceholder": "Type move name…",
       "moveLabel": "Move {slot}",
-      "removeMove": "Remove move"
+      "removeMove": "Remove move",
+      "itemSearch": "Search item…",
+      "itemNoResults": "No results",
+      "itemClear": "Clear item"
+    },
+    "itemCategories": {
+      "popular": "Popular",
+      "battle": "Items",
+      "pokemon": "Pokémon-specific",
+      "useless": "Usually useless"
     },
     "errors": {
       "nameEmpty": "Name cannot be empty",
