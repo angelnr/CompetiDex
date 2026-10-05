@@ -4,7 +4,7 @@ export const MAX_TEAM_SIZE = 6;
 export const MAX_EV_PER_STAT = 252;
 export const MAX_EV_TOTAL = 510;
 export const MAX_EV_PER_STAT_CHAMPIONS = 32;
-export const MAX_EV_TOTAL_CHAMPIONS = 68;
+export const MAX_EV_TOTAL_CHAMPIONS = 66;
 
 export interface StatSpread {
   hp: number;
