@@ -65,7 +65,7 @@ export interface MegaVarietyInfo {
   suffix: string;
 }
 
-const MEGA_NAME_RE = /^([a-z0-9-]+)-mega(-[xy])?$/;
+const MEGA_NAME_RE = /^[a-z0-9-]+-mega(?:-[a-z]+)?$/;
 
 /** Determina si un nombre de Pokémon corresponde a una forma Mega. */
 export function isMegaName(name: string): boolean {
@@ -74,15 +74,18 @@ export function isMegaName(name: string): boolean {
 
 /** Extrae el sufijo mega de un nombre: "charizard-mega-x" → "mega-x" */
 export function getMegaSuffix(name: string): string | null {
-  const m = name.match(/-(mega-?([xy])?)$/);
+  const m = name.match(/-(mega(?:-[a-z]+)?)$/);
   return m?.[1] ?? null;
 }
 
 /** Genera etiqueta legible: "charizard-mega-x" → "Mega Charizard X" */
 export function getMegaFormLabel(name: string): string {
-  const m = name.match(/^(.+)-mega-?([xy])?$/);
+  const m = name.match(/^(.+?)-mega(?:-([a-z]+))?$/);
   if (!m) return capitalize(name);
-  const base = capitalize(m[1]!);
+  const base = m[1]!
+    .split("-")
+    .map((part) => capitalize(part))
+    .join(" ");
   const variant = m[2] ? ` ${m[2].toUpperCase()}` : "";
   return `Mega ${base}${variant}`;
 }
@@ -111,7 +114,7 @@ const MEGA_SPECIES_MAP: Record<string, { name: string; id: number }[]> = {
   ],
   blastoise: [{ name: "blastoise-mega", id: 10036 }],
   beedrill: [{ name: "beedrill-mega", id: 10090 }],
-  pidgeot: [{ name: "pidgeot-mega", id: 10091 }],
+  pidgeot: [{ name: "pidgeot-mega", id: 10073 }],
   alakazam: [{ name: "alakazam-mega", id: 10037 }],
   slowbro: [{ name: "slowbro-mega", id: 10071 }],
   gengar: [{ name: "gengar-mega", id: 10038 }],
@@ -129,33 +132,92 @@ const MEGA_SPECIES_MAP: Record<string, { name: string; id: number }[]> = {
   heracross: [{ name: "heracross-mega", id: 10047 }],
   houndoom: [{ name: "houndoom-mega", id: 10048 }],
   tyranitar: [{ name: "tyranitar-mega", id: 10049 }],
-  sceptile: [{ name: "sceptile-mega", id: 10073 }],
+  sceptile: [{ name: "sceptile-mega", id: 10065 }],
   blaziken: [{ name: "blaziken-mega", id: 10050 }],
-  swampert: [{ name: "swampert-mega", id: 10074 }],
+  swampert: [{ name: "swampert-mega", id: 10064 }],
   gardevoir: [{ name: "gardevoir-mega", id: 10051 }],
-  sableye: [{ name: "sableye-mega", id: 10075 }],
-  mawile: [{ name: "mawile-mega", id: 10076 }],
-  aggron: [{ name: "aggron-mega", id: 10052 }],
-  medicham: [{ name: "medicham-mega", id: 10077 }],
-  manectric: [{ name: "manectric-mega", id: 10078 }],
-  banette: [{ name: "banette-mega", id: 10079 }],
-  absol: [{ name: "absol-mega", id: 10080 }],
-  garchomp: [{ name: "garchomp-mega", id: 10053 }],
-  lucario: [{ name: "lucario-mega", id: 10054 }],
-  abomasnow: [{ name: "abomasnow-mega", id: 10081 }],
-  gallade: [{ name: "gallade-mega", id: 10082 }],
-  audino: [{ name: "audino-mega", id: 10083 }],
-  diancie: [{ name: "diancie-mega", id: 10084 }],
-  lopunny: [{ name: "lopunny-mega", id: 10085 }],
-  salamence: [{ name: "salamence-mega", id: 10055 }],
-  metagross: [{ name: "metagross-mega", id: 10057 }],
-  latios: [{ name: "latios-mega", id: 10059 }],
-  latias: [{ name: "latias-mega", id: 10058 }],
-  rayquaza: [{ name: "rayquaza-mega", id: 10060 }],
-  sharpedo: [{ name: "sharpedo-mega", id: 10086 }],
+  sableye: [{ name: "sableye-mega", id: 10066 }],
+  mawile: [{ name: "mawile-mega", id: 10052 }],
+  aggron: [{ name: "aggron-mega", id: 10053 }],
+  medicham: [{ name: "medicham-mega", id: 10054 }],
+  manectric: [{ name: "manectric-mega", id: 10055 }],
+  banette: [{ name: "banette-mega", id: 10056 }],
+  absol: [
+    { name: "absol-mega", id: 10057 },
+    { name: "absol-mega-z", id: 10307 },
+  ],
+  garchomp: [
+    { name: "garchomp-mega", id: 10058 },
+    { name: "garchomp-mega-z", id: 10309 },
+  ],
+  lucario: [
+    { name: "lucario-mega", id: 10059 },
+    { name: "lucario-mega-z", id: 10310 },
+  ],
+  abomasnow: [{ name: "abomasnow-mega", id: 10060 }],
+  gallade: [{ name: "gallade-mega", id: 10068 }],
+  audino: [{ name: "audino-mega", id: 10069 }],
+  diancie: [{ name: "diancie-mega", id: 10075 }],
+  lopunny: [{ name: "lopunny-mega", id: 10088 }],
+  salamence: [{ name: "salamence-mega", id: 10089 }],
+  metagross: [{ name: "metagross-mega", id: 10076 }],
+  latios: [{ name: "latios-mega", id: 10063 }],
+  latias: [{ name: "latias-mega", id: 10062 }],
+  rayquaza: [{ name: "rayquaza-mega", id: 10079 }],
+  sharpedo: [{ name: "sharpedo-mega", id: 10070 }],
   camerupt: [{ name: "camerupt-mega", id: 10087 }],
-  altaria: [{ name: "altaria-mega", id: 10088 }],
-  glalie: [{ name: "glalie-mega", id: 10089 }],
+  altaria: [{ name: "altaria-mega", id: 10067 }],
+  glalie: [{ name: "glalie-mega", id: 10074 }],
+
+  // ===== Megas nuevas (Legends Z-A / Pokémon Champions, IDs 10278+) =====
+  clefable: [{ name: "clefable-mega", id: 10278 }],
+  victreebel: [{ name: "victreebel-mega", id: 10279 }],
+  starmie: [{ name: "starmie-mega", id: 10280 }],
+  dragonite: [{ name: "dragonite-mega", id: 10281 }],
+  meganium: [{ name: "meganium-mega", id: 10282 }],
+  feraligatr: [{ name: "feraligatr-mega", id: 10283 }],
+  skarmory: [{ name: "skarmory-mega", id: 10284 }],
+  froslass: [{ name: "froslass-mega", id: 10285 }],
+  emboar: [{ name: "emboar-mega", id: 10286 }],
+  excadrill: [{ name: "excadrill-mega", id: 10287 }],
+  scolipede: [{ name: "scolipede-mega", id: 10288 }],
+  scrafty: [{ name: "scrafty-mega", id: 10289 }],
+  eelektross: [{ name: "eelektross-mega", id: 10290 }],
+  chandelure: [{ name: "chandelure-mega", id: 10291 }],
+  chesnaught: [{ name: "chesnaught-mega", id: 10292 }],
+  delphox: [{ name: "delphox-mega", id: 10293 }],
+  greninja: [{ name: "greninja-mega", id: 10294 }],
+  pyroar: [{ name: "pyroar-mega", id: 10295 }],
+  floette: [{ name: "floette-mega", id: 10296 }],
+  malamar: [{ name: "malamar-mega", id: 10297 }],
+  barbaracle: [{ name: "barbaracle-mega", id: 10298 }],
+  dragalge: [{ name: "dragalge-mega", id: 10299 }],
+  hawlucha: [{ name: "hawlucha-mega", id: 10300 }],
+  zygarde: [{ name: "zygarde-mega", id: 10301 }],
+  drampa: [{ name: "drampa-mega", id: 10302 }],
+  falinks: [{ name: "falinks-mega", id: 10303 }],
+  raichu: [
+    { name: "raichu-mega-x", id: 10304 },
+    { name: "raichu-mega-y", id: 10305 },
+  ],
+  chimecho: [{ name: "chimecho-mega", id: 10306 }],
+  staraptor: [{ name: "staraptor-mega", id: 10308 }],
+  heatran: [{ name: "heatran-mega", id: 10311 }],
+  darkrai: [{ name: "darkrai-mega", id: 10312 }],
+  golurk: [{ name: "golurk-mega", id: 10313 }],
+  "meowstic-male": [{ name: "meowstic-male-mega", id: 10314 }],
+  "meowstic-female": [{ name: "meowstic-female-mega", id: 10326 }],
+  crabominable: [{ name: "crabominable-mega", id: 10315 }],
+  golisopod: [{ name: "golisopod-mega", id: 10316 }],
+  magearna: [{ name: "magearna-mega", id: 10317 }],
+  "magearna-original": [{ name: "magearna-original-mega", id: 10318 }],
+  zeraora: [{ name: "zeraora-mega", id: 10319 }],
+  scovillain: [{ name: "scovillain-mega", id: 10320 }],
+  glimmora: [{ name: "glimmora-mega", id: 10321 }],
+  "tatsugiri-curly": [{ name: "tatsugiri-curly-mega", id: 10322 }],
+  "tatsugiri-droopy": [{ name: "tatsugiri-droopy-mega", id: 10323 }],
+  "tatsugiri-stretchy": [{ name: "tatsugiri-stretchy-mega", id: 10324 }],
+  baxcalibur: [{ name: "baxcalibur-mega", id: 10325 }],
 };
 
 /** Retorna las formas mega conocidas para una especie dada su nombre. */

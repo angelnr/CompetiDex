@@ -15,6 +15,7 @@ import {
   getMegaSuffix,
   getMegaFormLabel,
   getMegaVarieties,
+  getMegaFormSuggestions,
   isRegionalName,
   parseRegionalForm,
   getRegionalFormSuggestions,
@@ -208,6 +209,9 @@ describe("isMegaName", () => {
     expect(isMegaName("venusaur-mega")).toBe(true);
     expect(isMegaName("rayquaza-mega")).toBe(true);
     expect(isMegaName("mewtwo-mega-x")).toBe(true);
+    expect(isMegaName("absol-mega-z")).toBe(true);
+    expect(isMegaName("raichu-mega-x")).toBe(true);
+    expect(isMegaName("dragonite-mega")).toBe(true);
   });
 
   it("rechaza nombres no-mega", () => {
@@ -223,6 +227,8 @@ describe("getMegaSuffix", () => {
     expect(getMegaSuffix("charizard-mega-x")).toBe("mega-x");
     expect(getMegaSuffix("charizard-mega-y")).toBe("mega-y");
     expect(getMegaSuffix("venusaur-mega")).toBe("mega");
+    expect(getMegaSuffix("absol-mega-z")).toBe("mega-z");
+    expect(getMegaSuffix("raichu-mega-x")).toBe("mega-x");
   });
 
   it("null para nombres sin mega", () => {
@@ -237,6 +243,9 @@ describe("getMegaFormLabel", () => {
     expect(getMegaFormLabel("venusaur-mega")).toBe("Mega Venusaur");
     expect(getMegaFormLabel("mewtwo-mega-x")).toBe("Mega Mewtwo X");
     expect(getMegaFormLabel("rayquaza-mega")).toBe("Mega Rayquaza");
+    expect(getMegaFormLabel("absol-mega-z")).toBe("Mega Absol Z");
+    expect(getMegaFormLabel("raichu-mega-x")).toBe("Mega Raichu X");
+    expect(getMegaFormLabel("magearna-original-mega")).toBe("Mega Magearna Original");
   });
 
   it("fallback a capitalize si no coincide", () => {
@@ -303,6 +312,48 @@ describe("getMegaVarieties", () => {
       ],
     };
     expect(getMegaVarieties(noMega)).toHaveLength(0);
+  });
+});
+
+describe("getMegaFormSuggestions", () => {
+  it("retorna vacio para especie sin mega", () => {
+    expect(getMegaFormSuggestions("pikachu")).toEqual([]);
+  });
+
+  it("una forma para metagross con el id correcto", () => {
+    expect(getMegaFormSuggestions("metagross")).toEqual([{ name: "metagross-mega", id: 10076 }]);
+  });
+
+  it("absol-mega apunta al id 10057, no metagross", () => {
+    const forms = getMegaFormSuggestions("absol");
+    expect(forms).toContainEqual({ name: "absol-mega", id: 10057 });
+    expect(forms).toContainEqual({ name: "absol-mega-z", id: 10307 });
+  });
+
+  it("incluye megas nuevas (Legends Z-A / Champions)", () => {
+    expect(getMegaFormSuggestions("dragonite")).toEqual([{ name: "dragonite-mega", id: 10281 }]);
+    expect(getMegaFormSuggestions("raichu")).toEqual([
+      { name: "raichu-mega-x", id: 10304 },
+      { name: "raichu-mega-y", id: 10305 },
+    ]);
+    expect(getMegaFormSuggestions("garchomp")).toContainEqual({
+      name: "garchomp-mega-z",
+      id: 10309,
+    });
+  });
+
+  it("dos formas para charizard (x + y)", () => {
+    expect(getMegaFormSuggestions("charizard")).toEqual([
+      { name: "charizard-mega-x", id: 10034 },
+      { name: "charizard-mega-y", id: 10035 },
+    ]);
+  });
+
+  it("ids corregidos de megas antes desalineados", () => {
+    expect(getMegaFormSuggestions("pidgeot")).toEqual([{ name: "pidgeot-mega", id: 10073 }]);
+    expect(getMegaFormSuggestions("sceptile")).toEqual([{ name: "sceptile-mega", id: 10065 }]);
+    expect(getMegaFormSuggestions("salamence")).toEqual([{ name: "salamence-mega", id: 10089 }]);
+    expect(getMegaFormSuggestions("rayquaza")).toEqual([{ name: "rayquaza-mega", id: 10079 }]);
   });
 });
 

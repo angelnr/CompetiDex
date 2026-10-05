@@ -9,7 +9,12 @@
  * pasar por el caché Redis server-side. Ver AGENTS.md §4.2.
  */
 
-import { useQuery, useInfiniteQuery, type UseQueryOptions } from "@tanstack/react-query";
+import {
+  useQuery,
+  useInfiniteQuery,
+  useQueries,
+  type UseQueryOptions,
+} from "@tanstack/react-query";
 import type {
   NamedAPIResourceList,
   Pokemon,
@@ -151,6 +156,34 @@ export function useType(idOrName: number | string | undefined) {
     queryFn: () => fetchJson<Type>(`/api/pokemon?type=${idOrName}`),
     enabled: idOrName !== undefined && idOrName !== "",
     staleTime: STALE_STATIC,
+  });
+}
+
+/**
+ * Resuelve varios tipos por nombre en paralelo.
+ * Pensado para formas alternativas (mega) cuyos tipos pueden diferir del base.
+ */
+export function useTypes(names: string[]) {
+  return useQueries({
+    queries: names.map((name) => ({
+      queryKey: ["type", name],
+      queryFn: () => fetchJson<Type>(`/api/pokemon?type=${name}`),
+      staleTime: STALE_STATIC,
+    })),
+  });
+}
+
+/**
+ * Resuelve varias habilidades por id/nombre en paralelo.
+ * Pensado para formas alternativas (mega) cuyas habilidades difieren del base.
+ */
+export function useAbilities(idsOrNames: (string | number)[]) {
+  return useQueries({
+    queries: idsOrNames.map((idOrName) => ({
+      queryKey: ["ability", idOrName],
+      queryFn: () => fetchJson<Ability>(`/api/pokemon?ability=${idOrName}`),
+      staleTime: STALE_STATIC,
+    })),
   });
 }
 

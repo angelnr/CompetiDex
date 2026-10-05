@@ -11,7 +11,7 @@ import { TypeBadge } from "@/components/pokemon/TypeBadge";
 import { TypeEffectiveness } from "@/components/pokemon/TypeEffectiveness";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { usePokemon } from "@/lib/queries";
+import { usePokemon, useTypes, useAbilities } from "@/lib/queries";
 import type { Pokemon, PokemonSpecies, Type, Ability } from "@/lib/pokeapi";
 import type { MegaVarietyInfo } from "@/lib/pokemon-utils";
 import {
@@ -57,36 +57,50 @@ export function PokemonFormContent({
   const artworkShiny = pokemon.sprites.other?.["official-artwork"]?.front_shiny ?? null;
   const defaultSprite = pokemon.sprites.front_default;
 
-  const typeData = useMemo(() => {
-    if (isMegaSelected && megaData) {
-      return megaData.types.map((t) => t.type.name);
-    }
-    return baseTypeData.map((t) => t.name);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isMegaSelected, megaData?.types]);
+  // Un mega puede cambiar de tipo (p. ej. Charizard X → dragón) o de habilidad
+  // (p. ej. Metagross → garra dura). Resolvemos los datos de la forma activa:
+  // los del servidor para el base, y vía TanStack Query (cacheado en Redis)
+  // para el mega, que se descarga solo al activarlo.
+  const formSwitching = megaLoading && selectedMega !== null;
+  const currentTypeNames = useMemo(() => pokemon.types.map((t) => t.type.name), [pokemon.types]);
+  const activeTypeQueries = useTypes(isMegaSelected ? currentTypeNames : []);
+  const megaTypesLoading =
+    formSwitching || (isMegaSelected && activeTypeQueries.some((q) => q.isLoading));
+  const activeTypeData: Type[] = isMegaSelected
+    ? activeTypeQueries.map((q) => q.data).filter((t): t is Type => t !== undefined)
+    : baseTypeData;
 
-  const effectiveness = useMemo(() => {
-    const typeNames =
-      isMegaSelected && megaData
-        ? megaData.types.map((t) => t.type.name)
-        : baseTypeData.map((t) => t.name);
-    const eff = computeDefensiveEffectiveness(
-      typeNames
-        .map((name) => {
-          const type = baseTypeData.find((t) => t.name === name);
-          return type ? { name: type.name, relations: type.damage_relations } : null;
-        })
-        .filter((t): t is NonNullable<typeof t> => t !== null),
-    );
-    return categorizeEffectiveness(eff);
-  }, [isMegaSelected, megaData, baseTypeData]);
+  const effectiveness = useMemo(
+    () =>
+      categorizeEffectiveness(
+        computeDefensiveEffectiveness(
+          activeTypeData.map((type) => ({ name: type.name, relations: type.damage_relations })),
+        ),
+      ),
+    [activeTypeData],
+  );
+
+  const currentAbilityNames = useMemo(
+    () => pokemon.abilities.map((slot) => slot.ability.name),
+    [pokemon.abilities],
+  );
+  const activeAbilityQueries = useAbilities(isMegaSelected ? currentAbilityNames : []);
+  const megaAbilitiesLoading =
+    formSwitching || (isMegaSelected && activeAbilityQueries.some((q) => q.isLoading));
 
   const abilityEntries: AbilityEntry[] = useMemo(() => {
-    return pokemon.abilities.map((slot, i) => ({
+    if (isMegaSelected && megaData) {
+      return megaData.abilities.map((slot, i) => ({
+        slot,
+        data: activeAbilityQueries[i]?.data ?? null,
+      }));
+    }
+    return basePokemon.abilities.map((slot, i) => ({
       slot,
       data: baseAbilityData[i] ?? null,
     }));
-  }, [pokemon.abilities, baseAbilityData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isMegaSelected, megaData, basePokemon.abilities, baseAbilityData, activeAbilityQueries]);
 
   const isLegendary = species.is_legendary;
   const isMythical = species.is_mythical;
@@ -221,12 +235,27 @@ export function PokemonFormContent({
 
         <section>
           <h2 className="mb-4 text-xl font-semibold">{t("sections.abilities")}</h2>
-          <AbilitiesSection abilities={abilityEntries} />
+          {megaAbilitiesLoading ? (
+            <div className="flex flex-wrap gap-4">
+              <Skeleton className="h-20 w-40 rounded-lg" />
+              <Skeleton className="h-20 w-40 rounded-lg" />
+            </div>
+          ) : (
+            <AbilitiesSection abilities={abilityEntries} />
+          )}
         </section>
 
         <section>
           <h2 className="mb-4 text-xl font-semibold">{t("sections.defensiveEffectiveness")}</h2>
-          <TypeEffectiveness breakdown={effectiveness} />
+          {megaTypesLoading ? (
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Skeleton className="h-24 w-full rounded-lg" />
+              <Skeleton className="h-24 w-full rounded-lg" />
+              <Skeleton className="h-24 w-full rounded-lg" />
+            </div>
+          ) : (
+            <TypeEffectiveness breakdown={effectiveness} />
+          )}
         </section>
       </div>
     </div>
