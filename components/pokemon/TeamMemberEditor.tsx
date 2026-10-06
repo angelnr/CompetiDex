@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ItemPicker } from "@/components/pokemon/ItemPicker";
 import { ItemSprite } from "@/components/pokemon/ItemSprite";
+import { MovePicker } from "@/components/pokemon/MovePicker";
 import {
   Select,
   SelectContent,
@@ -288,18 +289,16 @@ export function TeamMemberEditor({
         <label className="mb-1 block text-xs font-medium">{t("moves")}</label>
         <div className="space-y-2">
           {[0, 1, 2, 3].map((i) => {
-            const moveVal = member.moves?.[i] ?? "";
+            const moveVal = member.moves?.[i] ?? null;
             return (
               <div key={i} className="flex items-center gap-2">
-                <Input
-                  type="text"
-                  value={moveVal}
-                  onChange={(e) => handleMove(i, e.target.value)}
-                  placeholder={t("movePlaceholder")}
-                  list={`move-list-${member.pokemonId}`}
-                  className="flex-1"
-                  aria-label={t("moveLabel", { slot: i + 1 })}
-                />
+                <div className="flex-1">
+                  <MovePicker
+                    value={moveVal}
+                    pool={availableMoves}
+                    onChange={(slug) => handleMove(i, slug ?? "")}
+                  />
+                </div>
                 {moveVal && (
                   <Button
                     type="button"
@@ -315,11 +314,6 @@ export function TeamMemberEditor({
               </div>
             );
           })}
-          <datalist id={`move-list-${member.pokemonId}`}>
-            {availableMoves.map((m) => (
-              <option key={m} value={m} />
-            ))}
-          </datalist>
         </div>
       </div>
     </div>

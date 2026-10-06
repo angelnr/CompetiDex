@@ -187,6 +187,21 @@ export function useAbilities(idsOrNames: (string | number)[]) {
   });
 }
 
+/**
+ * Resuelve varios movimientos por id/nombre en paralelo.
+ * Pensado para el picker de movimientos del equipo: permite mostrar el nombre
+ * localizado en la UI manteniendo el slug en inglés para el export.
+ */
+export function useMoves(idsOrNames: (string | number)[]) {
+  return useQueries({
+    queries: idsOrNames.map((idOrName) => ({
+      queryKey: ["move", idOrName],
+      queryFn: () => fetchJson<Move>(`/api/pokemon?move=${idOrName}`),
+      staleTime: STALE_STATIC,
+    })),
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Type list (para filtros)
 // ---------------------------------------------------------------------------
