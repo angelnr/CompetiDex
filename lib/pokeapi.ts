@@ -358,7 +358,10 @@ class PokeAPIError extends Error {
   }
 }
 
-async function rawFetch<T>(endpoint: string, retries = 2): Promise<T> {
+/** Reintentos ante errores de red/timeout/429 (PokeAPI es intermitente). */
+const FETCH_RETRIES = 3;
+
+async function rawFetch<T>(endpoint: string, attempt = 0): Promise<T> {
   const url = endpoint.startsWith("http") ? endpoint : `${BASE_URL}${endpoint}`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
@@ -370,14 +373,21 @@ async function rawFetch<T>(endpoint: string, retries = 2): Promise<T> {
       headers: { Accept: "application/json" },
       next: { revalidate: 86_400 },
     });
-  } finally {
+  } catch (err) {
     clearTimeout(timer);
+    // Error de red o timeout: reintenta con backoff exponencial.
+    if (attempt < FETCH_RETRIES) {
+      await new Promise((r) => setTimeout(r, 300 * 2 ** attempt));
+      return rawFetch(endpoint, attempt + 1);
+    }
+    throw err;
   }
+  clearTimeout(timer);
 
-  if (res.status === 429 && retries > 0) {
+  if (res.status === 429 && attempt < FETCH_RETRIES) {
     const retryAfter = Number(res.headers.get("Retry-After")) || 2;
     await new Promise((r) => setTimeout(r, retryAfter * 1_000));
-    return rawFetch(endpoint, retries - 1);
+    return rawFetch(endpoint, attempt + 1);
   }
 
   if (!res.ok) {

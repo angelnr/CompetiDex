@@ -151,6 +151,25 @@ describe("getTypeList", () => {
   });
 });
 
+describe("reintentos de red", () => {
+  it("reintenta ante fallo de fetch y termina OK", async () => {
+    fetchMock.mockRejectedValueOnce(new Error("ETIMEDOUT"));
+    fetchMock.mockResolvedValueOnce(jsonResponse({ id: 25, name: "pikachu" }));
+
+    const data = await getPokemon(25);
+
+    expect(data).toEqual({ id: 25, name: "pikachu" });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("lanza si agota los reintentos", async () => {
+    fetchMock.mockRejectedValue(new Error("ETIMEDOUT"));
+
+    await expect(getPokemon(999)).rejects.toThrow("ETIMEDOUT");
+    expect(fetchMock).toHaveBeenCalledTimes(4); // intento inicial + 3 reintentos
+  }, 10_000);
+});
+
 describe("PokeAPIError en upstream no-ok", async () => {
   it("lanza PokeAPIError con status y endpoint en 404", async () => {
     fetchMock.mockResolvedValueOnce({
