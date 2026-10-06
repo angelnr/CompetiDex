@@ -22,13 +22,14 @@ import { useTeams } from "@/hooks/useTeams";
 import { usePokemon } from "@/lib/queries";
 import { teamTypes } from "@/lib/team";
 import { teamToPokepaste } from "@/lib/pokepaste";
+import { cn } from "@/lib/utils";
 
 export default function TeamEditorPage() {
   const t = useTranslations("teams");
   const tNav = useTranslations("nav");
   const params = useParams();
   const teamId = params?.id as string | undefined;
-  const { teams, loaded, addPokemon, removePokemon, updateMember, toggleChampions } = useTeams();
+  const { teams, loaded, addPokemon, removePokemon, updateMember, setChampions } = useTeams();
   const [activeSlot, setActiveSlot] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -103,16 +104,41 @@ export default function TeamEditorPage() {
               </Link>
             </Button>
             <h1 className="text-2xl font-bold">{team.name}</h1>
-            <Button
-              variant={team.champions ? "default" : "outline"}
-              size="sm"
-              onClick={() => toggleChampions(team.id)}
-              aria-label={team.champions ? t("standardMode") : t("championsMode")}
-              className="gap-1"
+            <div
+              role="radiogroup"
+              aria-label={t("formatLabel")}
+              className="flex items-center gap-1 rounded-lg border bg-muted/50 p-1"
             >
-              <Swords className="size-4" />
-              {team.champions ? t("standardMode") : t("championsMode")}
-            </Button>
+              <Swords className="ml-1 size-4 shrink-0 text-muted-foreground" aria-hidden />
+              <button
+                type="button"
+                role="radio"
+                aria-checked={!team.champions}
+                onClick={() => setChampions(team.id, false)}
+                className={cn(
+                  "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
+                  !team.champions
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {t("standardMode")}
+              </button>
+              <button
+                type="button"
+                role="radio"
+                aria-checked={team.champions}
+                onClick={() => setChampions(team.id, true)}
+                className={cn(
+                  "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
+                  team.champions
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {t("championsMode")}
+              </button>
+            </div>
           </div>
 
           {/* ── Botón Exportar ── */}

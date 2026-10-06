@@ -28,8 +28,9 @@ export interface UseTeamsResult {
     pokemonId: number,
     patch: TeamMemberPatch,
   ) => Promise<{ ok: true; team: Team } | { ok: false; error: string }>;
-  toggleChampions: (
+  setChampions: (
     teamId: string,
+    champions: boolean,
   ) => Promise<{ ok: true; team: Team } | { ok: false; error: string }>;
 }
 
@@ -141,15 +142,15 @@ export function useTeams(storage: TeamStorage = localStorageTeamStorage): UseTea
     [teams, storage],
   );
 
-  const toggleChampions = useCallback(
-    async (teamId: string): ReturnType<UseTeamsResult["toggleChampions"]> => {
+  const setChampions = useCallback(
+    async (teamId: string, champions: boolean): ReturnType<UseTeamsResult["setChampions"]> => {
       const team = teams.find((t) => t.id === teamId);
       if (!team) return { ok: false, error: "Equipo no encontrado" };
+      if (team.champions === champions) return { ok: true, team };
 
-      const newChampions = !team.champions;
       const updated: Team = {
         ...team,
-        champions: newChampions,
+        champions,
         members: team.members.map((m) => ({
           ...m,
           evs: { ...DEFAULT_EVS },
@@ -172,6 +173,6 @@ export function useTeams(storage: TeamStorage = localStorageTeamStorage): UseTea
     addPokemon,
     removePokemon,
     updateMember,
-    toggleChampions,
+    setChampions,
   };
 }

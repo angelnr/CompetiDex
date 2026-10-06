@@ -5,7 +5,6 @@ import { Link } from "@/i18n/routing";
 import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-import { TypeBadge } from "@/components/pokemon/TypeBadge";
 import { ItemSprite } from "@/components/pokemon/ItemSprite";
 import { Button } from "@/components/ui/button";
 import type { TeamMember } from "@/lib/team";
@@ -22,8 +21,8 @@ export interface TeamSlotProps {
 }
 
 /**
- * Slot individual de un equipo (0..5). Muestra el sprite, nombre, #id y tipos
- * si está ocupado, o un placeholder "vacío" si no.
+ * Slot individual de un equipo (0..5). Muestra el sprite, nombre, #id y el
+ * icono del objeto equipado en la esquina, o un placeholder "vacío" si no.
  */
 export function TeamSlot({ member, onRemove, onClick }: TeamSlotProps) {
   const t = useTranslations("teams");
@@ -83,11 +82,6 @@ export function TeamSlot({ member, onRemove, onClick }: TeamSlotProps) {
           <span className="text-[0.55rem] text-muted-foreground">
             {formatPokedexId(member.pokemonId)}
           </span>
-          <div className="flex gap-0.5">
-            {member.types.map((t) => (
-              <TypeBadge key={t} type={t} />
-            ))}
-          </div>
         </div>
       ) : (
         <Link href={`/pokemon/${member.pokemonId}`} className="flex flex-col items-center gap-0.5">
@@ -104,11 +98,6 @@ export function TeamSlot({ member, onRemove, onClick }: TeamSlotProps) {
           <span className="text-[0.55rem] text-muted-foreground">
             {formatPokedexId(member.pokemonId)}
           </span>
-          <div className="flex gap-0.5">
-            {member.types.map((t) => (
-              <TypeBadge key={t} type={t} />
-            ))}
-          </div>
         </Link>
       )}
 
