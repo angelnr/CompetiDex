@@ -5,9 +5,11 @@ import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import type { Ability } from "@/lib/pokeapi";
 import {
-  capitalize,
+  formatSpeciesLabel,
   extractIdFromUrl,
   formatPokedexId,
+  getFlavorText,
+  getName,
   getPixelSpriteById,
 } from "@/lib/pokemon-utils";
 
@@ -18,17 +20,13 @@ export interface AbilityDetailProps {
 
 export function AbilityDetail({ ability, locale = "es" }: AbilityDetailProps) {
   const t = useTranslations("abilities");
-  const lang = locale;
-  const nameEs =
-    ability.names.find((n) => n.language.name === lang)?.name ??
-    ability.names.find((n) => n.language.name === "es")?.name ??
-    ability.names.find((n) => n.language.name === "en")?.name ??
-    ability.name;
-  const nameEn = ability.names.find((n) => n.language.name === "en")?.name ?? ability.name;
+  const displayName = getName(ability.names, ability.name, locale);
+  const canonical = ability.names.find((n) => n.language.name === "en")?.name ?? ability.name;
 
-  const flavorEs = ability.flavor_text_entries.find((e) => e.language.name === lang);
-  const flavorEn = ability.flavor_text_entries.find((e) => e.language.name === "es");
-  const descEs = (flavorEs ?? flavorEn)?.flavor_text?.replace(/\f|\n/g, " ").trim() ?? null;
+  const description =
+    getFlavorText(ability.flavor_text_entries, locale) ??
+    ability.effect_entries.find((e) => e.language.name === "en")?.short_effect ??
+    null;
 
   const pokemonList = ability.pokemon
     .filter((p) => {
@@ -44,16 +42,17 @@ export function AbilityDetail({ ability, locale = "es" }: AbilityDetailProps) {
   return (
     <article className="container mx-auto max-w-3xl py-8">
       <header className="mb-8">
-        <h1 className="text-3xl font-bold">{nameEs ?? nameEn}</h1>
+        <h1 className="text-3xl font-bold">{displayName}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {nameEs ? `${nameEn} (${capitalize(ability.name)})` : capitalize(ability.name)}
+          {displayName !== canonical ? `${canonical} · ` : ""}
+          <span className="font-mono">{ability.name}</span>
         </p>
       </header>
 
-      {descEs && (
+      {description && (
         <section className="mb-8">
           <h2 className="mb-2 text-lg font-semibold">{t("description")}</h2>
-          <p className="text-sm leading-relaxed text-muted-foreground">{descEs}</p>
+          <p className="text-sm leading-relaxed text-muted-foreground">{description}</p>
         </section>
       )}
 
@@ -88,7 +87,7 @@ export function AbilityDetail({ ability, locale = "es" }: AbilityDetailProps) {
                     <span className="font-mono text-xs text-muted-foreground">
                       {formatPokedexId(id)}
                     </span>
-                    {capitalize(p.pokemon.name.replace(/-/g, " "))}
+                    {formatSpeciesLabel(p.pokemon.name)}
                   </Link>
                   <Badge variant={p.is_hidden ? "secondary" : "outline"} className="text-[10px]">
                     {p.is_hidden ? t("hidden") : t("slot", { slot: p.slot })}

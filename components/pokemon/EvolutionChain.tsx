@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 
 import type { ChainLink } from "@/lib/pokeapi";
 import { extractIdFromUrl, formatPokedexId, getOfficialArtworkById } from "@/lib/pokemon-utils";
+import { useLocalizedSpeciesName } from "@/hooks/useLocalizedSpeciesName";
 
 export interface EvolutionChainProps {
   /** Cadena evolutiva ya resuelta (fetch server-side). */
@@ -62,13 +63,14 @@ function EvolutionBranch({
 function StageNode({ species }: { species: { name: string; url: string } }) {
   const id = extractIdFromUrl(species.url);
   const sprite = getOfficialArtworkById(id);
+  const name = useLocalizedSpeciesName(species.name);
   return (
     <Link href={`/pokemon/${id}`} className="group flex flex-col items-center gap-1">
       <div className="relative size-24">
         {sprite && (
           <Image
             src={sprite}
-            alt={species.name}
+            alt={name}
             fill
             className="object-contain transition-transform group-hover:scale-110"
             sizes="96px"
@@ -77,7 +79,7 @@ function StageNode({ species }: { species: { name: string; url: string } }) {
         )}
       </div>
       <span className="text-xs font-medium">{formatPokedexId(id)}</span>
-      <span className="text-xs text-muted-foreground">{species.name}</span>
+      <span className="text-xs text-muted-foreground">{name}</span>
     </Link>
   );
 }

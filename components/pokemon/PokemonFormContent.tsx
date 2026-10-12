@@ -22,6 +22,7 @@ import {
   getFlavorText,
   getGenus,
   getOfficialArtwork,
+  speciesLabelWithGender,
 } from "@/lib/pokemon-utils";
 import { categorizeEffectiveness, computeDefensiveEffectiveness } from "@/lib/type-effectiveness";
 import { cn } from "@/lib/utils";
@@ -50,7 +51,10 @@ export function PokemonFormContent({
   const isMegaSelected = selectedMega !== null && megaData !== undefined;
 
   const pokemon = isMegaSelected && megaData ? megaData : basePokemon;
-  const displayName = getDisplayName(species.names, pokemon.name, locale);
+  const displayName = speciesLabelWithGender(
+    getDisplayName(species.names, pokemon.name, locale),
+    pokemon.name,
+  );
   const flavorText = getFlavorText(species.flavor_text_entries, locale);
   const genus = getGenus(species.genera, locale);
   const artwork = getOfficialArtwork(pokemon);

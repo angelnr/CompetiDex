@@ -24,6 +24,8 @@ import type {
   Ability,
   Move,
   LocationAreaEncounter,
+  Nature,
+  Item,
 } from "@/lib/pokeapi";
 
 const STALE_STATIC = Infinity;
@@ -198,6 +200,40 @@ export function useMoves(idsOrNames: (string | number)[]) {
       queryKey: ["move", idOrName],
       queryFn: () => fetchJson<Move>(`/api/pokemon?move=${idOrName}`),
       staleTime: STALE_STATIC,
+    })),
+  });
+}
+
+/** Nombres localizados de naturalezas (por slug: "naughty", "timid"...). */
+export function useNatures(names: string[]) {
+  return useQueries({
+    queries: names.map((name) => ({
+      queryKey: ["nature", name],
+      queryFn: () => fetchJson<Nature>(`/api/pokemon?nature=${name}`),
+      staleTime: STALE_STATIC,
+    })),
+  });
+}
+
+/** Objeto por nombre/slug, con nombres y descripciones localizados. */
+export function useItem(idOrName: number | string | undefined) {
+  return useQuery<Item>({
+    queryKey: ["item", idOrName],
+    queryFn: () => fetchJson<Item>(`/api/pokemon?item=${idOrName}`),
+    enabled: idOrName !== undefined && idOrName !== "",
+    staleTime: STALE_STATIC,
+    retry: false,
+  });
+}
+
+/** Resuelve varios objetos por slug en paralelo (para el selector de equipo). */
+export function useItems(idsOrNames: (string | number)[]) {
+  return useQueries({
+    queries: idsOrNames.map((idOrName) => ({
+      queryKey: ["item", idOrName],
+      queryFn: () => fetchJson<Item>(`/api/pokemon?item=${idOrName}`),
+      staleTime: STALE_STATIC,
+      retry: false,
     })),
   });
 }

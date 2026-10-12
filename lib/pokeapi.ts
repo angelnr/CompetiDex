@@ -28,6 +28,7 @@ const CACHE_TTL = {
   list: 86_400,
   ability: 86_400,
   move: 604_800, // 7d
+  item: 604_800, // 7d
   encounters: 86_400,
 } as const;
 
@@ -320,6 +321,43 @@ export interface Move {
 }
 
 // ---------------------------------------------------------------------------
+// Nature (nombres localizados para el creador de equipos)
+// ---------------------------------------------------------------------------
+
+export interface Nature {
+  id: number;
+  name: string;
+  names: { name: string; language: NamedAPIResource }[];
+  increased_stat: NamedAPIResource | null;
+  decreased_stat: NamedAPIResource | null;
+}
+
+// ---------------------------------------------------------------------------
+// Item (nombres/descripciones localizados para el editor de equipos)
+// ---------------------------------------------------------------------------
+
+export interface ItemFlavorText {
+  text: string;
+  language: NamedAPIResource;
+  version_group: NamedAPIResource;
+}
+
+export interface ItemEffectEntry {
+  effect: string;
+  short_effect: string;
+  language: NamedAPIResource;
+}
+
+export interface Item {
+  id: number;
+  name: string;
+  names: { name: string; language: NamedAPIResource }[];
+  flavor_text_entries: ItemFlavorText[];
+  effect_entries: ItemEffectEntry[];
+  category: NamedAPIResource;
+}
+
+// ---------------------------------------------------------------------------
 // Location Area Encounter
 // ---------------------------------------------------------------------------
 
@@ -470,6 +508,18 @@ export function getAbility(idOrName: number | string): Promise<Ability> {
 export function getMove(idOrName: number | string): Promise<Move> {
   const id = typeof idOrName === "number" ? String(idOrName) : idOrName;
   return pokeapiFetch<Move>(`/move/${id}`, CACHE_TTL.move);
+}
+
+/** Naturaleza con nombres localizados: /nature/{idOrName} */
+export function getNature(idOrName: number | string): Promise<Nature> {
+  const id = typeof idOrName === "number" ? String(idOrName) : idOrName;
+  return pokeapiFetch<Nature>(`/nature/${id}`, CACHE_TTL.ability);
+}
+
+/** Objeto con nombres/descripciones localizados: /item/{idOrName} */
+export function getItem(idOrName: number | string): Promise<Item> {
+  const id = typeof idOrName === "number" ? String(idOrName) : idOrName;
+  return pokeapiFetch<Item>(`/item/${id}`, CACHE_TTL.item);
 }
 
 /** Encuentros de un Pokémon por id: /pokemon/{id}/encounters */

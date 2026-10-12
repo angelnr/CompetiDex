@@ -75,6 +75,31 @@ describe("SearchBar", () => {
     });
   });
 
+  it("sugiere la forma hembra al buscar una especie con dimorfismo", async () => {
+    vi.mocked(usePokemonInfiniteList).mockReturnValue({
+      data: {
+        pages: [
+          makeResourceListFixture({
+            results: [
+              { name: "basculegion-male", url: "https://pokeapi.co/api/v2/pokemon/902/" },
+              { name: "basculegion-female", url: "https://pokeapi.co/api/v2/pokemon/10248/" },
+            ],
+          }),
+        ],
+      },
+    } as never);
+    vi.useRealTimers();
+
+    setup(<SearchBar />);
+    const input = screen.getByLabelText(/buscar/i);
+    fireEvent.change(input, { target: { value: "basculegion" } });
+
+    await waitFor(() => {
+      expect(screen.getByRole("listbox")).toBeInTheDocument();
+    });
+    expect(screen.getByText("Basculegion (F)")).toBeInTheDocument();
+  });
+
   it("limpia el input al pulsar el boton X", async () => {
     vi.mocked(usePokemonInfiniteList).mockReturnValue({
       data: { pages: [makeResourceListFixture()] },

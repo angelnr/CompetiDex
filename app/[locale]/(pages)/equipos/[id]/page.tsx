@@ -22,6 +22,7 @@ import { useTeams } from "@/hooks/useTeams";
 import { usePokemon } from "@/lib/queries";
 import { teamTypes } from "@/lib/team";
 import { teamToPokepaste } from "@/lib/pokepaste";
+import { formatSpeciesLabel } from "@/lib/pokemon-utils";
 import { cn } from "@/lib/utils";
 
 export default function TeamEditorPage() {
@@ -93,7 +94,7 @@ export default function TeamEditorPage() {
   }
 
   return (
-    <main className="container mx-auto max-w-3xl py-10">
+    <main className="container mx-auto max-w-5xl py-10">
       <div className="mb-6 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -176,75 +177,81 @@ export default function TeamEditorPage() {
         )}
       </div>
 
-      {/* Slots del equipo */}
-      <section className="mb-8 rounded-lg border bg-card p-6">
-        <h2 className="mb-4 text-lg font-semibold">
-          {t("members", { count: team.members.length })}
-        </h2>
-        <div className="flex flex-wrap gap-3">
-          {Array.from({ length: 6 }).map((_, i) => {
-            const member = team.members.find((m) => m.slot === i);
-            const isActive = activeSlot === i;
-            return (
-              <div
-                key={i}
-                className={`rounded-lg transition-all ${isActive ? "ring-2 ring-primary" : ""}`}
-              >
-                <TeamSlot
-                  member={member ?? null}
-                  onClick={member ? () => setActiveSlot(isActive ? null : i) : undefined}
-                  onRemove={
-                    member
-                      ? (id) => {
-                          removePokemon(team.id, id);
-                          setActiveSlot(null);
-                        }
-                      : undefined
-                  }
-                />
-              </div>
-            );
-          })}
+      {/* Columna izquierda: slots + editor. Derecha: buscador siempre accesible. */}
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+        <div className="min-w-0 flex-1 space-y-6">
+          <section className="rounded-lg border bg-card p-6">
+            <h2 className="mb-4 text-lg font-semibold">
+              {t("members", { count: team.members.length })}
+            </h2>
+            <div className="flex flex-wrap gap-3">
+              {Array.from({ length: 6 }).map((_, i) => {
+                const member = team.members.find((m) => m.slot === i);
+                const isActive = activeSlot === i;
+                return (
+                  <div
+                    key={i}
+                    className={`rounded-lg transition-all ${isActive ? "ring-2 ring-primary" : ""}`}
+                  >
+                    <TeamSlot
+                      member={member ?? null}
+                      onClick={member ? () => setActiveSlot(isActive ? null : i) : undefined}
+                      onRemove={
+                        member
+                          ? (id) => {
+                              removePokemon(team.id, id);
+                              setActiveSlot(null);
+                            }
+                          : undefined
+                      }
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* Panel editor del miembro activo */}
+          {activeMember && activePokemon && (
+            <section>
+              <h2 className="mb-4 text-lg font-semibold">
+                {t("editMember", { name: formatSpeciesLabel(activeMember.name) })}
+              </h2>
+              <TeamMemberEditor
+                member={activeMember}
+                pokemon={activePokemon}
+                champions={!!team.champions}
+                onChange={(patch) => {
+                  updateMember(team.id, activeMember.pokemonId, patch);
+                }}
+                onRemove={() => {
+                  removePokemon(team.id, activeMember.pokemonId);
+                  setActiveSlot(null);
+                }}
+              />
+            </section>
+          )}
         </div>
-      </section>
 
-      {/* Panel editor del miembro activo */}
-      {activeMember && activePokemon && (
-        <section className="mb-8">
-          <h2 className="mb-4 text-lg font-semibold">
-            {t("editMember", { name: activeMember.name })}
-          </h2>
-          <TeamMemberEditor
-            member={activeMember}
-            pokemon={activePokemon}
-            champions={!!team.champions}
-            onChange={(patch) => {
-              updateMember(team.id, activeMember.pokemonId, patch);
-            }}
-            onRemove={() => {
-              removePokemon(team.id, activeMember.pokemonId);
-              setActiveSlot(null);
-            }}
-          />
-        </section>
-      )}
-
-      {/* Buscador para añadir */}
-      {team.members.length < 6 && (
-        <section className="rounded-lg border bg-card p-6">
-          <h2 className="mb-4 text-lg font-semibold">{t("addPokemon")}</h2>
-          <SearchBar
-            showSprite
-            onSelect={(id) => {
-              handleAddById(id);
-              setActiveSlot(null);
-            }}
-            excludeIds={team.members.map((m) => m.pokemonId)}
-            placeholderKey="forTeamPlaceholder"
-            ariaKey="forTeamAria"
-          />
-        </section>
-      )}
+        {/* Buscador para añadir (columna derecha fija al hacer scroll) */}
+        {team.members.length < 6 && (
+          <aside className="w-full shrink-0 self-start lg:sticky lg:top-20 lg:w-80">
+            <section className="rounded-lg border bg-card p-6">
+              <h2 className="mb-4 text-lg font-semibold">{t("addPokemon")}</h2>
+              <SearchBar
+                showSprite
+                onSelect={(id) => {
+                  handleAddById(id);
+                  setActiveSlot(null);
+                }}
+                excludeIds={team.members.map((m) => m.pokemonId)}
+                placeholderKey="forTeamPlaceholder"
+                ariaKey="forTeamAria"
+              />
+            </section>
+          </aside>
+        )}
+      </div>
     </main>
   );
 }

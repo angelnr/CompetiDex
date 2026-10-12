@@ -105,6 +105,11 @@ export async function PokemonDetail({
         <EncounterInfo encounters={encounters} />
       </Section>
 
+      {/* Cadena evolutiva */}
+      <Section title={t("sections.evolutionChain")}>
+        <EvolutionChain chain={evolutionChain.chain} />
+      </Section>
+
       {/* Movimientos */}
       {pokemon.moves.length > 0 && (
         <Section title={t("sections.moves")}>

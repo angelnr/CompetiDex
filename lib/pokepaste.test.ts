@@ -138,6 +138,97 @@ describe("teamToPokepaste", () => {
     expect(output).toBe("");
   });
 
+  it("exporta formas de género con identificador de Showdown", () => {
+    const team: Team = {
+      id: "test-5",
+      name: "",
+      members: [
+        {
+          pokemonId: 902,
+          name: "basculegion-male",
+          slot: 0,
+          sprite: null,
+          types: ["water"],
+        },
+        {
+          pokemonId: 10248,
+          name: "basculegion-female",
+          slot: 1,
+          sprite: null,
+          types: ["water"],
+        },
+      ],
+      createdAt: 0,
+      updatedAt: 0,
+    };
+    const output = teamToPokepaste(team);
+    const lines = output.split("\n");
+    expect(lines[0]).toBe("Basculegion (M)");
+    expect(lines[1]).toBe("");
+    expect(lines[2]).toBe("Basculegion-F (F)");
+  });
+
+  it("exporta siempre en inglés aunque la UI esté localizada", () => {
+    // Los valores guardados son slugs en inglés; el export no localiza.
+    const team: Team = {
+      id: "test-6",
+      name: "",
+      members: [
+        {
+          pokemonId: 6,
+          name: "charizard",
+          slot: 0,
+          sprite: null,
+          types: ["fire", "flying"],
+          ability: "adaptability",
+          heldItem: "Leftovers",
+          moves: ["flame-burst"],
+          ivs: {
+            hp: 31,
+            attack: 31,
+            defense: 31,
+            "special-attack": 31,
+            "special-defense": 31,
+            speed: 31,
+          },
+          evs: {
+            hp: 0,
+            attack: 0,
+            defense: 0,
+            "special-attack": 252,
+            "special-defense": 0,
+            speed: 252,
+          },
+        },
+      ],
+      createdAt: 0,
+      updatedAt: 0,
+    };
+    const output = teamToPokepaste(team).split("\n");
+    expect(output[0]).toBe("Charizard @ Leftovers");
+    expect(output[1]).toBe("Ability: Adaptability");
+    expect(output).toContain("- Flame Burst");
+  });
+
+  it("exporta Slowking-Galar con guion y mayúsculas", () => {
+    const team: Team = {
+      id: "test-7",
+      name: "",
+      members: [
+        {
+          pokemonId: 10172,
+          name: "slowking-galar",
+          slot: 0,
+          sprite: null,
+          types: ["poison", "psychic"],
+        },
+      ],
+      createdAt: 0,
+      updatedAt: 0,
+    };
+    expect(teamToPokepaste(team).split("\n")[0]).toBe("Slowking-Galar");
+  });
+
   it("preserva el nombre canónico de objetos con guion o variante", () => {
     const team: Team = {
       id: "test-4",

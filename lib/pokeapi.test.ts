@@ -24,6 +24,8 @@ import {
   getEvolutionChain,
   getType,
   getTypeList,
+  getNature,
+  getItem,
   PokeAPIError,
 } from "@/lib/pokeapi";
 
@@ -168,6 +170,36 @@ describe("reintentos de red", () => {
     await expect(getPokemon(999)).rejects.toThrow("ETIMEDOUT");
     expect(fetchMock).toHaveBeenCalledTimes(4); // intento inicial + 3 reintentos
   }, 10_000);
+});
+
+describe("getNature", () => {
+  it("construye /nature/{id} con ttl de habilidad", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse({ id: 5, name: "naughty", names: [] }));
+
+    await getNature(5);
+
+    const [key, , ttl] = getOrSetMock.mock.calls[0]!;
+    expect(key).toBe("pokeapi:/nature/5");
+    expect(ttl).toBe(86_400);
+    const url = fetchMock.mock.calls[0]![0] as string;
+    expect(url).toMatch(/\/nature\/5$/);
+  });
+});
+
+describe("getItem", () => {
+  it("construye /item/{nombre} con ttl de 7d", async () => {
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({ id: 234, name: "leftovers", names: [], flavor_text_entries: [] }),
+    );
+
+    await getItem("leftovers");
+
+    const [key, , ttl] = getOrSetMock.mock.calls[0]!;
+    expect(key).toBe("pokeapi:/item/leftovers");
+    expect(ttl).toBe(604_800);
+    const url = fetchMock.mock.calls[0]![0] as string;
+    expect(url).toMatch(/\/item\/leftovers$/);
+  });
 });
 
 describe("PokeAPIError en upstream no-ok", async () => {

@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import Image from "next/image";
 import { X } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -27,9 +27,11 @@ import {
   totalEvs,
 } from "@/lib/team";
 import type { Pokemon } from "@/lib/pokeapi";
-import { capitalize, formatPokedexId, getPixelSpriteById } from "@/lib/pokemon-utils";
+import { formatPokedexId, getName, getPixelSpriteById } from "@/lib/pokemon-utils";
+import { useLocalizedSpeciesName } from "@/hooks/useLocalizedSpeciesName";
 import { findItem } from "@/lib/items";
 import { NATURES } from "@/lib/natures";
+import { useAbilities, useItem, useNatures } from "@/lib/queries";
 
 export interface TeamMemberEditorProps {
   member: TeamMember;
@@ -71,6 +73,8 @@ export function TeamMemberEditor({
   );
   const evOver = evTotal > maxEvTotal;
   const selectedItem = useMemo(() => findItem(member.heldItem), [member.heldItem]);
+  const locale = useLocale();
+  const localizedName = useLocalizedSpeciesName(member.name);
 
   const abilities = useMemo(
     () =>
@@ -80,6 +84,36 @@ export function TeamMemberEditor({
       })),
     [pokemon.abilities],
   );
+
+  // Nombres localizados (habilidad y naturaleza) para la UI; el valor guardado
+  // sigue siendo el slug en inglés para que el export no cambie de idioma.
+  const abilityNames = useMemo(() => abilities.map((a) => a.name), [abilities]);
+  const abilityQueries = useAbilities(abilityNames);
+  const natureQueries = useNatures(NATURES.map((n) => n.name));
+  const { data: heldItemData } = useItem(selectedItem?.slug);
+
+  const abilityLabel = (slug: string): string => {
+    const idx = abilityNames.indexOf(slug);
+    const data = idx >= 0 ? abilityQueries[idx]?.data : undefined;
+    if (data) return getName(data.names, slug, locale);
+    return slug.replace(/-/g, " ");
+  };
+
+  const natureLabel = (n: (typeof NATURES)[number], i: number): string => {
+    const data = natureQueries[i]?.data;
+    return data ? getName(data.names, n.name, locale) : n.name;
+  };
+
+  // Descripción localizada del objeto equipado; cae al texto curado en inglés.
+  const heldItemDescription = selectedItem
+    ? (heldItemData?.flavor_text_entries
+        .find((e) => e.language.name === locale)
+        ?.text.replace(/\f|\n/g, " ")
+        .replace(/\s+/g, " ")
+        .trim() ??
+      heldItemData?.effect_entries.find((e) => e.language.name === "en")?.short_effect ??
+      selectedItem.description)
+    : null;
 
   const availableMoves = useMemo(() => {
     const seen = new Set<string>();
@@ -139,7 +173,7 @@ export function TeamMemberEditor({
           className="size-12 shrink-0 object-contain"
         />
         <div className="flex-1">
-          <span className="font-semibold">{capitalize(member.name)}</span>
+          <span className="font-semibold">{localizedName}</span>
           <span className="ml-2 font-mono text-xs text-muted-foreground">
             {formatPokedexId(member.pokemonId)}
           </span>
@@ -149,7 +183,7 @@ export function TeamMemberEditor({
           variant="destructive"
           size="sm"
           onClick={onRemove}
-          aria-label={tTeams("removeAria", { name: capitalize(member.name) })}
+          aria-label={tTeams("removeAria", { name: localizedName })}
         >
           <X className="mr-1 size-4" />
           {tTeams("removeMember")}
@@ -180,7 +214,7 @@ export function TeamMemberEditor({
           {selectedItem && (
             <p className="mt-1 flex items-start gap-1.5 text-[10px] text-muted-foreground">
               <ItemSprite slug={selectedItem.slug} alt="" className="mt-0.5 size-4" />
-              <span>{selectedItem.description}</span>
+              <span>{heldItemDescription}</span>
             </p>
           )}
         </div>
@@ -199,7 +233,7 @@ export function TeamMemberEditor({
           <SelectContent>
             {abilities.map((a) => (
               <SelectItem key={a.name} value={a.name}>
-                {capitalize(a.name.replace(/-/g, " "))}
+                {abilityLabel(a.name)}
                 {a.is_hidden && (
                   <Badge variant="secondary" className="ml-2 text-[10px]">
                     {t("hidden")}
@@ -219,9 +253,9 @@ export function TeamMemberEditor({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {NATURES.map((n) => (
+            {NATURES.map((n, i) => (
               <SelectItem key={n.name} value={n.name}>
-                {n.nameEs} ({capitalize(n.name)})
+                {natureLabel(n, i)}
               </SelectItem>
             ))}
           </SelectContent>

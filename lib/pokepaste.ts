@@ -1,6 +1,7 @@
 import type { Team, TeamMember } from "@/lib/team";
 import { normalizeMember, STAT_KEYS, totalEvs } from "@/lib/team";
 import { findItem } from "@/lib/items";
+import { pokepasteSpeciesLine } from "@/lib/pokemon-utils";
 
 /**
  * Convierte un slug like "thunder-bolt" a "Thunder Bolt".
@@ -43,8 +44,9 @@ export function teamToPokepaste(team: Team): string {
     if (i > 0) lines.push(""); // línea en blanco separadora entre miembros
 
     // ── Nickname + especie + objeto ──
-    // Showdown: "Pokémon @ Item" (sin nick a menos que haya uno)
-    const speciesLine = slugToTitle(member.name);
+    // Showdown: "Pokémon @ Item" (sin nick a menos que haya uno).
+    // Las formas por género usan su identificador: "Basculegion" / "Basculegion-F".
+    const speciesLine = pokepasteSpeciesLine(member.name);
     if (member.heldItem) {
       // Preserva el nombre canónico del catálogo (p. ej. "Never-Melt Ice");
       // si no se reconoce, asume slug y lo formatea.

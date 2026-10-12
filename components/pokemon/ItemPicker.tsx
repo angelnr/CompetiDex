@@ -2,12 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Input } from "@/components/ui/input";
 import { ItemSprite } from "@/components/pokemon/ItemSprite";
 import { ITEMS, type Item } from "@/lib/items";
-import { fuzzyMatch } from "@/lib/pokemon-utils";
+import { fuzzyMatch, getName } from "@/lib/pokemon-utils";
+import { useItem, useItems } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 
 export interface ItemPickerProps {
@@ -27,14 +28,20 @@ const MAX_RESULTS = 30;
 export function ItemPicker({ value, onChange, disabled = false }: ItemPickerProps) {
   const t = useTranslations("teams.member");
   const tCat = useTranslations("teams.itemCategories");
+  const locale = useLocale();
   const [query, setQuery] = useState(value ?? "");
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const { data: selectedData } = useItem(value ?? undefined);
+  const selectedLabel =
+    value && selectedData ? getName(selectedData.names, value, locale) : (value ?? "");
+
   useEffect(() => {
-    setQuery(value ?? "");
-  }, [value]);
+    if (!open) setQuery(selectedLabel);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, selectedLabel]);
 
   useEffect(() => {
     if (!open) return;
@@ -59,6 +66,25 @@ export function ItemPicker({ value, onChange, disabled = false }: ItemPickerProp
       .slice(0, MAX_RESULTS)
       .map((r) => r.item);
   }, [query]);
+
+  // Nombres/descripciones localizados de los objetos visibles (PokeAPI).
+  // Los objetos exclusivos de Champions no existen en PokeAPI: caen al inglés.
+  const itemQueries = useItems(results.map((r) => r.slug));
+
+  const localize = (item: Item, i: number) => {
+    const data = itemQueries[i]?.data;
+    if (!data) return { name: item.name, description: item.description };
+    const name = getName(data.names, item.name, locale);
+    const description =
+      data.flavor_text_entries
+        .find((e) => e.language.name === locale)
+        ?.text.replace(/\f|\n/g, " ")
+        .replace(/\s+/g, " ")
+        .trim() ??
+      data.effect_entries.find((e) => e.language.name === "en")?.short_effect ??
+      item.description;
+    return { name, description };
+  };
 
   const select = (item: Item) => {
     onChange(item);
@@ -141,37 +167,40 @@ export function ItemPicker({ value, onChange, disabled = false }: ItemPickerProp
           {results.length === 0 ? (
             <li className="px-3 py-2 text-sm text-muted-foreground">{t("itemNoResults")}</li>
           ) : (
-            results.map((item, i) => (
-              <li
-                key={item.slug}
-                id={`item-option-${i}`}
-                role="option"
-                aria-selected={i === activeIndex}
-              >
-                <button
-                  type="button"
-                  onClick={() => select(item)}
-                  onMouseEnter={() => setActiveIndex(i)}
-                  className={cn(
-                    "flex w-full items-start gap-2 px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground",
-                    i === activeIndex && "bg-accent text-accent-foreground",
-                  )}
+            results.map((item, i) => {
+              const { name, description } = localize(item, i);
+              return (
+                <li
+                  key={item.slug}
+                  id={`item-option-${i}`}
+                  role="option"
+                  aria-selected={i === activeIndex}
                 >
-                  <ItemSprite slug={item.slug} alt="" className="mt-0.5 size-6" />
-                  <span className="min-w-0 flex-1">
-                    <span className="flex items-center gap-2">
-                      <span className="truncate font-medium">{item.name}</span>
-                      <span className="shrink-0 rounded bg-muted px-1 text-[10px] text-muted-foreground">
-                        {tCat(item.category)}
+                  <button
+                    type="button"
+                    onClick={() => select(item)}
+                    onMouseEnter={() => setActiveIndex(i)}
+                    className={cn(
+                      "flex w-full items-start gap-2 px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground",
+                      i === activeIndex && "bg-accent text-accent-foreground",
+                    )}
+                  >
+                    <ItemSprite slug={item.slug} alt="" className="mt-0.5 size-6" />
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center gap-2">
+                        <span className="truncate font-medium">{name}</span>
+                        <span className="shrink-0 rounded bg-muted px-1 text-[10px] text-muted-foreground">
+                          {tCat(item.category)}
+                        </span>
+                      </span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {description}
                       </span>
                     </span>
-                    <span className="block truncate text-xs text-muted-foreground">
-                      {item.description}
-                    </span>
-                  </span>
-                </button>
-              </li>
-            ))
+                  </button>
+                </li>
+              );
+            })
           )}
         </ul>
       )}

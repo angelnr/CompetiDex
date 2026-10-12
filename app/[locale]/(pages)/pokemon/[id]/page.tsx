@@ -15,9 +15,10 @@ import {
 } from "@/lib/pokeapi";
 import {
   extractIdFromUrl,
-  capitalize,
   getOfficialArtworkById,
   getMegaVarieties,
+  getName,
+  speciesLabelWithGender,
 } from "@/lib/pokemon-utils";
 
 const STATIC_RANGE = { min: 1, max: 151 };
@@ -67,10 +68,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const speciesId = extractIdFromUrl(pokemon.species.url);
     const species = await getPokemonSpecies(speciesId);
     const lang = params.locale;
-    const name =
-      species.names.find((n) => n.language.name === lang)?.name ??
-      species.names.find((n) => n.language.name === "es")?.name ??
-      capitalize(pokemon.name);
+    const name = speciesLabelWithGender(getName(species.names, pokemon.name, lang), pokemon.name);
 
     const flavorEs = species.flavor_text_entries.find((e) => e.language.name === lang);
     const flavorEn = species.flavor_text_entries.find((e) => e.language.name === "en");

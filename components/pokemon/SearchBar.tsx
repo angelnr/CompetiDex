@@ -12,7 +12,9 @@ import { usePokemonInfiniteList } from "@/lib/queries";
 import {
   capitalize,
   extractIdFromUrl,
+  formatSpeciesLabel,
   fuzzyMatch,
+  getGenderFormSuggestions,
   getMegaFormLabel,
   getMegaFormSuggestions,
   getPixelSpriteById,
@@ -97,7 +99,7 @@ export function SearchBar({
       .filter((r) => !excludeIds?.includes(r.id))
       .sort((a, b) => a.score - b.score)
       .slice(0, 8);
-    // Añadir formas alternativas de especies coincidentes (mega + regional)
+    // Añadir formas alternativas de especies coincidentes (mega + regional + género)
     const altForms = matched.flatMap((m) => {
       const mega = getMegaFormSuggestions(m.name).map((mf) => ({
         name: mf.name,
@@ -111,7 +113,13 @@ export function SearchBar({
         score: -1,
         kind: "regional" as const,
       }));
-      return [...mega, ...regional];
+      const gender = getGenderFormSuggestions(m.name).map((gf) => ({
+        name: gf.name,
+        id: gf.id,
+        score: -1,
+        kind: "gender" as const,
+      }));
+      return [...mega, ...regional, ...gender];
     });
     return [...altForms, ...matched].slice(0, 12);
   }, [debounced, data, excludeIds]);
@@ -225,7 +233,9 @@ export function SearchBar({
                 ? getMegaFormLabel(s.name)
                 : s.kind === "regional"
                   ? formatRegionalLabel(s.name)
-                  : capitalize(s.name);
+                  : s.kind === "gender"
+                    ? formatSpeciesLabel(s.name)
+                    : capitalize(s.name);
             return (
               <li
                 key={s.name}
@@ -259,6 +269,10 @@ export function SearchBar({
                     </span>
                   ) : s.kind === "regional" ? (
                     <span className="text-xs font-medium text-sky-600 dark:text-sky-400">
+                      {displayName}
+                    </span>
+                  ) : s.kind === "gender" ? (
+                    <span className="text-xs font-medium text-pink-600 dark:text-pink-400">
                       {displayName}
                     </span>
                   ) : (

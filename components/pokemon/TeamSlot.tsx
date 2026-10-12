@@ -8,7 +8,8 @@ import { useTranslations } from "next-intl";
 import { ItemSprite } from "@/components/pokemon/ItemSprite";
 import { Button } from "@/components/ui/button";
 import type { TeamMember } from "@/lib/team";
-import { formatPokedexId, capitalize } from "@/lib/pokemon-utils";
+import { formatPokedexId } from "@/lib/pokemon-utils";
+import { useLocalizedSpeciesName } from "@/hooks/useLocalizedSpeciesName";
 import { findItem, itemSlug } from "@/lib/items";
 
 export interface TeamSlotProps {
@@ -26,6 +27,7 @@ export interface TeamSlotProps {
  */
 export function TeamSlot({ member, onRemove, onClick }: TeamSlotProps) {
   const t = useTranslations("teams");
+  const localizedName = useLocalizedSpeciesName(member?.name);
 
   if (!member) {
     return (
@@ -62,7 +64,7 @@ export function TeamSlot({ member, onRemove, onClick }: TeamSlotProps) {
             e.stopPropagation();
             onRemove(member.pokemonId);
           }}
-          aria-label={t("removeAria", { name: capitalize(member.name) })}
+          aria-label={t("removeAria", { name: localizedName })}
         >
           <X className="size-3" />
         </Button>
@@ -78,7 +80,7 @@ export function TeamSlot({ member, onRemove, onClick }: TeamSlotProps) {
               className="size-12 object-contain"
             />
           )}
-          <span className="text-[0.6rem] font-medium leading-tight">{capitalize(member.name)}</span>
+          <span className="text-[0.6rem] font-medium leading-tight">{localizedName}</span>
           <span className="text-[0.55rem] text-muted-foreground">
             {formatPokedexId(member.pokemonId)}
           </span>
@@ -94,7 +96,7 @@ export function TeamSlot({ member, onRemove, onClick }: TeamSlotProps) {
               className="size-12 object-contain"
             />
           )}
-          <span className="text-[0.6rem] font-medium leading-tight">{capitalize(member.name)}</span>
+          <span className="text-[0.6rem] font-medium leading-tight">{localizedName}</span>
           <span className="text-[0.55rem] text-muted-foreground">
             {formatPokedexId(member.pokemonId)}
           </span>

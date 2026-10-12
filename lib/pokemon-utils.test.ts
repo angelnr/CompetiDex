@@ -10,6 +10,7 @@ import {
   getFlavorText,
   getGenus,
   getDisplayName,
+  getName,
   getOfficialArtworkById,
   isMegaName,
   getMegaSuffix,
@@ -19,6 +20,13 @@ import {
   isRegionalName,
   parseRegionalForm,
   getRegionalFormSuggestions,
+  isGenderFormName,
+  genderBaseSpecies,
+  getGenderFormSuggestions,
+  formatSpeciesLabel,
+  pokepasteSpeciesLine,
+  baseSpeciesSlug,
+  speciesLabelWithGender,
   type MegaVarietyInfo,
 } from "@/lib/pokemon-utils";
 import type { PokemonSpecies } from "@/lib/pokeapi";
@@ -168,6 +176,14 @@ describe("getFlavorText", () => {
   it("null si no hay entradas", () => {
     expect(getFlavorText([])).toBeNull();
   });
+
+  it("locale en prefiere inglés sobre español", () => {
+    const entries = [
+      { flavor_text: "Cuando varios", language: { name: "es" } },
+      { flavor_text: "When several of these", language: { name: "en" } },
+    ];
+    expect(getFlavorText(entries, "en")).toBe("When several of these");
+  });
 });
 
 describe("getGenus", () => {
@@ -189,6 +205,26 @@ describe("getDisplayName", () => {
       "Pikachu",
     );
     expect(getDisplayName([], "pikachu")).toBe("Pikachu");
+  });
+});
+
+describe("getName", () => {
+  it("en prefiere inglés sobre español (Adaptability)", () => {
+    const names = [
+      { name: "Adaptabilidad", language: { name: "es" } },
+      { name: "Adaptability", language: { name: "en" } },
+    ];
+    expect(getName(names, "adaptability", "en")).toBe("Adaptability");
+    expect(getName(names, "adaptability", "es")).toBe("Adaptabilidad");
+  });
+
+  it("locale terciario cae a es luego en", () => {
+    const names = [{ name: "Adaptability", language: { name: "en" } }];
+    expect(getName(names, "adaptability", "fr")).toBe("Adaptability");
+  });
+
+  it("fallback al slug capitalizado si no hay traducción", () => {
+    expect(getName([], "solar-power", "es")).toBe("Solar-power");
   });
 });
 
@@ -312,6 +348,68 @@ describe("getMegaVarieties", () => {
       ],
     };
     expect(getMegaVarieties(noMega)).toHaveLength(0);
+  });
+});
+
+describe("gender forms", () => {
+  it("detecta formas de género y su especie base", () => {
+    expect(isGenderFormName("basculegion-male")).toBe(true);
+    expect(isGenderFormName("basculegion-female")).toBe(true);
+    expect(isGenderFormName("indeedee-female")).toBe(true);
+    expect(isGenderFormName("charizard")).toBe(false);
+    expect(genderBaseSpecies("basculegion-female")).toBe("basculegion");
+  });
+
+  it("sugiere la forma hembra para las especies con dimorfismo", () => {
+    expect(getGenderFormSuggestions("basculegion-male")).toEqual([
+      { name: "basculegion-female", id: 10248 },
+    ]);
+    expect(getGenderFormSuggestions("indeedee-male")).toEqual([
+      { name: "indeedee-female", id: 10186 },
+    ]);
+    expect(getGenderFormSuggestions("meowstic-male")).toEqual([
+      { name: "meowstic-female", id: 10025 },
+    ]);
+    expect(getGenderFormSuggestions("oinkologne-male")).toEqual([
+      { name: "oinkologne-female", id: 10254 },
+    ]);
+    expect(getGenderFormSuggestions("charizard")).toEqual([]);
+  });
+
+  it("formatea etiquetas legibles", () => {
+    expect(formatSpeciesLabel("basculegion-male")).toBe("Basculegion (M)");
+    expect(formatSpeciesLabel("basculegion-female")).toBe("Basculegion (F)");
+    expect(formatSpeciesLabel("charizard")).toBe("Charizard");
+  });
+
+  it("genera el nombre de especie de Poképaste/Showdown", () => {
+    expect(pokepasteSpeciesLine("basculegion-male")).toBe("Basculegion (M)");
+    expect(pokepasteSpeciesLine("basculegion-female")).toBe("Basculegion-F (F)");
+    expect(pokepasteSpeciesLine("indeedee-female")).toBe("Indeedee-F (F)");
+    expect(pokepasteSpeciesLine("charizard")).toBe("Charizard");
+  });
+
+  it("exporta formas regionales como <Pokemon>-<Región>", () => {
+    expect(pokepasteSpeciesLine("slowking-galar")).toBe("Slowking-Galar");
+    expect(pokepasteSpeciesLine("ninetales-alola")).toBe("Ninetales-Alola");
+    expect(pokepasteSpeciesLine("darmanitan-galar-standard")).toBe("Darmanitan-Galar");
+    expect(pokepasteSpeciesLine("darmanitan-galar-zen")).toBe("Darmanitan-Galar-Zen");
+    expect(pokepasteSpeciesLine("tauros-paldea-combat-breed")).toBe("Tauros-Paldea-Combat");
+  });
+
+  it("resuelve la especie base de cualquier forma", () => {
+    expect(baseSpeciesSlug("basculegion-female")).toBe("basculegion");
+    expect(baseSpeciesSlug("meowstic-male")).toBe("meowstic");
+    expect(baseSpeciesSlug("ninetales-alola")).toBe("ninetales");
+    expect(baseSpeciesSlug("charizard-mega-x")).toBe("charizard");
+    expect(baseSpeciesSlug("meowstic-male-mega")).toBe("meowstic");
+    expect(baseSpeciesSlug("pikachu")).toBe("pikachu");
+  });
+
+  it("añade el marcador de género a un nombre ya localizado", () => {
+    expect(speciesLabelWithGender("Basculegion", "basculegion-female")).toBe("Basculegion (F)");
+    expect(speciesLabelWithGender("Basculegion", "basculegion-male")).toBe("Basculegion (M)");
+    expect(speciesLabelWithGender("Charizard", "charizard")).toBe("Charizard");
   });
 });
 

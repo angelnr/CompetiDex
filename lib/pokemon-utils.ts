@@ -345,6 +345,116 @@ export function getRegionalFormSuggestions(speciesName: string): { name: string;
 }
 
 // ---------------------------------------------------------------------------
+// Gender forms (meowstic, indeedee, basculegion, oinkologne)
+// PokeAPI las modela como especies distintas (-male/-female) con stats propios.
+// ---------------------------------------------------------------------------
+
+const GENDER_FORM_BASES = new Set(["meowstic", "indeedee", "basculegion", "oinkologne"]);
+
+/** Forma hembra de las especies con forma por género (la macho es el default). */
+const GENDER_FEMALE_MAP: Record<string, { name: string; id: number }[]> = {
+  "meowstic-male": [{ name: "meowstic-female", id: 10025 }],
+  "indeedee-male": [{ name: "indeedee-female", id: 10186 }],
+  "basculegion-male": [{ name: "basculegion-female", id: 10248 }],
+  "oinkologne-male": [{ name: "oinkologne-female", id: 10254 }],
+};
+
+/** Indica si el slug corresponde a una forma de género (macho/hembra). */
+export function isGenderFormName(name: string): boolean {
+  const m = name.match(/^(.*)-(male|female)$/);
+  return !!m && GENDER_FORM_BASES.has(m[1]!);
+}
+
+/** Nombre de la especie base: "basculegion-female" → "basculegion". */
+export function genderBaseSpecies(name: string): string {
+  const m = name.match(/^(.*)-(male|female)$/);
+  return m?.[1] ?? name;
+}
+
+/** Retorna la forma hembra si el nombre coincide con la forma macho. */
+export function getGenderFormSuggestions(speciesName: string): { name: string; id: number }[] {
+  return GENDER_FEMALE_MAP[speciesName] ?? [];
+}
+
+/** "basculegion" → "Basculegion". */
+function titleFromSlug(slug: string): string {
+  return slug
+    .split("-")
+    .map((w) => capitalize(w))
+    .join(" ");
+}
+
+/**
+ * Etiqueta legible para UI: "basculegion-male" → "Basculegion (M)",
+ * "basculegion-female" → "Basculegion (F)", "charizard" → "Charizard".
+ */
+export function formatSpeciesLabel(name: string): string {
+  if (!isGenderFormName(name)) return titleFromSlug(name);
+  const base = titleFromSlug(genderBaseSpecies(name));
+  return name.endsWith("-female") ? `${base} (F)` : `${base} (M)`;
+}
+
+/**
+ * Nombre de especie en formato Poképaste/Showdown:
+ * - "basculegion-male" → "Basculegion (M)"
+ * - "basculegion-female" → "Basculegion-F (F)"
+ * - "slowking-galar" → "Slowking-Galar"
+ * - "tauros-paldea-combat-breed" → "Tauros-Paldea-Combat"
+ * - "charizard" → "Charizard"
+ * La primera letra de cada token va en mayúscula (case-sensitive para Showdown).
+ */
+export function pokepasteSpeciesLine(name: string): string {
+  if (isGenderFormName(name)) {
+    const base = titleFromSlug(genderBaseSpecies(name));
+    return name.endsWith("-female") ? `${base}-F (F)` : `${base} (M)`;
+  }
+  // Formas regionales y compuestas: "slowking-galar" → "Slowking-Galar".
+  // "-standard" es el default (se omite) y "-breed" es sufijo interno.
+  const clean = name.replace(/-breed$/, "").replace(/-standard$/, "");
+  return clean
+    .split("-")
+    .map((w) => capitalize(w))
+    .join("-");
+}
+
+/**
+ * Slug de la especie base a partir de cualquier forma:
+ * "basculegion-female" → "basculegion", "ninetales-alola" → "ninetales",
+ * "charizard-mega-x" → "charizard", "meowstic-male-mega" → "meowstic".
+ * Sirve para resolver los nombres localizados vía `/pokemon-species/{slug}`.
+ */
+export function baseSpeciesSlug(name: string): string {
+  let current = name;
+  for (let i = 0; i < 3; i++) {
+    if (isGenderFormName(current)) {
+      current = genderBaseSpecies(current);
+      continue;
+    }
+    const regional = parseRegionalForm(current, 0);
+    if (regional) {
+      current = regional.baseSpecies;
+      continue;
+    }
+    const mega = current.match(/^(.+?)-mega(?:-[a-z]+)?$/);
+    if (mega?.[1]) {
+      current = mega[1];
+      continue;
+    }
+    break;
+  }
+  return current;
+}
+
+/**
+ * Etiqueta de especie localizada conservando el marcador de género:
+ * `localizedSpeciesName("Basculegion", "basculegion-female")` → "Basculegion (F)".
+ */
+export function speciesLabelWithGender(localizedBase: string, slug: string): string {
+  if (!isGenderFormName(slug)) return localizedBase;
+  return slug.endsWith("-female") ? `${localizedBase} (F)` : `${localizedBase} (M)`;
+}
+
+// ---------------------------------------------------------------------------
 // Fuzzy match
 // ---------------------------------------------------------------------------
 
@@ -417,7 +527,7 @@ export interface PokemonSummary {
 
 /**
  * Selecciona un valor de un array de entradas lenguaje-dependentes.
- * Busca primero el locale dado, luego fallbacks en orden (es, en).
+ * Busca primero el locale dado, luego fallbacks (es → en, en → es).
  */
 function pickByLocale<T extends { language: { name: string } }>(
   arr: T[],
@@ -425,8 +535,9 @@ function pickByLocale<T extends { language: { name: string } }>(
   locale: string,
   fallbacks = ["es", "en"],
 ): T | undefined {
-  const fallback = locale === "es" || locale === "en" ? ["es", "en"] : [locale, ...fallbacks];
-  for (const l of fallback) {
+  // El locale activo siempre va primero; si no, "en" preferiría "es".
+  const order = [locale, ...fallbacks.filter((l) => l !== locale)];
+  for (const l of order) {
     const hit = arr.find((e) => e.language.name === l);
     if (hit) return hit;
   }
