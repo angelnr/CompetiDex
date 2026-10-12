@@ -27,6 +27,7 @@ import {
   pokepasteSpeciesLine,
   baseSpeciesSlug,
   speciesLabelWithGender,
+  getLocalizedItemFlavor,
   type MegaVarietyInfo,
 } from "@/lib/pokemon-utils";
 import type { PokemonSpecies } from "@/lib/pokeapi";
@@ -183,6 +184,52 @@ describe("getFlavorText", () => {
       { flavor_text: "When several of these", language: { name: "en" } },
     ];
     expect(getFlavorText(entries, "en")).toBe("When several of these");
+  });
+});
+
+describe("getLocalizedItemFlavor", () => {
+  const entries = [
+    {
+      text: "La delicadeza del pañuelo fortalece los movimientos de tipo Normal.",
+      language: { name: "es" },
+      version_group: { name: "x-y" },
+    },
+    {
+      text: "Este objeto restaura gradualmente durante el combate los PS del Pokémon.",
+      language: { name: "es" },
+      version_group: { name: "sun-moon" },
+    },
+    {
+      text: "Este objeto restaura gradualmente durante el combate los PS del Pokémon.",
+      language: { name: "es" },
+      version_group: { name: "sword-shield" },
+    },
+    {
+      text: "When several of these POKéMON gather, their electricity could build and cause lightning storms.",
+      language: { name: "en" },
+      version_group: { name: "x-y" },
+    },
+  ];
+
+  it("ignora el texto mal atribuido de X/Y y usa el version-group más reciente", () => {
+    expect(getLocalizedItemFlavor(entries, "es")).toBe(
+      "Este objeto restaura gradualmente durante el combate los PS del Pokémon.",
+    );
+  });
+
+  it("retorna null si el idioma no tiene entradas", () => {
+    expect(getLocalizedItemFlavor(entries, "fr")).toBeNull();
+  });
+
+  it("limpia saltos de línea y espacios", () => {
+    const raw = [
+      {
+        text: "Ejemplo\ncon\fsalto",
+        language: { name: "es" },
+        version_group: { name: "sun-moon" },
+      },
+    ];
+    expect(getLocalizedItemFlavor(raw, "es")).toBe("Ejemplo con salto");
   });
 });
 

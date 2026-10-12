@@ -238,6 +238,17 @@ export function useItems(idsOrNames: (string | number)[]) {
   });
 }
 
+/** Diccionario de nombres localizados del catálogo de objetos. */
+export function useLocalizedItemNames(enabled: boolean) {
+  return useQuery<Record<string, Record<string, string>>>({
+    queryKey: ["item-names"],
+    queryFn: () =>
+      fetchJson<Record<string, Record<string, string>>>("/api/pokemon?item-names=true"),
+    enabled,
+    staleTime: STALE_LIST,
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Type list (para filtros)
 // ---------------------------------------------------------------------------

@@ -34,6 +34,7 @@ import {
   PokeAPIError,
   type ListOptions,
 } from "@/lib/pokeapi";
+import { getLocalizedItemNames } from "@/lib/item-names";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -125,6 +126,11 @@ export async function GET(request: Request): Promise<NextResponse> {
     if (searchParams.has("item")) {
       const id = idParam.parse(searchParams.get("item"));
       const data = await getItem(id);
+      return NextResponse.json(data);
+    }
+
+    if (searchParams.has("item-names")) {
+      const data = await getLocalizedItemNames();
       return NextResponse.json(data);
     }
 

@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { ITEMS, itemSlug, getItemSpriteUrl, findItem } from "@/lib/items";
+import { ITEMS, itemSlug, getItemSpriteUrl, findItem, localizeItem } from "@/lib/items";
+import type { Item as PokeItem } from "@/lib/pokeapi";
 
 describe("itemSlug", () => {
   it("normaliza espacios y mayúsculas", () => {
@@ -38,6 +39,56 @@ describe("findItem", () => {
     expect(findItem(null)).toBeUndefined();
     expect(findItem("")).toBeUndefined();
     expect(findItem("objeto-inexistente")).toBeUndefined();
+  });
+});
+
+describe("localizeItem", () => {
+  const curated = ITEMS.find((i) => i.slug === "leftovers")!;
+  const pokeBase: PokeItem = {
+    id: 211,
+    name: "leftovers",
+    names: [{ name: "Restos", language: { name: "es", url: "" } }],
+    flavor_text_entries: [
+      {
+        text: "La delicadeza del pañuelo fortalece los movimientos de tipo Normal.",
+        language: { name: "es", url: "" },
+        version_group: { name: "x-y", url: "" },
+      },
+      {
+        text: "Este objeto restaura los PS del Pokémon que lo lleva.",
+        language: { name: "es", url: "" },
+        version_group: { name: "sun-moon", url: "" },
+      },
+    ],
+    effect_entries: [],
+    category: { name: "held-items", url: "" },
+  };
+
+  it("localiza el nombre en es", () => {
+    const { name } = localizeItem(curated, pokeBase, "es");
+    expect(name).toBe("Restos");
+  });
+
+  it("usa la descripción del version-group más reciente (no la de X/Y)", () => {
+    const { description } = localizeItem(curated, pokeBase, "es");
+    expect(description).toBe("Este objeto restaura los PS del Pokémon que lo lleva.");
+    expect(description).not.toContain("pañuelo");
+  });
+
+  it("en inglés usa la descripción curada del catálogo", () => {
+    const { description } = localizeItem(curated, pokeBase, "en");
+    expect(description).toBe(curated.description);
+  });
+
+  it("cae a la descripción curada si no hay texto localizado", () => {
+    const { description } = localizeItem(curated, pokeBase, "fr");
+    expect(description).toBe(curated.description);
+  });
+
+  it("sin datos de PokeAPI (objeto Champions) usa el nombre y descripción curados", () => {
+    const { name, description } = localizeItem(curated, undefined, "es");
+    expect(name).toBe(curated.name);
+    expect(description).toBe(curated.description);
   });
 });
 

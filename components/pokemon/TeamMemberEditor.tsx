@@ -27,11 +27,11 @@ import {
   totalEvs,
 } from "@/lib/team";
 import type { Pokemon } from "@/lib/pokeapi";
-import { formatPokedexId, getName, getPixelSpriteById } from "@/lib/pokemon-utils";
+import { baseSpeciesSlug, formatPokedexId, getName, getPixelSpriteById } from "@/lib/pokemon-utils";
 import { useLocalizedSpeciesName } from "@/hooks/useLocalizedSpeciesName";
-import { findItem } from "@/lib/items";
+import { findItem, localizeItem } from "@/lib/items";
 import { NATURES } from "@/lib/natures";
-import { useAbilities, useItem, useNatures } from "@/lib/queries";
+import { useAbilities, useItem, useNatures, usePokemon } from "@/lib/queries";
 
 export interface TeamMemberEditorProps {
   member: TeamMember;
@@ -104,20 +104,25 @@ export function TeamMemberEditor({
     return data ? getName(data.names, n.name, locale) : n.name;
   };
 
-  // Descripción localizada del objeto equipado; cae al texto curado en inglés.
+  // Descripción localizada del objeto equipado. localizeItem usa el texto del
+  // version-group más reciente de PokeAPI (los de X/Y están mal atribuidos) y
+  // en inglés/ausencia de datos cae a la descripción curada del catálogo.
   const heldItemDescription = selectedItem
-    ? (heldItemData?.flavor_text_entries
-        .find((e) => e.language.name === locale)
-        ?.text.replace(/\f|\n/g, " ")
-        .replace(/\s+/g, " ")
-        .trim() ??
-      heldItemData?.effect_entries.find((e) => e.language.name === "en")?.short_effect ??
-      selectedItem.description)
+    ? localizeItem(selectedItem, heldItemData, locale).description
     : null;
 
+  // Movepool del Pokémon. Las megas nuevas (Champions) vienen con `moves: []`
+  // en PokeAPI; en ese caso se cae al movepool de la especie base.
+  const baseSlug = useMemo(
+    () => (pokemon.moves.length === 0 ? baseSpeciesSlug(member.name) : undefined),
+    [pokemon.moves, member.name],
+  );
+  const { data: basePokemon } = usePokemon(baseSlug);
+
   const availableMoves = useMemo(() => {
+    const source = pokemon.moves.length > 0 ? pokemon.moves : (basePokemon?.moves ?? []);
     const seen = new Set<string>();
-    return pokemon.moves
+    return source
       .map((m) => m.move.name)
       .filter((name) => {
         const lower = name.toLowerCase();
@@ -126,7 +131,7 @@ export function TeamMemberEditor({
         return true;
       })
       .sort();
-  }, [pokemon.moves]);
+  }, [pokemon.moves, basePokemon?.moves]);
 
   const patch = (p: TeamMemberPatch) => onChange(p);
 

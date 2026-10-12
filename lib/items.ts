@@ -7,6 +7,9 @@
  * placeholder.
  */
 
+import { getLocalizedItemFlavor, getName } from "@/lib/pokemon-utils";
+import type { Item as PokeItem } from "@/lib/pokeapi";
+
 export type ItemCategory = "popular" | "battle" | "pokemon" | "useless";
 
 export interface Item {
@@ -604,4 +607,26 @@ export function findItem(value: string | null | undefined): Item | undefined {
   if (!value) return undefined;
   const v = value.trim().toLowerCase();
   return ITEMS.find((item) => item.name.toLowerCase() === v || item.slug === v);
+}
+
+/**
+ * Nombre y descripción localizados de un objeto del catálogo.
+ *
+ * - Nombre: siempre de PokeAPI (`names`), fallback al canónico.
+ * - Descripción: en el locale activo usando el texto del version-group más
+ *   reciente (los `flavor_text_entries` X/Y de PokeAPI están mal atribuidos);
+ *   en inglés y en ausencia de datos localizados se usa la del catálogo
+ *   curado, que es la fuente de verdad y siempre correcta.
+ */
+export function localizeItem(
+  curated: Item,
+  poke: PokeItem | undefined,
+  locale: string,
+): { name: string; description: string } {
+  const name = poke ? getName(poke.names, curated.name, locale) : curated.name;
+  const description =
+    locale !== "en" && poke
+      ? (getLocalizedItemFlavor(poke.flavor_text_entries, locale) ?? curated.description)
+      : curated.description;
+  return { name, description };
 }

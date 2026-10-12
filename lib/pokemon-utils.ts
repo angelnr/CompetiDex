@@ -4,6 +4,7 @@
  */
 
 import type { Pokemon, PokemonSpecies } from "@/lib/pokeapi";
+import { isExcludedVersionGroup, versionGroupOrder } from "@/lib/version-names";
 
 /** Extrae el id numérico de una URL de PokeAPI: /api/v2/pokemon/25/ -> 25 */
 export function extractIdFromUrl(url: string): number {
@@ -657,6 +658,34 @@ export function getGenus(
   const pick = pickByLocale(genera, "genus", locale);
   if (pick) return pick.genus as string;
   return null;
+}
+
+/**
+ * Descripción localizada de un objeto a partir de `flavor_text_entries`.
+ *
+ * PokeAPI tiene mal atribuidos los textos de los items de la generación
+ * X/Y (`x-y`, `oras`): mezclan la descripción de otro objeto (p. ej. el
+ * `leftovers` X/Y describe la Silk Scarf). Para evitarlo se toma la entrada
+ * del version-group más reciente, que sí es correcta en todas las muestras.
+ * Retorna `null` si no hay entradas del idioma buscado (tras filtrar
+ * version-groups excluidos).
+ */
+export function getLocalizedItemFlavor(
+  entries: { text: string; language: { name: string }; version_group: { name: string } }[],
+  locale: string,
+): string | null {
+  const pool = entries.filter(
+    (e) => e.language.name === locale && !isExcludedVersionGroup(e.version_group.name),
+  );
+  if (pool.length === 0) return null;
+  const newest = [...pool]
+    .sort((a, b) => versionGroupOrder(a.version_group.name, b.version_group.name))
+    .at(-1);
+  if (!newest) return null;
+  return newest.text
+    .replace(/\f|\n|\r/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /** Nombre legible traducido; fallback al nombre interno capitalizado. */

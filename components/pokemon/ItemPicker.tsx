@@ -6,9 +6,9 @@ import { useLocale, useTranslations } from "next-intl";
 
 import { Input } from "@/components/ui/input";
 import { ItemSprite } from "@/components/pokemon/ItemSprite";
-import { ITEMS, type Item } from "@/lib/items";
+import { ITEMS, localizeItem, type Item } from "@/lib/items";
 import { fuzzyMatch, getName } from "@/lib/pokemon-utils";
-import { useItem, useItems } from "@/lib/queries";
+import { useItem, useItems, useLocalizedItemNames } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 
 export interface ItemPickerProps {
@@ -19,6 +19,14 @@ export interface ItemPickerProps {
 }
 
 const MAX_RESULTS = 30;
+
+/** Normaliza para búsqueda: minúsculas y sin acentos. */
+function normalize(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
 
 /**
  * Combobox de objetos equipables. Filtra el catálogo local en cliente
@@ -54,37 +62,37 @@ export function ItemPicker({ value, onChange, disabled = false }: ItemPickerProp
     return () => document.removeEventListener("mousedown", onDocClick);
   }, [open]);
 
+  // Nombres localizados de todo el catálogo para poder buscar en cualquier
+  // idioma ("restos" también encuentra Leftovers). Se descarga al abrir.
+  const { data: namesDict } = useLocalizedItemNames(open);
+
   const results = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return ITEMS.filter((i) => i.category === "popular");
+    const qn = normalize(query.trim());
+    if (!qn) return ITEMS.filter((i) => i.category === "popular");
     return ITEMS.map((item) => {
-      const m = fuzzyMatch(q, item.name.toLowerCase());
-      return m ? { item, score: m.score } : null;
+      const candidates = [item.name, item.slug];
+      const dict = namesDict?.[item.slug];
+      if (dict) for (const v of Object.values(dict)) if (v) candidates.push(v);
+
+      let best = Infinity;
+      for (const cand of candidates) {
+        const m = fuzzyMatch(qn, normalize(cand));
+        if (m && m.score < best) best = m.score;
+      }
+      return best !== Infinity ? { item, score: best } : null;
     })
       .filter((r): r is { item: Item; score: number } => r !== null)
       .sort((a, b) => a.score - b.score)
       .slice(0, MAX_RESULTS)
       .map((r) => r.item);
-  }, [query]);
+  }, [query, namesDict]);
 
   // Nombres/descripciones localizados de los objetos visibles (PokeAPI).
-  // Los objetos exclusivos de Champions no existen en PokeAPI: caen al inglés.
+  // La descripción usa el texto del version-group más reciente para no mostrar
+  // las descripciones mal atribuidas de la generación X/Y.
   const itemQueries = useItems(results.map((r) => r.slug));
 
-  const localize = (item: Item, i: number) => {
-    const data = itemQueries[i]?.data;
-    if (!data) return { name: item.name, description: item.description };
-    const name = getName(data.names, item.name, locale);
-    const description =
-      data.flavor_text_entries
-        .find((e) => e.language.name === locale)
-        ?.text.replace(/\f|\n/g, " ")
-        .replace(/\s+/g, " ")
-        .trim() ??
-      data.effect_entries.find((e) => e.language.name === "en")?.short_effect ??
-      item.description;
-    return { name, description };
-  };
+  const localize = (item: Item, i: number) => localizeItem(item, itemQueries[i]?.data, locale);
 
   const select = (item: Item) => {
     onChange(item);
