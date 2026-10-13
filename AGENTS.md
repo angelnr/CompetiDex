@@ -261,9 +261,12 @@ docker compose up --build   # app en :3100 + Redis en :6379
 
 Cuando quieras reiniciar el servidor, usa `fuser -k 3100/tcp` en lugar de `kill` normal, que a veces no mata el proceso completo de Next.js.
 
-- El `Dockerfile` es multi-stage: `deps` → `builder` → `runner`.
+- El `Dockerfile` es multi-stage: `deps` → `builder` → `migrate` → `runner`.
 - Imagen final basada en `node:20-alpine`, usuario non-root, standalone output.
-- Redis persiste en volumen `docker-data/redis` (ignorado por git).
+- El servicio `migrate` (target `migrate`, one-shot) aplica `prisma migrate deploy`
+  antes de arrancar `app` (`depends_on: service_completed_successfully`).
+- SQLite persiste en el volumen nombrado `sqlite-data` montado en `/data`
+  (`DATABASE_URL=file:/data/prod.db`); Redis en `docker-data/redis`.
 
 ---
 
@@ -271,14 +274,17 @@ Cuando quieras reiniciar el servidor, usa `fuser -k 3100/tcp` en lugar de `kill`
 
 Solo `.env.example` se commitea. Variables mínimas esperadas:
 
-| Var                    | Descripción                         | Default dev                 |
-| ---------------------- | ----------------------------------- | --------------------------- |
-| `NODE_ENV`             | `development` / `production`        | `development`               |
-| `PORT`                 | Puerto de Next.js                   | `3100`                      |
-| `REDIS_URL`            | URL de conexión a Redis             | `redis://localhost:6379`    |
-| `POKEAPI_BASE`         | Base URL de PokeAPI                 | `https://pokeapi.co/api/v2` |
-| `POKEAPI_CACHE_TTL_S`  | TTL por defecto en Redis (segundos) | `86400`                     |
-| `NEXT_PUBLIC_APP_NAME` | Nombre público mostrado en UI       | `CompetiDex`                |
+| Var                    | Descripción                                                 | Default dev                 |
+| ---------------------- | ----------------------------------------------------------- | --------------------------- |
+| `NODE_ENV`             | `development` / `production`                                | `development`               |
+| `PORT`                 | Puerto de Next.js                                           | `3100`                      |
+| `DATABASE_URL`         | URL de Prisma (SQLite preparado para Postgres)              | `file:./dev.db`             |
+| `REDIS_URL`            | URL de conexión a Redis                                     | `redis://localhost:6379`    |
+| `POKEAPI_BASE`         | Base URL de PokeAPI                                         | `https://pokeapi.co/api/v2` |
+| `POKEAPI_CACHE_TTL_S`  | TTL por defecto en Redis (segundos)                         | `86400`                     |
+| `BETTER_AUTH_SECRET`   | Secreto de firma de Better Auth (`openssl rand -base64 32`) | (sin default, obligatorio)  |
+| `BETTER_AUTH_URL`      | URL pública de la app                                       | `http://localhost:3100`     |
+| `NEXT_PUBLIC_APP_NAME` | Nombre público mostrado en UI                               | `CompetiDex`                |
 
 Al añadir una nueva variable, documentarla aquí y en `.env.example`.
 
@@ -293,7 +299,9 @@ Al añadir una nueva variable, documentarla aquí y en `.env.example`.
 4. Ficha detallada del Pokémon — **HECHO**
 5. Testing (Vitest + Testing Library + Playwright) — **HECHO**
 6. CI/CD en GitHub Actions — **HECHO**
-7. _(futuro)_ Favoritos, equipos, comparador, calculadora de efectividades
+7. Autenticación de usuarios + equipos persistentes (Better Auth + Prisma) — **EN CURSO**
+8. Calculadora de daño (`@smogon/calc`) que sustituye `/efectividades` — **EN CURSO**
+9. _(futuro)_ Favoritos persistentes, comparador ampliado, calculadora de efectividades heredada
 
 Al completar una fase, marcar aquí y actualizar CHANGELOG (cuando exista).
 
@@ -301,10 +309,14 @@ Al completar una fase, marcar aquí y actualizar CHANGELOG (cuando exista).
 
 ## 12. Puntos de extensión conocidos
 
-- **Favoritos / Equipos**: modelos ya en `prisma/schema.prisma` (cuando se creen).
-  Hook `useFavorites`compatible con localStorage ahora y Prisma después.
+- **Favoritos**: modelo user-scoped en `prisma/schema.prisma` (placeholder,
+  sin uso en runtime). Hook `useFavorites` compatible con localStorage ahora y
+  Prisma después.
+- **Equipos**: persistidos en BBDD vía `lib/server/teams.ts` + API routes; modo
+  invitado usa `lib/storage.ts` (localStorage).
 - **Comparador**: mantener `components/pokemon/PokemonCompare` placeholder.
 - **Postgres**: cambiar `datasource` en `schema.prisma` y `docker-compose.yml`
-  para añadir servicio `postgres`. El resto del código no debe tocarcliente.
+  para añadir servicio `postgres`. Los `String` JSON de TeamPokemon migran al
+  escalar `Json` sin cambio de modelo de datos.
 
 Cualquier cambio que rompa este contrato debe actualizarse aquí.

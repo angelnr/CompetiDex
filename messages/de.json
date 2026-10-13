@@ -5,7 +5,8 @@
     "compare": "Vergleichen",
     "effectiveness": "Effektivität",
     "openMenu": "Menü öffnen",
-    "closeMenu": "Menü schließen"
+    "closeMenu": "Menü schließen",
+    "calculador": "Rechner"
   },
   "home": {
     "title": "CompetiDex",
@@ -218,7 +219,12 @@
       "alreadyInTeam": "{name} ist bereits im Team",
       "noSlots": "Keine freien Plätze",
       "notFound": "Team nicht gefunden"
-    }
+    },
+    "localImportTitle": "Lokale Teams importieren",
+    "localImportBody": "Du hast {count} Teams in diesem Browser ohne dein Konto gespeichert. Auf dein Konto importieren?",
+    "localImportSkip": "Später",
+    "localImportAction": "Importieren",
+    "localImporting": "Importiere…"
   },
   "compare": {
     "title": "Pokémon-Vergleich",
@@ -472,5 +478,92 @@
     "-overworld": "Überwelt",
     "-inside": "Innen",
     "-championship": "Meisterschaft"
+  },
+  "auth": {
+    "title": "Konto",
+    "loginHeading": "Melde dich bei deinem Konto an",
+    "loginSubtitle": "Speichere deine Teams und synchronisiere sie geräteübergreifend.",
+    "registerHeading": "Erstelle dein Konto",
+    "registerSubtitle": "Du brauchst nur eine E-Mail und ein Passwort.",
+    "signIn": "Anmelden",
+    "signOut": "Abmelden",
+    "loginTab": "Anmelden",
+    "registerTab": "Registrieren",
+    "name": "Name",
+    "namePlaceholder": "Dein Name",
+    "email": "E-Mail",
+    "emailPlaceholder": "du@beispiel.com",
+    "password": "Passwort",
+    "passwordPlaceholder": "••••••••",
+    "submitLogin": "Anmelden",
+    "submitRegister": "Konto erstellen",
+    "loading": "Wird geladen…",
+    "errorInvalidCredentials": "E-Mail oder Passwort falsch.",
+    "errorEmailExists": "Ein Konto mit dieser E-Mail existiert bereits.",
+    "errorGeneric": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
+    "welcome": "Willkommen, {name}",
+    "sessionActive": "Angemeldet",
+    "errorField": {
+      "name": "Der Name muss mindestens 2 Zeichen lang sein.",
+      "email": "Gib eine gültige E-Mail-Adresse ein.",
+      "password": "Das Passwort muss mindestens 6 Zeichen lang sein."
+    },
+    "errorPasswordTooShort": "Das Passwort muss mindestens 6 Zeichen lang sein.",
+    "errorRateLimited": "Zu viele Versuche. Bitte warte einen Moment."
+  },
+  "calc": {
+    "title": "Schadensrechner",
+    "subtitle": "Vergleiche einen Angreifer mit einem Verteidiger und erhalte die genauen Schadensspannen (Gen 9).",
+    "attacker": "Angreifer",
+    "defender": "Verteidiger",
+    "species": "Art",
+    "speciesPlaceholder": "Pokémon suchen…",
+    "movePlaceholder": "Attacke suchen…",
+    "moveLabel": "Attacke {slot}",
+    "clear": "Leeren",
+    "noResults": "Keine Ergebnisse",
+    "nature": "Wesen",
+    "ability": "Fähigkeit",
+    "abilityPlaceholder": "Fähigkeit wählen",
+    "heldItem": "Getragenes Item",
+    "ivs": "DV",
+    "evs": "FP",
+    "moves": "Attacken",
+    "field": "Feld",
+    "level": "Level",
+    "weather": {
+      "none": "Keines",
+      "sun": "Sonne",
+      "rain": "Regen",
+      "sand": "Sandsturm",
+      "snow": "Schnee"
+    },
+    "terrain": {
+      "none": "Keines",
+      "electric": "Elektro",
+      "grassy": "Gras",
+      "psychic": "Psycho",
+      "misty": "Nebel"
+    },
+    "spikes": "Stachler",
+    "stealthRock": "Tarnsteine",
+    "reflect": "Reflektor",
+    "lightScreen": "Lichtschild",
+    "auroraVeil": "Auroraschleier",
+    "critical": "Volltreffer",
+    "defenderHp": "KP des Verteidigers",
+    "results": "Ergebnisse",
+    "emptyResults": "Wähle Angreifer und Verteidiger, um zu starten.",
+    "calculating": "Berechne…",
+    "loadFromTeam": "Aus meinen Teams laden:",
+    "loadFromTeamPlaceholder": "Mitglied wählen",
+    "ko": {
+      "ohko": "OHKO",
+      "2hko": "2HKO",
+      "3hko": "3HKO",
+      "4hko": "4HKO"
+    },
+    "weatherLabel": "Wetter",
+    "terrainLabel": "Feld (Terrain)"
   }
 }

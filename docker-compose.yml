@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: runner
       args:
         NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-CompetiDex}
     container_name: competidex-app
@@ -14,11 +15,32 @@ services:
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       POKEAPI_BASE: ${POKEAPI_BASE:-https://pokeapi.co/api/v2}
       POKEAPI_CACHE_TTL_S: ${POKEAPI_CACHE_TTL_S:-86400}
-      DATABASE_URL: ${DATABASE_URL:-file:./prisma/dev.db}
+      DATABASE_URL: file:/data/prod.db
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Definir BETTER_AUTH_SECRET en .env}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3001}
       NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-CompetiDex}
+    volumes:
+      - sqlite-data:/data
     depends_on:
+      migrate:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
+    networks:
+      - competidex
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrate
+    container_name: competidex-migrate
+    restart: "no"
+    user: "1001:1001"
+    environment:
+      DATABASE_URL: file:/data/prod.db
+    volumes:
+      - sqlite-data:/data
     networks:
       - competidex
 
@@ -40,3 +62,6 @@ services:
 networks:
   competidex:
     driver: bridge
+
+volumes:
+  sqlite-data:

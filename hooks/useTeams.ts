@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Team, TeamMember, TeamMemberPatch } from "@/lib/team";
 import {
   addMember,
@@ -11,11 +11,13 @@ import {
   removeMember,
   validateTeamName,
 } from "@/lib/team";
-import { localStorageTeamStorage, type TeamStorage } from "@/lib/storage";
+import { localStorageTeamStorage, remoteTeamStorage, type TeamStorage } from "@/lib/storage";
+import { useSession } from "@/lib/auth-client";
 
 export interface UseTeamsResult {
   teams: Team[];
   loaded: boolean;
+  reload: () => Promise<void>;
   createTeam: (name: string) => { ok: true; team: Team } | { ok: false; error: string };
   deleteTeam: (id: string) => Promise<void>;
   addPokemon: (
@@ -36,19 +38,38 @@ export interface UseTeamsResult {
 
 /**
  * Hook para CRUD de equipos.
- * Persiste en localStorage (vía `TeamStorage`). Preparado para inyectar
- * un storage Prisma más adelante.
+ *
+ * Persiste en localStorage (invitado) o en la BBDD vía `/api/teams`
+ * (usuario con sesión). Ambos implementan la interfaz `TeamStorage`, por lo
+ * que la lógica es idéntica. El storage efectivo cambia al iniciar/cerrar
+ * sesión, forzando una recarga de `list()`.
  */
-export function useTeams(storage: TeamStorage = localStorageTeamStorage): UseTeamsResult {
+export function useTeams(storage?: TeamStorage): UseTeamsResult {
+  const { data: sessionData } = useSession();
+  const effectiveStorage: TeamStorage = useMemo(
+    () => storage ?? (sessionData?.user ? remoteTeamStorage : localStorageTeamStorage),
+    [storage, sessionData?.user?.id],
+  );
+
   const [teams, setTeams] = useState<Team[]>([]);
   const [loaded, setLoaded] = useState(false);
 
-  useEffect(() => {
-    storage.list().then((list) => {
+  const reload = useCallback(async () => {
+    setLoaded(false);
+    try {
+      const list = await effectiveStorage.list();
       setTeams(list);
+    } catch (err) {
+      console.error("[teams] error al cargar equipos:", err);
+      setTeams([]);
+    } finally {
       setLoaded(true);
-    });
-  }, [storage]);
+    }
+  }, [effectiveStorage]);
+
+  useEffect(() => {
+    void reload();
+  }, [reload]);
 
   const createTeam = useCallback(
     (name: string): ReturnType<UseTeamsResult["createTeam"]> => {
@@ -63,18 +84,18 @@ export function useTeams(storage: TeamStorage = localStorageTeamStorage): UseTea
         updatedAt: Date.now(),
       };
       setTeams((prev) => [...prev, team]);
-      storage.save(team).catch(console.error);
+      effectiveStorage.save(team).catch(console.error);
       return { ok: true, team };
     },
-    [storage],
+    [effectiveStorage],
   );
 
   const deleteTeam = useCallback(
     async (id: string) => {
       setTeams((prev) => prev.filter((t) => t.id !== id));
-      await storage.delete(id);
+      await effectiveStorage.delete(id);
     },
-    [storage],
+    [effectiveStorage],
   );
 
   const addPokemon = useCallback(
@@ -94,10 +115,10 @@ export function useTeams(storage: TeamStorage = localStorageTeamStorage): UseTea
         updatedAt: Date.now(),
       };
       setTeams((prev) => prev.map((t) => (t.id === teamId ? updated : t)));
-      await storage.save(updated);
+      await effectiveStorage.save(updated);
       return { ok: true, team: updated };
     },
-    [teams, storage],
+    [teams, effectiveStorage],
   );
 
   const removePokemon = useCallback(
@@ -107,9 +128,9 @@ export function useTeams(storage: TeamStorage = localStorageTeamStorage): UseTea
       const members = reindexSlots(removeMember(team.members, pokemonId));
       const updated: Team = { ...team, members, updatedAt: Date.now() };
       setTeams((prev) => prev.map((t) => (t.id === teamId ? updated : t)));
-      await storage.save(updated);
+      await effectiveStorage.save(updated);
     },
-    [teams, storage],
+    [teams, effectiveStorage],
   );
 
   const updateMember = useCallback(
@@ -136,10 +157,10 @@ export function useTeams(storage: TeamStorage = localStorageTeamStorage): UseTea
         updatedAt: Date.now(),
       };
       setTeams((prev) => prev.map((t) => (t.id === teamId ? updated : t)));
-      await storage.save(updated);
+      await effectiveStorage.save(updated);
       return { ok: true, team: updated };
     },
-    [teams, storage],
+    [teams, effectiveStorage],
   );
 
   const setChampions = useCallback(
@@ -159,15 +180,16 @@ export function useTeams(storage: TeamStorage = localStorageTeamStorage): UseTea
       };
 
       setTeams((prev) => prev.map((t) => (t.id === teamId ? updated : t)));
-      await storage.save(updated);
+      await effectiveStorage.save(updated);
       return { ok: true, team: updated };
     },
-    [teams, storage],
+    [teams, effectiveStorage],
   );
 
   return {
     teams,
     loaded,
+    reload,
     createTeam,
     deleteTeam,
     addPokemon,

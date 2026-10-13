@@ -5,7 +5,8 @@
     "compare": "Compare",
     "effectiveness": "Effectiveness",
     "openMenu": "Open menu",
-    "closeMenu": "Close menu"
+    "closeMenu": "Close menu",
+    "calculador": "Calculator"
   },
   "home": {
     "title": "CompetiDex",
@@ -218,7 +219,12 @@
       "alreadyInTeam": "{name} is already on the team",
       "noSlots": "No free slots",
       "notFound": "Team not found"
-    }
+    },
+    "localImportTitle": "Import local teams",
+    "localImportBody": "You have {count} teams saved on this browser outside your account. Import them to your account?",
+    "localImportSkip": "Not now",
+    "localImportAction": "Import",
+    "localImporting": "Importing…"
   },
   "compare": {
     "title": "Pokémon Compare",
@@ -472,5 +478,92 @@
     "-overworld": "Overworld",
     "-inside": "Inside",
     "-championship": "Championship"
+  },
+  "auth": {
+    "title": "Account",
+    "loginHeading": "Sign in to your account",
+    "loginSubtitle": "Keep your teams saved and synced across devices.",
+    "registerHeading": "Create your account",
+    "registerSubtitle": "You only need an email and a password.",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "loginTab": "Sign in",
+    "registerTab": "Register",
+    "name": "Name",
+    "namePlaceholder": "Your name",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "password": "Password",
+    "passwordPlaceholder": "••••••••",
+    "submitLogin": "Sign in",
+    "submitRegister": "Create account",
+    "loading": "Loading…",
+    "errorInvalidCredentials": "Incorrect email or password.",
+    "errorEmailExists": "An account with this email already exists.",
+    "errorGeneric": "Something went wrong. Please try again.",
+    "welcome": "Welcome, {name}",
+    "sessionActive": "Signed in",
+    "errorField": {
+      "name": "Name must be at least 2 characters long.",
+      "email": "Enter a valid email address.",
+      "password": "Password must be at least 6 characters long."
+    },
+    "errorPasswordTooShort": "Password must be at least 6 characters long.",
+    "errorRateLimited": "Too many attempts. Please wait a moment and try again."
+  },
+  "calc": {
+    "title": "Damage Calculator",
+    "subtitle": "Compare one attacker against one defender and get the exact damage ranges (Gen 9).",
+    "attacker": "Attacker",
+    "defender": "Defender",
+    "species": "Species",
+    "speciesPlaceholder": "Search a Pokémon…",
+    "movePlaceholder": "Search a move…",
+    "moveLabel": "Move {slot}",
+    "clear": "Clear",
+    "noResults": "No results",
+    "nature": "Nature",
+    "ability": "Ability",
+    "abilityPlaceholder": "Select ability",
+    "heldItem": "Held item",
+    "ivs": "IVs",
+    "evs": "EVs",
+    "moves": "Moves",
+    "field": "Field",
+    "level": "Level",
+    "weather": {
+      "none": "None",
+      "sun": "Sun",
+      "rain": "Rain",
+      "sand": "Sand",
+      "snow": "Snow"
+    },
+    "terrain": {
+      "none": "None",
+      "electric": "Electric",
+      "grassy": "Grassy",
+      "psychic": "Psychic",
+      "misty": "Misty"
+    },
+    "spikes": "Spikes",
+    "stealthRock": "Stealth Rock",
+    "reflect": "Reflect",
+    "lightScreen": "Light Screen",
+    "auroraVeil": "Aurora Veil",
+    "critical": "Critical hit",
+    "defenderHp": "Defender HP",
+    "results": "Results",
+    "emptyResults": "Pick an attacker and a defender to start.",
+    "calculating": "Calculating…",
+    "loadFromTeam": "Load from my teams:",
+    "loadFromTeamPlaceholder": "Choose a team member",
+    "ko": {
+      "ohko": "OHKO",
+      "2hko": "2HKO",
+      "3hko": "3HKO",
+      "4hko": "4HKO"
+    },
+    "weatherLabel": "Weather",
+    "terrainLabel": "Terrain"
   }
 }

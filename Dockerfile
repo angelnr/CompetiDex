@@ -29,7 +29,9 @@ FROM node:20-alpine AS builder
 ENV PNPM_HOME=/pnpm \
     PATH=/pnpm:$PATH \
     NEXT_TELEMETRY_DISABLED=1 \
-    NODE_ENV=production
+    NODE_ENV=production \
+    DATABASE_URL=file:./build.db \
+    BETTER_AUTH_SECRET=build-time-placeholder
 
 RUN corepack enable \
     && corepack prepare pnpm@9.15.0 --activate
@@ -43,10 +45,28 @@ COPY . .
 ARG NEXT_PUBLIC_APP_NAME=CompetiDex
 ENV NEXT_PUBLIC_APP_NAME=$NEXT_PUBLIC_APP_NAME
 
+# Generar el cliente Prisma (necesario para tipar y para el runtime)
+RUN pnpm prisma generate
+
 RUN pnpm build
 
 # =============================================================================
-# Stage 3: runner (imagen final mínima)
+# Stage 3: migrate (aplica migraciones; servicio one-shot en compose)
+# =============================================================================
+FROM deps AS migrate
+
+WORKDIR /app
+
+# /data debe ser escribible por el mismo uid que el runner (nextjs = 1001)
+RUN mkdir -p /data && chown 1001:1001 /data
+
+# Solo se necesita el esquema/migraciones + el CLI de Prisma (ya en node_modules)
+COPY prisma ./prisma
+
+CMD ["node", "node_modules/prisma/build/index.js", "migrate", "deploy", "--schema", "prisma/schema.prisma"]
+
+# =============================================================================
+# Stage 4: runner (imagen final mínima)
 # =============================================================================
 FROM node:20-alpine AS runner
 
@@ -60,6 +80,11 @@ WORKDIR /app
 # Usuario non-root
 RUN addgroup --system --gid 1001 nodejs \
     && adduser --system --uid 1001 nextjs
+
+# openssl es requisito del query engine de Prisma; /data aloja el SQLite
+RUN apk add --no-cache openssl \
+    && mkdir -p /data \
+    && chown nextjs:nodejs /data
 
 # Copiar standalone output + estáticos + messages
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./

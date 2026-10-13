@@ -69,6 +69,8 @@ jobs:
       - name: Build
         env:
           NEXT_PUBLIC_APP_NAME: CompetiDex
+          DATABASE_URL: file:./ci-build.db
+          BETTER_AUTH_SECRET: ci-build-secret-not-for-production
         run: pnpm build
 
       - name: Upload .next artifact
@@ -117,10 +119,18 @@ jobs:
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
 
+      - name: Apply DB migrations
+        env:
+          DATABASE_URL: file:./ci-e2e.db
+        run: pnpm prisma migrate deploy
+
       - name: Run E2E tests
         env:
           REDIS_URL: redis://127.0.0.1:6379
           NODE_ENV: production
+          DATABASE_URL: file:./ci-e2e.db
+          BETTER_AUTH_SECRET: ci-e2e-secret-not-for-production
+          BETTER_AUTH_URL: http://localhost:3100
         run: pnpm test:e2e --reporter=github
 
       - name: Upload test results

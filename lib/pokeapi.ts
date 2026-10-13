@@ -498,6 +498,11 @@ export function getTypeList(opts: ListOptions = { limit: 20 }): Promise<NamedAPI
   return pokeapiFetch<NamedAPIResourceList>(withQuery("/type", opts), CACHE_TTL.types);
 }
 
+/** Lista paginada de movimientos: /move?offset=0&limit=1000 */
+export function getMoveList(opts: ListOptions = { limit: 1000 }): Promise<NamedAPIResourceList> {
+  return pokeapiFetch<NamedAPIResourceList>(withQuery("/move", opts), CACHE_TTL.move);
+}
+
 /** Detalle de una habilidad: /ability/{idOrName} */
 export function getAbility(idOrName: number | string): Promise<Ability> {
   const id = typeof idOrName === "number" ? String(idOrName) : idOrName;

@@ -5,7 +5,8 @@
     "compare": "比較",
     "effectiveness": "効果",
     "openMenu": "メニューを開く",
-    "closeMenu": "メニューを閉じる"
+    "closeMenu": "メニューを閉じる",
+    "calculador": "計算機"
   },
   "home": {
     "title": "CompetiDex",
@@ -218,7 +219,12 @@
       "alreadyInTeam": "{name}はすでにチームにいます",
       "noSlots": "空きスロットがありません",
       "notFound": "チームが見つかりません"
-    }
+    },
+    "localImportTitle": "ローカルのチームをインポート",
+    "localImportBody": "このブラウザにアカウント外で保存されたチームが {count} 件あります。アカウントにインポートしますか？",
+    "localImportSkip": "あとで",
+    "localImportAction": "インポート",
+    "localImporting": "インポート中…"
   },
   "compare": {
     "title": "ポケモン比較",
@@ -472,5 +478,92 @@
     "-overworld": "外部",
     "-inside": "内部",
     "-championship": "選手権"
+  },
+  "auth": {
+    "title": "アカウント",
+    "loginHeading": "アカウントにログイン",
+    "loginSubtitle": "チームを保存し、端末間で同期できます。",
+    "registerHeading": "アカウントを作成",
+    "registerSubtitle": "メールアドレスとパスワードだけでOKです。",
+    "signIn": "ログイン",
+    "signOut": "ログアウト",
+    "loginTab": "ログイン",
+    "registerTab": "登録",
+    "name": "名前",
+    "namePlaceholder": "お名前",
+    "email": "メールアドレス",
+    "emailPlaceholder": "you@example.com",
+    "password": "パスワード",
+    "passwordPlaceholder": "••••••••",
+    "submitLogin": "ログイン",
+    "submitRegister": "アカウント作成",
+    "loading": "読み込み中…",
+    "errorInvalidCredentials": "メールアドレスまたはパスワードが間違っています。",
+    "errorEmailExists": "このメールアドレスのアカウントは既に存在します。",
+    "errorGeneric": "エラーが発生しました。もう一度お試しください。",
+    "welcome": "ようこそ、{name}",
+    "sessionActive": "ログイン済み",
+    "errorField": {
+      "name": "名前は2文字以上で入力してください。",
+      "email": "有効なメールアドレスを入力してください。",
+      "password": "パスワードは6文字以上で入力してください。"
+    },
+    "errorPasswordTooShort": "パスワードは6文字以上で入力してください。",
+    "errorRateLimited": "試行回数が多すぎます。しばらくしてからお試しください。"
+  },
+  "calc": {
+    "title": "ダメージ計算機",
+    "subtitle": "攻撃側と防御側を1体ずつ比較し、正確なダメージ幅を表示（Gen 9）。",
+    "attacker": "攻撃側",
+    "defender": "防御側",
+    "species": "ポケモン",
+    "speciesPlaceholder": "ポケモンを検索…",
+    "movePlaceholder": "わざを検索…",
+    "moveLabel": "わざ {slot}",
+    "clear": "クリア",
+    "noResults": "結果なし",
+    "nature": "性格",
+    "ability": "特性",
+    "abilityPlaceholder": "特性を選択",
+    "heldItem": "持ち物",
+    "ivs": "個体値",
+    "evs": "努力値",
+    "moves": "わざ",
+    "field": "フィールド",
+    "level": "レベル",
+    "weather": {
+      "none": "なし",
+      "sun": "ひざし",
+      "rain": "あめ",
+      "sand": "すなあらし",
+      "snow": "ゆき"
+    },
+    "terrain": {
+      "none": "なし",
+      "electric": "エレキ",
+      "grassy": "グラス",
+      "psychic": "サイコ",
+      "misty": "ミスト"
+    },
+    "spikes": "まきびし",
+    "stealthRock": "ステルスロック",
+    "reflect": "リフレクター",
+    "lightScreen": "ひかりのかべ",
+    "auroraVeil": "オーロラベール",
+    "critical": "急所",
+    "defenderHp": "防御側のHP",
+    "results": "結果",
+    "emptyResults": "攻撃側と防御側を選んで開始してください。",
+    "calculating": "計算中…",
+    "loadFromTeam": "自分のチームから読み込む:",
+    "loadFromTeamPlaceholder": "メンバーを選択",
+    "ko": {
+      "ohko": "1発",
+      "2hko": "2発",
+      "3hko": "3発",
+      "4hko": "4発"
+    },
+    "weatherLabel": "天候",
+    "terrainLabel": "地形"
   }
 }

@@ -28,6 +28,7 @@ import {
   getTypeList,
   getAbility,
   getMove,
+  getMoveList,
   getEncounters,
   getNature,
   getItem,
@@ -108,6 +109,15 @@ export async function GET(request: Request): Promise<NextResponse> {
     if (searchParams.has("move")) {
       const id = idParam.parse(searchParams.get("move"));
       const data = await getMove(id);
+      return NextResponse.json(data);
+    }
+
+    if (searchParams.has("moves-list")) {
+      const opts = listSchema.parse({
+        offset: searchParams.get("offset") ?? undefined,
+        limit: searchParams.get("limit") ?? undefined,
+      });
+      const data = await getMoveList(opts as ListOptions);
       return NextResponse.json(data);
     }
 

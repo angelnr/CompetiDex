@@ -42,6 +42,10 @@ export default defineConfig({
             // el miss si REDIS_URL no responde gracias a retryPolicy).
             NODE_ENV: "production",
             REDIS_URL: process.env.REDIS_URL ?? "",
+            DATABASE_URL: process.env.DATABASE_URL ?? "file:./ci-e2e.db",
+            BETTER_AUTH_SECRET:
+              process.env.BETTER_AUTH_SECRET ?? "ci-e2e-secret-not-for-production",
+            BETTER_AUTH_URL: `http://localhost:${process.env.PORT ?? "3100"}`,
           },
         }
       : {}),

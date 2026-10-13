@@ -5,7 +5,8 @@
     "compare": "Comparador",
     "effectiveness": "Efectividades",
     "openMenu": "Abrir menú",
-    "closeMenu": "Cerrar menú"
+    "closeMenu": "Cerrar menú",
+    "calculador": "Calculadora"
   },
   "home": {
     "title": "CompetiDex",
@@ -218,7 +219,12 @@
       "alreadyInTeam": "{name} ya está en el equipo",
       "noSlots": "No hay slots libres",
       "notFound": "Equipo no encontrado"
-    }
+    },
+    "localImportTitle": "Importar equipos locales",
+    "localImportBody": "Tienes {count} equipos guardados en este navegador sin tu cuenta. ¿Los importamos a tu cuenta?",
+    "localImportSkip": "Ahora no",
+    "localImportAction": "Importar",
+    "localImporting": "Importando…"
   },
   "compare": {
     "title": "Comparador de Pokémon",
@@ -472,5 +478,92 @@
     "-overworld": "exterior",
     "-inside": "interior",
     "-championship": "campeonato"
+  },
+  "auth": {
+    "title": "Cuenta",
+    "loginHeading": "Accede a tu cuenta",
+    "loginSubtitle": "Guarda tus equipos y sincronízalos entre dispositivos.",
+    "registerHeading": "Crea tu cuenta",
+    "registerSubtitle": "Solo necesitas un correo y una contraseña.",
+    "signIn": "Iniciar sesión",
+    "signOut": "Cerrar sesión",
+    "loginTab": "Acceder",
+    "registerTab": "Registrarse",
+    "name": "Nombre",
+    "namePlaceholder": "Tu nombre",
+    "email": "Correo electrónico",
+    "emailPlaceholder": "tucorreo@ejemplo.com",
+    "password": "Contraseña",
+    "passwordPlaceholder": "••••••••",
+    "submitLogin": "Entrar",
+    "submitRegister": "Crear cuenta",
+    "loading": "Cargando…",
+    "errorInvalidCredentials": "Correo o contraseña incorrectos.",
+    "errorEmailExists": "Ya existe una cuenta con este correo.",
+    "errorGeneric": "Algo salió mal. Inténtalo de nuevo.",
+    "welcome": "Bienvenido, {name}",
+    "sessionActive": "Sesión iniciada",
+    "errorField": {
+      "name": "El nombre debe tener al menos 2 caracteres.",
+      "email": "Introduce un correo electrónico válido.",
+      "password": "La contraseña debe tener al menos 6 caracteres."
+    },
+    "errorPasswordTooShort": "La contraseña debe tener al menos 6 caracteres.",
+    "errorRateLimited": "Demasiados intentos. Espera un momento e inténtalo de nuevo."
+  },
+  "calc": {
+    "title": "Calculadora de daño",
+    "subtitle": "Compara un atacante contra un defensor y obtén el rango exacto de daño (Gen 9).",
+    "attacker": "Atacante",
+    "defender": "Defensor",
+    "species": "Especie",
+    "speciesPlaceholder": "Buscar un Pokémon…",
+    "movePlaceholder": "Buscar un movimiento…",
+    "moveLabel": "Movimiento {slot}",
+    "clear": "Limpiar",
+    "noResults": "Sin resultados",
+    "nature": "Naturaleza",
+    "ability": "Habilidad",
+    "abilityPlaceholder": "Seleccionar habilidad",
+    "heldItem": "Objeto equipado",
+    "ivs": "IVs",
+    "evs": "EVs",
+    "moves": "Movimientos",
+    "field": "Condiciones",
+    "level": "Nivel",
+    "weather": {
+      "none": "Sin clima",
+      "sun": "Sol",
+      "rain": "Lluvia",
+      "sand": "Tormenta de arena",
+      "snow": "Nieve"
+    },
+    "terrain": {
+      "none": "Sin terreno",
+      "electric": "Eléctrico",
+      "grassy": "Pradal",
+      "psychic": "Psíquico",
+      "misty": "Bruma"
+    },
+    "spikes": "Púas",
+    "stealthRock": "Tramparrocas",
+    "reflect": "Reflect",
+    "lightScreen": "Pantalla de luz",
+    "auroraVeil": "Velo Aurora",
+    "critical": "Crítico",
+    "defenderHp": "HP del defensor",
+    "results": "Resultados",
+    "emptyResults": "Elige un atacante y un defensor para empezar.",
+    "calculating": "Calculando…",
+    "loadFromTeam": "Cargar desde mis equipos:",
+    "loadFromTeamPlaceholder": "Elegir un miembro",
+    "ko": {
+      "ohko": "OHKO",
+      "2hko": "2HKO",
+      "3hko": "3HKO",
+      "4hko": "4HKO"
+    },
+    "weatherLabel": "Clima",
+    "terrainLabel": "Terreno"
   }
 }

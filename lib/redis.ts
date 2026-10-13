@@ -8,6 +8,8 @@ declare global {
 const DEFAULT_TTL_S = Number(process.env.POKEAPI_CACHE_TTL_S) || 86_400;
 
 let _redisUnavailableLogged = false;
+let _lastRedisErrorLoggedAt = 0;
+const REDIS_ERROR_LOG_INTERVAL_MS = 30_000;
 
 function shouldSkipCache(): boolean {
   return !process.env.REDIS_URL;
@@ -45,7 +47,12 @@ export function getRedis(): Redis | null {
   const client = new Redis(process.env.REDIS_URL, buildOptions());
 
   client.on("error", (err) => {
-    console.error("[redis] error de conexión:", err.message);
+    // Throttle: si Redis está caído, no inundar el log en cada reintento.
+    const now = Date.now();
+    if (now - _lastRedisErrorLoggedAt >= REDIS_ERROR_LOG_INTERVAL_MS) {
+      console.error("[redis] error de conexión:", err.message);
+      _lastRedisErrorLoggedAt = now;
+    }
   });
 
   globalThis.__competidexRedis = client;

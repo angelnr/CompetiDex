@@ -5,7 +5,8 @@
     "compare": "Comparer",
     "effectiveness": "Efficacités",
     "openMenu": "Ouvrir le menu",
-    "closeMenu": "Fermer le menu"
+    "closeMenu": "Fermer le menu",
+    "calculador": "Calculateur"
   },
   "home": {
     "title": "CompetiDex",
@@ -218,7 +219,12 @@
       "alreadyInTeam": "{name} est déjà dans l'équipe",
       "noSlots": "Pas d'emplacement libre",
       "notFound": "Équipe introuvable"
-    }
+    },
+    "localImportTitle": "Importer les équipes locales",
+    "localImportBody": "Vous avez {count} équipes enregistrées dans ce navigateur sans votre compte. Les importer sur votre compte ?",
+    "localImportSkip": "Plus tard",
+    "localImportAction": "Importer",
+    "localImporting": "Importation…"
   },
   "compare": {
     "title": "Comparateur de Pokémon",
@@ -472,5 +478,92 @@
     "-overworld": "Extérieur",
     "-inside": "Intérieur",
     "-championship": "Championnat"
+  },
+  "auth": {
+    "title": "Compte",
+    "loginHeading": "Connectez-vous à votre compte",
+    "loginSubtitle": "Gardez vos équipes enregistrées et synchronisées entre appareils.",
+    "registerHeading": "Créez votre compte",
+    "registerSubtitle": "Il suffit d'un e-mail et d'un mot de passe.",
+    "signIn": "Se connecter",
+    "signOut": "Se déconnecter",
+    "loginTab": "Connexion",
+    "registerTab": "Inscription",
+    "name": "Nom",
+    "namePlaceholder": "Votre nom",
+    "email": "Adresse e-mail",
+    "emailPlaceholder": "vous@exemple.com",
+    "password": "Mot de passe",
+    "passwordPlaceholder": "••••••••",
+    "submitLogin": "Se connecter",
+    "submitRegister": "Créer un compte",
+    "loading": "Chargement…",
+    "errorInvalidCredentials": "E-mail ou mot de passe incorrect.",
+    "errorEmailExists": "Un compte avec cet e-mail existe déjà.",
+    "errorGeneric": "Une erreur est survenue. Réessayez.",
+    "welcome": "Bienvenue, {name}",
+    "sessionActive": "Connecté",
+    "errorField": {
+      "name": "Le nom doit contenir au moins 2 caractères.",
+      "email": "Saisissez une adresse e-mail valide.",
+      "password": "Le mot de passe doit contenir au moins 6 caractères."
+    },
+    "errorPasswordTooShort": "Le mot de passe doit contenir au moins 6 caractères.",
+    "errorRateLimited": "Trop de tentatives. Veuillez patienter un instant."
+  },
+  "calc": {
+    "title": "Calculateur de dégâts",
+    "subtitle": "Comparez un attaquant contre un défenseur pour obtenir les dégâts exacts (Gen 9).",
+    "attacker": "Attaquant",
+    "defender": "Défenseur",
+    "species": "Espèce",
+    "speciesPlaceholder": "Rechercher un Pokémon…",
+    "movePlaceholder": "Rechercher un mouvement…",
+    "moveLabel": "Mouvement {slot}",
+    "clear": "Effacer",
+    "noResults": "Aucun résultat",
+    "nature": "Nature",
+    "ability": "Talent",
+    "abilityPlaceholder": "Choisir un talent",
+    "heldItem": "Objet tenu",
+    "ivs": "IV",
+    "evs": "EV",
+    "moves": "Capacités",
+    "field": "Conditions",
+    "level": "Niveau",
+    "weather": {
+      "none": "Aucune",
+      "sun": "Soleil",
+      "rain": "Pluie",
+      "sand": "Tempête de sable",
+      "snow": "Neige"
+    },
+    "terrain": {
+      "none": "Aucun",
+      "electric": "Électrique",
+      "grassy": "Herbu",
+      "psychic": "Psy",
+      "misty": "Brume"
+    },
+    "spikes": "Pics",
+    "stealthRock": "Piège de Roc",
+    "reflect": "Reflet",
+    "lightScreen": "Mur Lumière",
+    "auroraVeil": "Voile Aurore",
+    "critical": "Coup critique",
+    "defenderHp": "PV du défenseur",
+    "results": "Résultats",
+    "emptyResults": "Choisissez un attaquant et un défenseur pour commencer.",
+    "calculating": "Calcul…",
+    "loadFromTeam": "Charger depuis mes équipes :",
+    "loadFromTeamPlaceholder": "Choisir un membre",
+    "ko": {
+      "ohko": "OHKO",
+      "2hko": "2HKO",
+      "3hko": "3HKO",
+      "4hko": "4HKO"
+    },
+    "weatherLabel": "Météo",
+    "terrainLabel": "Terrain"
   }
 }

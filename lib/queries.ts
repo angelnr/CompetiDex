@@ -277,3 +277,43 @@ export function usePokeapiQuery<T>(
     ...options,
   });
 }
+
+// ---------------------------------------------------------------------------
+// Catálogos completos (calculadora de daño): todas las especies y movimientos
+// ---------------------------------------------------------------------------
+
+export interface CatalogEntry {
+  name: string;
+  id: number;
+}
+
+function toEntries(list: NamedAPIResourceList): CatalogEntry[] {
+  return list.results.map((r) => {
+    const id = Number(r.url.split("/").filter(Boolean).pop());
+    return { name: r.name, id: Number.isFinite(id) ? id : 0 };
+  });
+}
+
+/** Todas las especies y formas (PokeAPI /pokemon, ~1300). Cache infinito. */
+export function usePokemonCatalog() {
+  return useQuery<CatalogEntry[]>({
+    queryKey: ["pokemon-catalog"],
+    queryFn: async () => {
+      const page = await fetchJson<NamedAPIResourceList>("/api/pokemon?limit=2000");
+      return toEntries(page);
+    },
+    staleTime: Infinity,
+  });
+}
+
+/** Todos los movimientos (PokeAPI /move, ~900). Cache infinito. */
+export function useMoveCatalog() {
+  return useQuery<CatalogEntry[]>({
+    queryKey: ["move-catalog"],
+    queryFn: async () => {
+      const page = await fetchJson<NamedAPIResourceList>("/api/pokemon?moves-list=true&limit=2000");
+      return toEntries(page);
+    },
+    staleTime: Infinity,
+  });
+}

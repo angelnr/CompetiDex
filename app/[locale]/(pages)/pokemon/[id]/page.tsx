@@ -29,11 +29,12 @@ interface PageProps {
 }
 
 export async function generateStaticParams(): Promise<{ locale: string; id: string }[]> {
+  // Solo se prerenderiza el idioma por defecto (Gen 1). El resto de idiomas
+  // y fichas se generan on-demand vía ISR (revalidate 24h), lo que reduce el
+  // build de ~755 a ~151 páginas sin perder SEO ni funcionalidad.
   const params: { locale: string; id: string }[] = [];
-  for (const locale of routing.locales) {
-    for (let id = STATIC_RANGE.min; id <= STATIC_RANGE.max; id++) {
-      params.push({ locale, id: String(id) });
-    }
+  for (let id = STATIC_RANGE.min; id <= STATIC_RANGE.max; id++) {
+    params.push({ locale: routing.defaultLocale, id: String(id) });
   }
   return params;
 }

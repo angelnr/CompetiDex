@@ -13,11 +13,10 @@ interface PageProps {
 }
 
 export async function generateStaticParams(): Promise<{ locale: string; id: string }[]> {
+  // Solo idioma por defecto; el resto se genera on-demand vía ISR.
   const params: { locale: string; id: string }[] = [];
-  for (const locale of routing.locales) {
-    for (let id = 1; id <= 300; id++) {
-      params.push({ locale, id: String(id) });
-    }
+  for (let id = 1; id <= 300; id++) {
+    params.push({ locale: routing.defaultLocale, id: String(id) });
   }
   return params;
 }

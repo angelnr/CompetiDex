@@ -6,11 +6,12 @@ import { useTranslations } from "next-intl";
 
 import { Link, usePathname } from "@/i18n/routing";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { AuthMenu } from "@/components/auth/AuthMenu";
 
 const NAV_LINKS = [
   { href: "/equipos", key: "teams" },
   { href: "/comparar", key: "compare" },
-  { href: "/efectividades", key: "effectiveness" },
+  { href: "/calculadora", key: "calculador" },
 ] as const;
 
 export function NavBar() {
@@ -42,6 +43,7 @@ export function NavBar() {
         </div>
 
         <div className="ml-auto flex items-center gap-1 sm:gap-2">
+          <AuthMenu />
           <LanguageSwitcher />
           <button
             type="button"

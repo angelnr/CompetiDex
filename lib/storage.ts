@@ -93,3 +93,47 @@ export const localStorageTeamStorage: TeamStorage = {
     writeData(data);
   },
 };
+
+// ---------------------------------------------------------------------------
+// Implementación remota (Prisma vía API routes `/api/teams`)
+// ---------------------------------------------------------------------------
+
+export class TeamApiError extends Error {
+  constructor(public status: number) {
+    super(`API error ${status}`);
+    this.name = "TeamApiError";
+  }
+}
+
+async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(path, {
+    ...init,
+    headers: { "Content-Type": "application/json", ...init?.headers },
+  });
+  if (!res.ok) throw new TeamApiError(res.status);
+  return (await res.json()) as T;
+}
+
+export const remoteTeamStorage: TeamStorage = {
+  async list(): Promise<Team[]> {
+    return apiFetch<Team[]>("/api/teams");
+  },
+
+  async get(id: string): Promise<Team | null> {
+    const res = await fetch(`/api/teams/${encodeURIComponent(id)}`);
+    if (res.status === 404) return null;
+    if (!res.ok) throw new TeamApiError(res.status);
+    return (await res.json()) as Team;
+  },
+
+  async save(team: Team): Promise<void> {
+    await apiFetch<Team>(`/api/teams/${encodeURIComponent(team.id)}`, {
+      method: "PUT",
+      body: JSON.stringify(team),
+    });
+  },
+
+  async delete(id: string): Promise<void> {
+    await apiFetch<unknown>(`/api/teams/${encodeURIComponent(id)}`, { method: "DELETE" });
+  },
+};

@@ -1,23 +1,9 @@
-"use client";
+import { redirect } from "@/i18n/routing";
 
-import { Suspense } from "react";
-import { useTranslations } from "next-intl";
-
-import { EffectivenessCalculator } from "@/components/pokemon/EffectivenessCalculator";
-
-export default function EfectividadesPage() {
-  const t = useTranslations("effectiveness");
-  const tc = useTranslations("common");
-  return (
-    <main className="container mx-auto py-10">
-      <h1 className="mb-8 text-3xl font-bold">{t("title")}</h1>
-      <Suspense
-        fallback={
-          <div className="py-8 text-center text-sm text-muted-foreground">{tc("loading")}</div>
-        }
-      >
-        <EffectivenessCalculator />
-      </Suspense>
-    </main>
-  );
+/**
+ * La calculadora de daño sustituye a la página de efectividades.
+ * Redirige de forma permanente a /calculadora conservando el locale.
+ */
+export default function EfectividadesPage({ params }: { params: { locale: string } }) {
+  redirect({ href: "/calculadora", locale: params.locale });
 }

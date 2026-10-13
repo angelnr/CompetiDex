@@ -5,13 +5,14 @@ import { Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { TeamCard } from "@/components/pokemon/TeamCard";
+import { TeamImportPrompt } from "@/components/teams/TeamImportPrompt";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTeams } from "@/hooks/useTeams";
 
 export default function EquiposPage() {
   const t = useTranslations("teams");
-  const { teams, loaded, createTeam, deleteTeam } = useTeams();
+  const { teams, loaded, createTeam, deleteTeam, reload } = useTeams();
   const [newName, setNewName] = useState("");
   const [error, setError] = useState<string | null>(null);
 
@@ -51,6 +52,8 @@ export default function EquiposPage() {
         </div>
         {error && <p className="text-sm text-destructive">{error}</p>}
       </div>
+
+      <TeamImportPrompt onImported={() => void reload()} />
 
       {!loaded ? (
         <p className="text-sm text-muted-foreground">{t("loading")}</p>

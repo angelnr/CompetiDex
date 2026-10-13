@@ -19,11 +19,11 @@ export function IntlProvider({ locale, messages, children }: IntlProviderProps) 
     <NextIntlClientProvider
       locale={locale}
       messages={messages}
-      getMessageFallback={({ namespace, key }) => {
-        if (namespace === "encounterMethods" || namespace === "versions") {
-          return key;
-        }
-        return key;
+      timeZone="UTC"
+      getMessageFallback={({ key }) => key}
+      onError={(error) => {
+        if (error.code === "MISSING_MESSAGE") return;
+        console.error(error);
       }}
     >
       {children}
