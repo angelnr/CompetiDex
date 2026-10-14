@@ -21,6 +21,7 @@ model User {
   accounts  Account[]
   teams     Team[]
   favorites Favorite[]
+  folders   Folder[]
 
   @@unique([email])
   @@map("user")
@@ -86,13 +87,40 @@ model Team {
   userId    String
   name      String
   champions Boolean  @default(false)
+  folderId  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folder  Folder?        @relation(fields: [folderId], references: [id], onDelete: SetNull)
   members TeamPokemon[]
 
   @@index([userId])
+  @@index([folderId])
+}
+
+// ------------------------------------------------------------
+// Carpetas — clasificación jerárquica de equipos (máx. 3 niveles).
+// El borrado de una carpeta sube su contenido al padre (lógica en
+// lib/folders.ts + lib/server/folders.ts); la FK se deja en SetNull como red
+// de seguridad.
+// ------------------------------------------------------------
+
+model Folder {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  parentId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent   Folder?  @relation("FolderChildren", fields: [parentId], references: [id], onDelete: SetNull)
+  children Folder[] @relation("FolderChildren")
+  teams    Team[]
+
+  @@index([userId])
+  @@index([parentId])
 }
 
 model TeamPokemon {

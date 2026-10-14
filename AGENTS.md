@@ -314,6 +314,10 @@ Al completar una fase, marcar aquí y actualizar CHANGELOG (cuando exista).
   Prisma después.
 - **Equipos**: persistidos en BBDD vía `lib/server/teams.ts` + API routes; modo
   invitado usa `lib/storage.ts` (localStorage).
+- **Carpetas de equipos**: clasificación jerárquica de máx. 3 niveles.
+  Helpers puros en `lib/folders.ts`, servidor en `lib/server/folders.ts` y
+  `/api/folders`; en invitado, localStorage (esquema v3). Borrar una carpeta
+  sube su contenido directo al padre.
 - **Comparador**: mantener `components/pokemon/PokemonCompare` placeholder.
 - **Postgres**: cambiar `datasource` en `schema.prisma` y `docker-compose.yml`
   para añadir servicio `postgres`. Los `String` JSON de TeamPokemon migran al

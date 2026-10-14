@@ -1,12 +1,15 @@
 import type { Team, TeamMember } from "@/lib/team";
 import { normalizeMember } from "@/lib/team";
+import type { Folder } from "@/lib/folders";
+import { promoteOnDelete } from "@/lib/folders";
 
 const STORAGE_KEY = "competidex:teams";
-const CURRENT_VERSION = 2;
+const CURRENT_VERSION = 3;
 
 interface StoredData {
   version: number;
   teams: Team[];
+  folders: Folder[];
 }
 
 // ---------------------------------------------------------------------------
@@ -21,15 +24,24 @@ function migrateV1toV2(teams: Team[]): Team[] {
 }
 
 function migrateData(data: StoredData): StoredData {
-  let teams = data.teams;
+  const rawTeams = Array.isArray(data.teams) ? data.teams : [];
+  const rawFolders = Array.isArray(data.folders) ? data.folders : [];
+  let teams = rawTeams;
+
   if (!data.version || data.version < 2) {
     teams = migrateV1toV2(teams);
   }
-  return { version: CURRENT_VERSION, teams };
+
+  // v3: las carpetas aparecen; los equipos sin `folderId` van a la raíz.
+  if (!data.version || data.version < 3) {
+    teams = teams.map((team) => ({ ...team, folderId: team.folderId ?? null }));
+  }
+
+  return { version: CURRENT_VERSION, teams, folders: rawFolders };
 }
 
 // ---------------------------------------------------------------------------
-// Interfaz abstracta (preparada para Prisma)
+// Interfaz abstracta (localStorage para invitados, API/Prisma para usuarios)
 // ---------------------------------------------------------------------------
 
 export interface TeamStorage {
@@ -37,19 +49,25 @@ export interface TeamStorage {
   get(id: string): Promise<Team | null>;
   save(team: Team): Promise<void>;
   delete(id: string): Promise<void>;
+  listFolders(): Promise<Folder[]>;
+  saveFolder(folder: Folder): Promise<void>;
+  /** Borra la carpeta subiendo su contenido (equipos y subcarpetas) al padre. */
+  deleteFolder(id: string): Promise<void>;
 }
 
 // ---------------------------------------------------------------------------
 // Implementación localStorage
 // ---------------------------------------------------------------------------
 
+function emptyData(): StoredData {
+  return { version: CURRENT_VERSION, teams: [], folders: [] };
+}
+
 function readData(): StoredData {
-  if (typeof localStorage === "undefined") {
-    return { version: CURRENT_VERSION, teams: [] };
-  }
+  if (typeof localStorage === "undefined") return emptyData();
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { version: CURRENT_VERSION, teams: [] };
+    if (!raw) return emptyData();
     const parsed = JSON.parse(raw) as StoredData;
     const migrated = migrateData(parsed);
     if (migrated.version !== parsed.version) {
@@ -57,7 +75,7 @@ function readData(): StoredData {
     }
     return migrated;
   } catch {
-    return { version: CURRENT_VERSION, teams: [] };
+    return emptyData();
   }
 }
 
@@ -92,10 +110,34 @@ export const localStorageTeamStorage: TeamStorage = {
     data.teams = data.teams.filter((t) => t.id !== id);
     writeData(data);
   },
+
+  async listFolders(): Promise<Folder[]> {
+    return readData().folders;
+  },
+
+  async saveFolder(folder: Folder): Promise<void> {
+    const data = readData();
+    const idx = data.folders.findIndex((f) => f.id === folder.id);
+    if (idx >= 0) {
+      data.folders[idx] = folder;
+    } else {
+      data.folders.push(folder);
+    }
+    writeData(data);
+  },
+
+  async deleteFolder(id: string): Promise<void> {
+    const data = readData();
+    const { folders, parentId } = promoteOnDelete(data.folders, id);
+    const teams = data.teams.map((team) =>
+      team.folderId === id ? { ...team, folderId: parentId } : team,
+    );
+    writeData({ ...data, folders, teams });
+  },
 };
 
 // ---------------------------------------------------------------------------
-// Implementación remota (Prisma vía API routes `/api/teams`)
+// Implementación remota (Prisma vía API routes `/api/teams` y `/api/folders`)
 // ---------------------------------------------------------------------------
 
 export class TeamApiError extends Error {
@@ -135,5 +177,20 @@ export const remoteTeamStorage: TeamStorage = {
 
   async delete(id: string): Promise<void> {
     await apiFetch<unknown>(`/api/teams/${encodeURIComponent(id)}`, { method: "DELETE" });
+  },
+
+  async listFolders(): Promise<Folder[]> {
+    return apiFetch<Folder[]>("/api/folders");
+  },
+
+  async saveFolder(folder: Folder): Promise<void> {
+    await apiFetch<Folder>(`/api/folders/${encodeURIComponent(folder.id)}`, {
+      method: "PUT",
+      body: JSON.stringify(folder),
+    });
+  },
+
+  async deleteFolder(id: string): Promise<void> {
+    await apiFetch<unknown>(`/api/folders/${encodeURIComponent(id)}`, { method: "DELETE" });
   },
 };

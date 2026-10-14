@@ -77,6 +77,7 @@ export function toTeam(row: TeamRow): Team {
     id: row.id,
     name: row.name,
     champions: row.champions ?? false,
+    folderId: row.folderId ?? null,
     members: [...row.members].sort((a, b) => a.slot - b.slot).map(toTeamMember),
     createdAt: row.createdAt.getTime(),
     updatedAt: row.updatedAt.getTime(),
@@ -139,6 +140,7 @@ export async function saveTeam(userId: string, team: Team): Promise<Team> {
         data: {
           name: team.name,
           champions: team.champions ?? false,
+          folderId: team.folderId ?? null,
           updatedAt: now,
         },
       });
@@ -149,6 +151,7 @@ export async function saveTeam(userId: string, team: Team): Promise<Team> {
           userId,
           name: team.name,
           champions: team.champions ?? false,
+          folderId: team.folderId ?? null,
           createdAt: new Date(team.createdAt ?? Date.now()),
           updatedAt: now,
         },

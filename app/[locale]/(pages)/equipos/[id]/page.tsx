@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Copy, Download, Swords } from "lucide-react";
+import { ArrowLeft, Check, Copy, Download, Pencil, Swords, X } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 
@@ -10,6 +10,7 @@ import { SearchBar } from "@/components/pokemon/SearchBar";
 import { TeamSlot } from "@/components/pokemon/TeamSlot";
 import { TeamMemberEditor } from "@/components/pokemon/TeamMemberEditor";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { TypeBadge } from "@/components/pokemon/TypeBadge";
 import {
   Dialog,
@@ -27,12 +28,16 @@ import { cn } from "@/lib/utils";
 
 export default function TeamEditorPage() {
   const t = useTranslations("teams");
+  const tc = useTranslations("common");
   const tNav = useTranslations("nav");
   const params = useParams();
   const teamId = params?.id as string | undefined;
-  const { teams, loaded, addPokemon, removePokemon, updateMember, setChampions } = useTeams();
+  const { teams, loaded, addPokemon, removePokemon, updateMember, setChampions, renameTeam } =
+    useTeams();
   const [activeSlot, setActiveSlot] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
 
   const team = teams.find((t) => t.id === teamId);
   const types = team ? teamTypes(team.members) : [];
@@ -72,6 +77,12 @@ export default function TeamEditorPage() {
     setTimeout(() => setCopied(false), 2000);
   }, [team]);
 
+  const commitName = useCallback(async () => {
+    if (!team) return;
+    const result = await renameTeam(team.id, nameDraft);
+    if (result.ok) setEditingName(false);
+  }, [team, renameTeam, nameDraft]);
+
   if (!loaded) {
     return (
       <main className="container mx-auto py-10">
@@ -104,7 +115,59 @@ export default function TeamEditorPage() {
                 {tNav("teams")}
               </Link>
             </Button>
-            <h1 className="truncate text-xl font-bold sm:text-2xl">{team.name}</h1>
+            {editingName ? (
+              <div className="flex min-w-0 items-center gap-1">
+                <Input
+                  value={nameDraft}
+                  onChange={(e) => setNameDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") void commitName();
+                    if (e.key === "Escape") setEditingName(false);
+                  }}
+                  maxLength={30}
+                  autoFocus
+                  aria-label={t("renameAria", { name: team.name })}
+                  className="h-8 max-w-64"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-7 shrink-0"
+                  onClick={() => void commitName()}
+                  aria-label={tc("save")}
+                >
+                  <Check className="size-4 text-primary" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-7 shrink-0"
+                  onClick={() => setEditingName(false)}
+                  aria-label={tc("cancel")}
+                >
+                  <X className="size-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex min-w-0 items-center gap-1">
+                <h1 className="truncate text-xl font-bold sm:text-2xl">{team.name}</h1>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-7 shrink-0"
+                  onClick={() => {
+                    setNameDraft(team.name);
+                    setEditingName(true);
+                  }}
+                  aria-label={t("renameAria", { name: team.name })}
+                >
+                  <Pencil className="size-3.5" />
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-2 sm:shrink-0">
