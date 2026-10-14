@@ -581,6 +581,8 @@
     "emptyResults": "Elige un atacante y un defensor para empezar.",
     "boosts": "Aumentos",
     "damageRange": "{min}–{max} ({pctMin}%–{pctMax}%)",
+    "swapSides": "Intercambiar lados",
+    "selectSpeciesFirst": "Selecciona una especie primero",
     "calculating": "Calculando…",
     "loadFromTeam": "Cargar desde mis equipos:",
     "loadFromTeamPlaceholder": "Elegir un miembro",

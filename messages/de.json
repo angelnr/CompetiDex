@@ -581,6 +581,8 @@
     "emptyResults": "Wähle Angreifer und Verteidiger, um zu starten.",
     "boosts": "Boosts",
     "damageRange": "{min}–{max} ({pctMin}%–{pctMax}%)",
+    "swapSides": "Seiten tauschen",
+    "selectSpeciesFirst": "Zuerst eine Art wählen",
     "calculating": "Berechne…",
     "loadFromTeam": "Aus meinen Teams laden:",
     "loadFromTeamPlaceholder": "Mitglied wählen",

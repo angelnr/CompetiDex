@@ -104,6 +104,13 @@ export function DamageCalculator() {
     setAttacker(input);
   };
 
+  // Intercambia atacante y defensor (todos los campos: especie, habilidad,
+  // objeto, IVs, EVs, aumentos y movimientos).
+  const swapSides = () => {
+    setAttacker(defender);
+    setDefender(attacker);
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
@@ -117,7 +124,11 @@ export function DamageCalculator() {
         />
 
         <div className="w-full shrink-0 lg:w-72">
-          <FieldPanel field={field} onChange={(patch) => setField((f) => ({ ...f, ...patch }))} />
+          <FieldPanel
+            field={field}
+            onChange={(patch) => setField((f) => ({ ...f, ...patch }))}
+            onSwap={swapSides}
+          />
         </div>
 
         <CalcSetPanel

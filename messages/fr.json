@@ -581,6 +581,8 @@
     "emptyResults": "Choisissez un attaquant et un défenseur pour commencer.",
     "boosts": "Boosts",
     "damageRange": "{min}–{max} ({pctMin}%–{pctMax}%)",
+    "swapSides": "Inverser les camps",
+    "selectSpeciesFirst": "Choisissez d'abord une espèce",
     "calculating": "Calcul…",
     "loadFromTeam": "Charger depuis mes équipes :",
     "loadFromTeamPlaceholder": "Choisir un membre",

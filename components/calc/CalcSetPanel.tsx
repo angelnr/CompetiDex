@@ -328,6 +328,7 @@ export function CalcSetPanel({
                 key={i}
                 label={t("moveLabel", { slot: i + 1 })}
                 value={moves[i] ?? null}
+                species={input.species}
                 onChange={(slug) => {
                   const next = [...input.moves];
                   next[i] = slug;

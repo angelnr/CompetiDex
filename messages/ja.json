@@ -581,6 +581,8 @@
     "emptyResults": "攻撃側と防御側を選んで開始してください。",
     "boosts": "ランク補正",
     "damageRange": "{min}–{max} ({pctMin}%–{pctMax}%)",
+    "swapSides": "攻守を入れ替え",
+    "selectSpeciesFirst": "先にポケモンを選んでください",
     "calculating": "計算中…",
     "loadFromTeam": "自分のチームから読み込む:",
     "loadFromTeamPlaceholder": "メンバーを選択",

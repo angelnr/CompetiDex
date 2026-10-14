@@ -1,7 +1,9 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { ArrowLeftRight } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -16,6 +18,8 @@ import { cn } from "@/lib/utils";
 export interface FieldPanelProps {
   field: CalcFieldInput;
   onChange: (patch: Partial<CalcFieldInput>) => void;
+  /** Intercambia atacante y defensor. */
+  onSwap?: (() => void) | undefined;
 }
 
 const WEATHERS: { value: WeatherKey; labelKey: string }[] = [
@@ -63,14 +67,29 @@ function Toggle({
 
 /** Panel central de condiciones de campo: nivel, clima, terreno, púas,
  * tramparrocas, pantallas y crítico. */
-export function FieldPanel({ field, onChange }: FieldPanelProps) {
+export function FieldPanel({ field, onChange, onSwap }: FieldPanelProps) {
   const t = useTranslations("calc");
 
   const setLevel = (level: Level) => onChange({ level });
 
   return (
     <section className="rounded-lg border bg-card p-4">
-      <h3 className="mb-3 text-sm font-semibold">{t("field")}</h3>
+      <div className="mb-3 flex items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold">{t("field")}</h3>
+        {onSwap && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onSwap}
+            aria-label={t("swapSides")}
+            title={t("swapSides")}
+          >
+            <ArrowLeftRight className="size-4" />
+            <span className="ml-1 hidden sm:inline">{t("swapSides")}</span>
+          </Button>
+        )}
+      </div>
 
       {/* Nivel global 50/100 */}
       <div className="mb-3">

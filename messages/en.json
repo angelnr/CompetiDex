@@ -581,6 +581,8 @@
     "emptyResults": "Pick an attacker and a defender to start.",
     "boosts": "Boosts",
     "damageRange": "{min}–{max} ({pctMin}%–{pctMax}%)",
+    "swapSides": "Swap sides",
+    "selectSpeciesFirst": "Select a species first",
     "calculating": "Calculating…",
     "loadFromTeam": "Load from my teams:",
     "loadFromTeamPlaceholder": "Choose a team member",
