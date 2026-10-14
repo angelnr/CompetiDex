@@ -59,6 +59,23 @@ describe("lib/calc/engine", () => {
     expect(crit[0]?.damageMax).toBeGreaterThan(base[0]!.damageMax);
   });
 
+  it("aplica boosts de atacante al daño", async () => {
+    const base = await computeMatchups(ABOMASNOW, ABOMASNOW, EMPTY_CALC_FIELD);
+    const boosted = await computeMatchups(
+      { ...ABOMASNOW, boosts: { ...ABOMASNOW.boosts, "special-attack": 2 } },
+      ABOMASNOW,
+      EMPTY_CALC_FIELD,
+    );
+    expect(boosted[0]?.damageMax).toBeGreaterThan(base[0]!.damageMax);
+  });
+
+  it("Meteorobola pega más en sol (100 base, tipo fuego)", async () => {
+    const atk = { ...ABOMASNOW, moves: ["weather-ball"] };
+    const none = await computeMatchups(atk, ABOMASNOW, EMPTY_CALC_FIELD);
+    const sun = await computeMatchups(atk, ABOMASNOW, { ...EMPTY_CALC_FIELD, weather: "sun" });
+    expect(sun[0]?.damageMax).toBeGreaterThan(none[0]!.damageMax);
+  });
+
   it("expone las habilidades de una especie según el dex de Gen 9", async () => {
     const abilities = await getSpeciesAbilities("abomasnow");
     expect(abilities).toContain("Snow Warning");

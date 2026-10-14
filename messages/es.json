@@ -579,6 +579,8 @@
     "defenderHp": "HP del defensor",
     "results": "Resultados",
     "emptyResults": "Elige un atacante y un defensor para empezar.",
+    "boosts": "Aumentos",
+    "damageRange": "{min}–{max} ({pctMin}%–{pctMax}%)",
     "calculating": "Calculando…",
     "loadFromTeam": "Cargar desde mis equipos:",
     "loadFromTeamPlaceholder": "Elegir un miembro",

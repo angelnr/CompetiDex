@@ -28,6 +28,7 @@ import type {
   Item,
 } from "@/lib/pokeapi";
 import type { Movepool } from "@/lib/moveset";
+import type { LocalizedMoveNames } from "@/lib/move-names";
 
 const STALE_STATIC = Infinity;
 const STALE_LIST = 60 * 60 * 1000; // 1h
@@ -329,5 +330,15 @@ export function useMoveCatalog() {
       return toEntries(page);
     },
     staleTime: Infinity,
+  });
+}
+
+/** Nombres localizados de todos los movimientos (diccionario cacheado 7d). */
+export function useMoveNames(enabled: boolean) {
+  return useQuery<LocalizedMoveNames>({
+    queryKey: ["move-names"],
+    queryFn: () => fetchJson<LocalizedMoveNames>("/api/pokemon?move-names=true"),
+    enabled,
+    staleTime: STALE_LIST,
   });
 }

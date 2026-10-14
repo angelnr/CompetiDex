@@ -22,6 +22,8 @@ export interface CalcPokemonInput {
   item: string | null;
   ivs: StatSpread;
   evs: StatSpread;
+  /** Etapas de buff/debuff (-6…+6) por stat. HP siempre 0 (no aplica). */
+  boosts: StatSpread;
   /** Hasta 4 slugs kebab de movimientos. */
   moves: (string | null)[];
 }
@@ -91,6 +93,14 @@ export const EMPTY_CALC_INPUT: CalcPokemonInput = {
     speed: 31,
   },
   evs: {
+    hp: 0,
+    attack: 0,
+    defense: 0,
+    "special-attack": 0,
+    "special-defense": 0,
+    speed: 0,
+  },
+  boosts: {
     hp: 0,
     attack: 0,
     defense: 0,

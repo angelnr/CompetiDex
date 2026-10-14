@@ -38,6 +38,7 @@ import {
 } from "@/lib/pokeapi";
 import { getLocalizedItemNames } from "@/lib/item-names";
 import { getMovepool } from "@/lib/moveset";
+import { getLocalizedMoveNames } from "@/lib/move-names";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -149,6 +150,11 @@ export async function GET(request: Request): Promise<NextResponse> {
 
     if (searchParams.has("item-names")) {
       const data = await getLocalizedItemNames();
+      return NextResponse.json(data);
+    }
+
+    if (searchParams.has("move-names")) {
+      const data = await getLocalizedMoveNames();
       return NextResponse.json(data);
     }
 

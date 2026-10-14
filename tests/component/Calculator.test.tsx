@@ -1,10 +1,15 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 
 import { FieldPanel } from "@/components/calc/FieldPanel";
 import { ResultsPanel } from "@/components/calc/ResultsPanel";
 import { EMPTY_CALC_FIELD, type CalcFieldInput, type CalcResult } from "@/lib/calc/types";
+import { useMoveNames } from "@/lib/queries";
 import { WithIntl } from "@/tests/component/with-intl";
+
+vi.mock("@/lib/queries", () => ({
+  useMoveNames: vi.fn(),
+}));
 
 describe("FieldPanel", () => {
   it("cambia de nivel 50/100 y de clima", () => {
@@ -37,6 +42,10 @@ describe("FieldPanel", () => {
 });
 
 describe("ResultsPanel", () => {
+  beforeEach(() => {
+    vi.mocked(useMoveNames).mockReturnValue({ data: undefined } as never);
+  });
+
   it("muestra la notación Smogon y la etiqueta OHKO", () => {
     const results: CalcResult[] = [
       {

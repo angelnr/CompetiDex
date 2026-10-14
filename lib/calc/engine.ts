@@ -6,8 +6,10 @@ import type {
   TerrainKey,
   WeatherKey,
 } from "./types";
-import { fullSpread, toGenslug, toSpeciesGenslug, titleCase } from "./convert";
+import { fullBoosts, fullSpread, toGenslug, toSpeciesGenslug, titleCase } from "./convert";
 import { DEFAULT_IVS, DEFAULT_EVS } from "@/lib/team";
+import { EMPTY_BOOSTS } from "./stages";
+import { moveOverride } from "./weather";
 
 /**
  * Motor de cálculo basado en `@smogon/calc` (Gen 9). Se importa dinámicamente
@@ -74,6 +76,7 @@ function buildPokemon(calc: CalcModule, input: CalcPokemonInput, curHP?: number)
     nature: input.nature ? titleCase(input.nature) : "Hardy",
     ivs: fullSpread(input.ivs ?? DEFAULT_IVS),
     evs: fullSpread(input.evs ?? DEFAULT_EVS),
+    boosts: fullBoosts(input.boosts ?? EMPTY_BOOSTS),
   };
   if (input.ability) options.ability = toGenslug(input.ability);
   if (input.item) options.item = toGenslug(input.item);
@@ -171,7 +174,11 @@ export async function computeMatchups(
       // El HP actual del defensor se fija por movimiento para que el KO text
       // de `desc()` refleje el HP ajustado del defensor.
       const defForMove = buildPokemon(calc, defender, Math.min(curHp, defMaxHp));
-      const move = new calc.Move(gen, moveGenslug as never, { isCrit: field.critical });
+      const override = moveOverride(moveGenslug, field);
+      const move = new calc.Move(gen, moveGenslug as never, {
+        isCrit: field.critical,
+        ...(override ? { overrides: { basePower: override.basePower, type: override.type } } : {}),
+      });
       result = calc.calculate(gen, atk, defForMove, move, fieldObj);
     } catch {
       results.push({

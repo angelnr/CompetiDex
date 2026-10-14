@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Input } from "@/components/ui/input";
 import {
@@ -15,9 +15,11 @@ import { SpeciesPicker } from "@/components/calc/SpeciesPicker";
 import { MoveSelect } from "@/components/calc/MoveSelect";
 import { ItemPicker } from "@/components/pokemon/ItemPicker";
 import { NATURES, type StatKey } from "@/lib/natures";
-import { usePokemonCatalog } from "@/lib/queries";
-import { getPixelSpriteById, formatPokedexId } from "@/lib/pokemon-utils";
+import type { StatSpread } from "@/lib/team";
+import { useAbilities, useNatures, usePokemonCatalog } from "@/lib/queries";
+import { getPixelSpriteById, formatPokedexId, getName } from "@/lib/pokemon-utils";
 import { titleCase } from "@/lib/calc/convert";
+import { BOOST_STATS, effectiveStat } from "@/lib/calc/stages";
 import type { CalcPokemonInput, Level } from "@/lib/calc/types";
 import { cn } from "@/lib/utils";
 
@@ -47,6 +49,16 @@ const STAT_ROWS: { key: keyof CalcStatsShape; label: string }[] = [
   { key: "spd", label: "SpD" },
   { key: "spe", label: "Spe" },
 ];
+
+/** Mapa stat corta → clave de StatSpread (para leer el boost correspondiente). */
+const BOOST_BY_STAT: Record<keyof CalcStatsShape, keyof StatSpread> = {
+  hp: "hp",
+  atk: "attack",
+  def: "defense",
+  spa: "special-attack",
+  spd: "special-defense",
+  spe: "speed",
+};
 
 const STAT_KEYS: StatKey[] = [
   "hp",
@@ -89,9 +101,22 @@ export function CalcSetPanel({
     ? (catalog?.find((e) => e.name === input.species)?.id ?? null)
     : null;
 
-  const abilityOptions = abilities
-    .filter((a) => a !== "---")
-    .map((a) => ({ value: abilityKebab(a), label: a }));
+  const locale = useLocale();
+  const natureQueries = useNatures(NATURES.map((n) => n.name));
+  const abilitySlugs = abilities.filter((a) => a !== "---").map(abilityKebab);
+  const abilityQueries = useAbilities(abilitySlugs);
+
+  const natureLabel = (slug: string, index: number): string => {
+    const data = natureQueries[index]?.data;
+    return data ? getName(data.names, data.name, locale) : titleCase(slug);
+  };
+
+  const abilityOptions = abilitySlugs.map((slug, index) => ({
+    value: slug,
+    label: abilityQueries[index]?.data
+      ? getName(abilityQueries[index]!.data!.names, abilityQueries[index]!.data!.name, locale)
+      : titleCase(slug),
+  }));
 
   return (
     <section
@@ -136,9 +161,9 @@ export function CalcSetPanel({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {NATURES.map((n) => (
+            {NATURES.map((n, i) => (
               <SelectItem key={n.name} value={n.name}>
-                {titleCase(n.name)}
+                {natureLabel(n.name, i)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -178,12 +203,29 @@ export function CalcSetPanel({
       {/* Stats calculadas */}
       {stats && (
         <div className="mb-3 grid grid-cols-6 gap-1 rounded-md border bg-muted/30 p-2">
-          {STAT_ROWS.map((s) => (
-            <div key={s.key} className="text-center">
-              <span className="block text-[9px] uppercase text-muted-foreground">{s.label}</span>
-              <span className="block text-xs font-semibold tabular-nums">{stats[s.key]}</span>
-            </div>
-          ))}
+          {STAT_ROWS.map((s) => {
+            const stage = input.boosts?.[BOOST_BY_STAT[s.key]] ?? 0;
+            const value = stage !== 0 ? effectiveStat(stats[s.key], stage) : stats[s.key];
+            return (
+              <div key={s.key} className="text-center">
+                <span className="block text-[9px] uppercase text-muted-foreground">{s.label}</span>
+                <span
+                  className={cn(
+                    "block text-xs font-semibold tabular-nums",
+                    stage > 0 && "text-emerald-500",
+                    stage < 0 && "text-red-500",
+                  )}
+                >
+                  {value}
+                </span>
+                {stage !== 0 && (
+                  <span className="block text-[8px] leading-none text-muted-foreground">
+                    {stage > 0 ? `+${stage}` : stage}
+                  </span>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -241,6 +283,34 @@ export function CalcSetPanel({
                 }}
                 className="h-8 text-center text-xs"
                 aria-label={`EV ${SHORT_LABELS[k]}`}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Buffs / debuffs (-6…+6) */}
+      <div className="mb-3">
+        <label className="mb-1 block text-xs font-medium">{t("boosts")}</label>
+        <div className="grid grid-cols-5 gap-1.5">
+          {BOOST_STATS.map((k) => (
+            <div key={k}>
+              <span className="block text-center text-[9px] text-muted-foreground">
+                {SHORT_LABELS[k]}
+              </span>
+              <Input
+                type="number"
+                min={-6}
+                max={6}
+                value={input.boosts[k]}
+                onChange={(e) => {
+                  const n = parseInt(e.target.value, 10);
+                  if (!isNaN(n)) {
+                    onChange({ boosts: { ...input.boosts, [k]: Math.min(Math.max(n, -6), 6) } });
+                  }
+                }}
+                className="h-8 text-center text-xs"
+                aria-label={`Boost ${SHORT_LABELS[k]}`}
               />
             </div>
           ))}

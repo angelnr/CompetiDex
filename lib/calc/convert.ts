@@ -1,5 +1,6 @@
 import { DEFAULT_EVS, DEFAULT_IVS, type StatSpread, type TeamMember } from "@/lib/team";
 import type { CalcPokemonInput, Level } from "./types";
+import { EMPTY_BOOSTS } from "./stages";
 
 /**
  * Conversión entre slugs del repositorio (kebab) y slugs compactos que
@@ -50,6 +51,23 @@ export function fullSpread(spread: StatSpread): {
   };
 }
 
+/** Etapas de buff/debuff al formato compacto de calc (sin HP). */
+export function fullBoosts(spread: StatSpread): {
+  atk: number;
+  def: number;
+  spa: number;
+  spd: number;
+  spe: number;
+} {
+  return {
+    atk: spread.attack,
+    def: spread.defense,
+    spa: spread["special-attack"],
+    spd: spread["special-defense"],
+    spe: spread.speed,
+  };
+}
+
 /** Título legible a partir de un slug kebab (`thunder-bolt` → `Thunder Bolt`). */
 export function titleCase(slug: string): string {
   return slug
@@ -73,6 +91,7 @@ export function teamMemberToCalcInput(member: TeamMember, level: Level): CalcPok
     item: member.heldItem ?? null,
     ivs: { ...DEFAULT_IVS, ...member.ivs },
     evs: { ...DEFAULT_EVS, ...member.evs },
+    boosts: { ...EMPTY_BOOSTS },
     moves,
   };
 }

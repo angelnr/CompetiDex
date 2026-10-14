@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePokemonCatalog } from "@/lib/queries";
 import { getPixelSpriteById } from "@/lib/pokemon-utils";
+import { useLocalizedSpeciesName } from "@/hooks/useLocalizedSpeciesName";
 import { titleCase } from "@/lib/calc/convert";
 import { cn } from "@/lib/utils";
 
@@ -33,20 +34,16 @@ function normalize(text: string): string {
 export function SpeciesPicker({ value, onChange }: SpeciesPickerProps) {
   const t = useTranslations("calc");
   const { data: catalog, isLoading } = usePokemonCatalog();
+  const localizedSelected = useLocalizedSpeciesName(value ?? "");
   const [query, setQuery] = useState(value ?? "");
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const selected = useMemo(
-    () => (value ? (catalog?.find((e) => e.name === value) ?? null) : null),
-    [value, catalog],
-  );
-
   useEffect(() => {
-    if (!open) setQuery(selected ? titleCase(selected.name) : (value ?? ""));
+    if (!open) setQuery(value ? localizedSelected : (value ?? ""));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, selected]);
+  }, [open, localizedSelected]);
 
   useEffect(() => {
     if (!open) return;

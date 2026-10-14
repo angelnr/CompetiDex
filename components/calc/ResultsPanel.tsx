@@ -1,7 +1,9 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { CalcResult } from "@/lib/calc/types";
+import { useMoveNames } from "@/lib/queries";
+import type { MoveNameLocale } from "@/lib/move-names";
 import { titleCase } from "@/lib/calc/convert";
 import { cn } from "@/lib/utils";
 
@@ -29,6 +31,13 @@ function barColor(pctMax: number): string {
 /** Lista de resultados por movimiento con la notación Smogon + barra visual. */
 export function ResultsPanel({ results }: ResultsPanelProps) {
   const t = useTranslations("calc");
+  const locale = useLocale();
+  const { data: moveNames } = useMoveNames(true);
+
+  const localize = (slug: string): string => {
+    const entry = moveNames?.[slug];
+    return entry?.[locale as MoveNameLocale] ?? titleCase(slug);
+  };
 
   if (results.length === 0) {
     return (
@@ -46,7 +55,15 @@ export function ResultsPanel({ results }: ResultsPanelProps) {
           const label = koLabel(t, r.pctMax);
           return (
             <li key={r.move} className="space-y-2">
-              <p className="text-sm font-medium">{titleCase(r.move)}</p>
+              <p className="text-sm font-medium">{localize(r.move)}</p>
+              <p className="text-xs text-muted-foreground">
+                {t("damageRange", {
+                  min: r.damageMin,
+                  max: r.damageMax,
+                  pctMin: Math.round(r.pctMin),
+                  pctMax: Math.round(r.pctMax),
+                })}
+              </p>
               <p className="rounded-md bg-muted/40 p-2 font-mono text-xs leading-relaxed">
                 {r.desc}
               </p>

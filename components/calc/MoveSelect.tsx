@@ -2,11 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useMoveCatalog } from "@/lib/queries";
+import { useMoveCatalog, useMoveNames } from "@/lib/queries";
+import type { MoveNameLocale } from "@/lib/move-names";
 import { titleCase } from "@/lib/calc/convert";
 import { cn } from "@/lib/utils";
 
@@ -28,13 +29,20 @@ function normalize(text: string): string {
 /** Combobox de movimiento para la calculadora (catálogo completo de Gen 9). */
 export function MoveSelect({ value, onChange, label }: MoveSelectProps) {
   const t = useTranslations("calc");
+  const locale = useLocale();
   const { data: catalog, isLoading } = useMoveCatalog();
+  const { data: moveNames } = useMoveNames(true);
   const [query, setQuery] = useState(value ?? "");
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const displayName = value ? titleCase(value) : "";
+  const localize = (slug: string): string => {
+    const entry = moveNames?.[slug];
+    return entry?.[locale as MoveNameLocale] ?? titleCase(slug);
+  };
+
+  const displayName = value ? localize(value) : "";
 
   useEffect(() => {
     if (!open) setQuery(displayName);
@@ -57,9 +65,15 @@ export function MoveSelect({ value, onChange, label }: MoveSelectProps) {
     const q = normalize(query.trim());
     if (!q) return catalog.slice(0, MAX_RESULTS);
     return catalog
-      .filter((e) => normalize(titleCase(e.name)).includes(q) || normalize(e.name).includes(q))
+      .filter(
+        (e) =>
+          normalize(localize(e.name)).includes(q) ||
+          normalize(titleCase(e.name)).includes(q) ||
+          normalize(e.name).includes(q),
+      )
       .slice(0, MAX_RESULTS);
-  }, [catalog, query]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [catalog, query, moveNames, locale]);
 
   const select = (slug: string) => {
     onChange(slug);
@@ -163,7 +177,7 @@ export function MoveSelect({ value, onChange, label }: MoveSelectProps) {
                     i === activeIndex && "bg-accent text-accent-foreground",
                   )}
                 >
-                  <span className="min-w-0 flex-1 truncate">{titleCase(entry.name)}</span>
+                  <span className="min-w-0 flex-1 truncate">{localize(entry.name)}</span>
                   {value === entry.name && (
                     <span className="shrink-0 rounded bg-muted px-1 text-[10px] text-muted-foreground">
                       ✓
