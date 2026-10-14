@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 
 import { useSession } from "@/lib/auth-client";
 import { localStorageTeamStorage, remoteTeamStorage } from "@/lib/storage";
+import { folderDepth } from "@/lib/folders";
 import { Button } from "@/components/ui/button";
 
 export interface TeamImportPromptProps {
@@ -54,8 +55,16 @@ export function TeamImportPrompt({ onImported }: TeamImportPromptProps) {
   async function handleImport() {
     setImporting(true);
     try {
-      const local = await localStorageTeamStorage.list();
-      for (const team of local) {
+      const localTeams = await localStorageTeamStorage.list();
+      const localFolders = await localStorageTeamStorage.listFolders();
+      // Carpetas primero, de raíz a hojas, para respetar las FK padre→hijo.
+      const orderedFolders = [...localFolders].sort(
+        (a, b) => folderDepth(localFolders, a.id) - folderDepth(localFolders, b.id),
+      );
+      for (const folder of orderedFolders) {
+        await remoteTeamStorage.saveFolder(folder);
+      }
+      for (const team of localTeams) {
         await remoteTeamStorage.save(team);
       }
       localStorage.setItem(`competidex:teams-imported-${userId}`, "1");

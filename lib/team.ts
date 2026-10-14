@@ -62,9 +62,14 @@ export interface Team {
   name: string;
   members: TeamMember[];
   champions?: boolean;
+  /** Carpeta contenedora; `null`/`undefined` = raíz ("Sin carpeta"). */
+  folderId?: string | null;
   createdAt: number;
   updatedAt: number;
 }
+
+/** Campos editables de Team (excluye miembros, que van por su propia API). */
+export type TeamPatch = Partial<Pick<Team, "name" | "folderId">>;
 
 /** Campos editables de TeamMember (excluye campos de identidad). */
 export type TeamMemberPatch = Partial<

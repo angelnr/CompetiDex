@@ -27,6 +27,7 @@ import type {
   Nature,
   Item,
 } from "@/lib/pokeapi";
+import type { Movepool } from "@/lib/moveset";
 
 const STALE_STATIC = Infinity;
 const STALE_LIST = 60 * 60 * 1000; // 1h
@@ -201,6 +202,19 @@ export function useMoves(idsOrNames: (string | number)[]) {
       queryFn: () => fetchJson<Move>(`/api/pokemon?move=${idOrName}`),
       staleTime: STALE_STATIC,
     })),
+  });
+}
+
+/**
+ * Movepool completo de una especie (lista completa para el constructor de
+ * equipos). Una única petición cacheada en Redis + TanStack (staleTime ∞).
+ */
+export function useMovepool(idOrName: number | string | undefined) {
+  return useQuery<Movepool>({
+    queryKey: ["movepool", idOrName],
+    queryFn: () => fetchJson<Movepool>(`/api/pokemon?moveset=${idOrName}`),
+    enabled: idOrName !== undefined && idOrName !== "",
+    staleTime: STALE_STATIC,
   });
 }
 

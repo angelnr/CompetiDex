@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
-import { X } from "lucide-react";
+import { List, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { ItemPicker } from "@/components/pokemon/ItemPicker";
 import { ItemSprite } from "@/components/pokemon/ItemSprite";
 import { MovePicker } from "@/components/pokemon/MovePicker";
+import { MovepoolDialog } from "@/components/pokemon/MovepoolDialog";
 import {
   Select,
   SelectContent,
@@ -75,6 +76,7 @@ export function TeamMemberEditor({
   const selectedItem = useMemo(() => findItem(member.heldItem), [member.heldItem]);
   const locale = useLocale();
   const localizedName = useLocalizedSpeciesName(member.name);
+  const [movepoolSlot, setMovepoolSlot] = useState<number | null>(null);
 
   const abilities = useMemo(
     () =>
@@ -118,6 +120,11 @@ export function TeamMemberEditor({
     [pokemon.moves, member.name],
   );
   const { data: basePokemon } = usePokemon(baseSlug);
+
+  // Fuente del movepool de la tabla completa: la propia especie si tiene
+  // movimientos, o la especie base (megas sin learnset en PokeAPI).
+  const movepoolSource: number | string | undefined =
+    pokemon.moves.length > 0 ? member.pokemonId : baseSlug;
 
   const availableMoves = useMemo(() => {
     const source = pokemon.moves.length > 0 ? pokemon.moves : (basePokemon?.moves ?? []);
@@ -338,6 +345,17 @@ export function TeamMemberEditor({
                     onChange={(slug) => handleMove(i, slug ?? "")}
                   />
                 </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-6 shrink-0"
+                  onClick={() => setMovepoolSlot(i)}
+                  aria-label={t("moveViewAllAria")}
+                  title={t("moveViewAll")}
+                >
+                  <List className="size-3" />
+                </Button>
                 {moveVal && (
                   <Button
                     type="button"
@@ -355,6 +373,19 @@ export function TeamMemberEditor({
           })}
         </div>
       </div>
+
+      <MovepoolDialog
+        open={movepoolSlot !== null}
+        onOpenChange={(next) => {
+          if (!next) setMovepoolSlot(null);
+        }}
+        sourceId={movepoolSource}
+        speciesLabel={localizedName}
+        selectedSlug={movepoolSlot !== null ? (member.moves?.[movepoolSlot] ?? null) : null}
+        onSelect={(slug) => {
+          if (movepoolSlot !== null) handleMove(movepoolSlot, slug);
+        }}
+      />
     </div>
   );
 }
