@@ -19,7 +19,7 @@ export interface MovePickerProps {
   disabled?: boolean;
 }
 
-const MAX_RESULTS = 50;
+const MAX_RESULTS = 200;
 
 function normalize(text: string): string {
   return text
@@ -85,18 +85,26 @@ export function MovePicker({ value, pool, onChange, disabled = false }: MovePick
         name: poolQueries[i]?.data
           ? getName(poolQueries[i]!.data!.names, poolQueries[i]!.data!.name, locale)
           : titleCase(slug),
+        // Nombre en inglés: permite encontrar el movimiento aunque el usuario
+        // no conozca la traducción localizada (p. ej. "Mystical Fire").
+        englishName: poolQueries[i]?.data
+          ? getName(poolQueries[i]!.data!.names, poolQueries[i]!.data!.name, "en")
+          : titleCase(slug),
       })),
     [pool, poolQueries, locale],
   );
 
-  const results = useMemo(() => {
+  const { results, total } = useMemo(() => {
     const q = normalize(query.trim());
     const filtered = q
       ? localizedPool.filter(
-          (m) => normalize(m.name).includes(q) || m.slug.includes(q.replace(/\s+/g, "-")),
+          (m) =>
+            normalize(m.name).includes(q) ||
+            normalize(m.englishName).includes(q) ||
+            m.slug.includes(q.replace(/\s+/g, "-")),
         )
-      : [...localizedPool];
-    return filtered.slice(0, MAX_RESULTS);
+      : localizedPool;
+    return { results: filtered.slice(0, MAX_RESULTS), total: filtered.length };
   }, [query, localizedPool]);
 
   const select = (slug: string) => {
@@ -186,31 +194,48 @@ export function MovePicker({ value, pool, onChange, disabled = false }: MovePick
           ) : results.length === 0 ? (
             <li className="px-3 py-2 text-sm text-muted-foreground">{t("moveNoResults")}</li>
           ) : (
-            results.map((m, i) => (
-              <li
-                key={m.slug}
-                id={`move-option-${i}`}
-                role="option"
-                aria-selected={i === activeIndex}
-              >
-                <button
-                  type="button"
-                  onClick={() => select(m.slug)}
-                  onMouseEnter={() => setActiveIndex(i)}
-                  className={cn(
-                    "flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground",
-                    i === activeIndex && "bg-accent text-accent-foreground",
-                  )}
+            <>
+              {results.map((m, i) => (
+                <li
+                  key={m.slug}
+                  id={`move-option-${i}`}
+                  role="option"
+                  aria-selected={i === activeIndex}
                 >
-                  <span className="min-w-0 flex-1 truncate">{m.name}</span>
-                  {value === m.slug && (
-                    <span className="shrink-0 rounded bg-muted px-1 text-[10px] text-muted-foreground">
-                      ✓
+                  <button
+                    type="button"
+                    onClick={() => select(m.slug)}
+                    onMouseEnter={() => setActiveIndex(i)}
+                    className={cn(
+                      "flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground",
+                      i === activeIndex && "bg-accent text-accent-foreground",
+                    )}
+                  >
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate">{m.name}</span>
+                      {m.englishName && m.englishName !== m.name && (
+                        <span className="block truncate text-xs text-muted-foreground">
+                          {m.englishName}
+                        </span>
+                      )}
                     </span>
-                  )}
-                </button>
+                    {value === m.slug && (
+                      <span className="shrink-0 rounded bg-muted px-1 text-[10px] text-muted-foreground">
+                        ✓
+                      </span>
+                    )}
+                  </button>
+                </li>
+              ))}
+              <li
+                role="presentation"
+                className="border-t px-3 py-1.5 text-[11px] text-muted-foreground"
+              >
+                {results.length < total
+                  ? t("movepoolShowing", { shown: results.length, total })
+                  : t("movepoolCount", { count: total })}
               </li>
-            ))
+            </>
           )}
         </ul>
       )}

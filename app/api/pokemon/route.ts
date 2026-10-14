@@ -12,6 +12,7 @@
  *   GET /api/pokemon?evolution=10     -> evolution-chain por id
  *   GET /api/pokemon?type=electric    -> tipo
  *   GET /api/pokemon?type-list=true   -> lista de tipos
+ *   GET /api/pokemon?moveset=25       -> movepool completo de una especie
  *
  * Respuestas normalizadas: 200 con body, 400 param faltante,
  * 404 upstream (PokeAPI no encontrado), 500 error inesperado.
@@ -36,6 +37,7 @@ import {
   type ListOptions,
 } from "@/lib/pokeapi";
 import { getLocalizedItemNames } from "@/lib/item-names";
+import { getMovepool } from "@/lib/moveset";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -109,6 +111,12 @@ export async function GET(request: Request): Promise<NextResponse> {
     if (searchParams.has("move")) {
       const id = idParam.parse(searchParams.get("move"));
       const data = await getMove(id);
+      return NextResponse.json(data);
+    }
+
+    if (searchParams.has("moveset")) {
+      const id = idParam.parse(searchParams.get("moveset"));
+      const data = await getMovepool(id);
       return NextResponse.json(data);
     }
 
