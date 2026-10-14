@@ -94,21 +94,24 @@ export default function TeamEditorPage() {
   }
 
   return (
-    <main className="container mx-auto max-w-5xl py-10">
+    <main className="container mx-auto max-w-5xl px-4 py-10">
       <div className="mb-6 space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button asChild variant="ghost" size="sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <Button asChild variant="ghost" size="sm" className="shrink-0">
               <Link href="/equipos">
                 <ArrowLeft className="size-4" />
                 {tNav("teams")}
               </Link>
             </Button>
-            <h1 className="text-2xl font-bold">{team.name}</h1>
+            <h1 className="truncate text-xl font-bold sm:text-2xl">{team.name}</h1>
+          </div>
+
+          <div className="flex items-center gap-2 sm:shrink-0">
             <div
               role="radiogroup"
               aria-label={t("formatLabel")}
-              className="flex items-center gap-1 rounded-lg border bg-muted/50 p-1"
+              className="flex flex-1 items-center gap-1 rounded-lg border bg-muted/50 p-1 sm:flex-none"
             >
               <Swords className="ml-1 size-4 shrink-0 text-muted-foreground" aria-hidden />
               <button
@@ -117,7 +120,7 @@ export default function TeamEditorPage() {
                 aria-checked={!team.champions}
                 onClick={() => setChampions(team.id, false)}
                 className={cn(
-                  "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
+                  "flex-1 rounded-md px-2.5 py-1 text-xs font-medium transition-colors sm:flex-none",
                   !team.champions
                     ? "bg-primary text-primary-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground",
@@ -131,7 +134,7 @@ export default function TeamEditorPage() {
                 aria-checked={team.champions}
                 onClick={() => setChampions(team.id, true)}
                 className={cn(
-                  "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
+                  "flex-1 rounded-md px-2.5 py-1 text-xs font-medium transition-colors sm:flex-none",
                   team.champions
                     ? "bg-primary text-primary-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground",
@@ -140,32 +143,32 @@ export default function TeamEditorPage() {
                 {t("championsMode")}
               </button>
             </div>
-          </div>
 
-          {/* ── Botón Exportar ── */}
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Download className="mr-1 size-4" />
-                {t("export")}
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-xl">
-              <DialogHeader>
-                <DialogTitle>{t("export")}</DialogTitle>
-              </DialogHeader>
-              <textarea
-                readOnly
-                value={teamToPokepaste(team)}
-                className="h-80 w-full resize-none rounded-md border bg-muted p-3 font-mono text-xs"
-                aria-label={t("export")}
-              />
-              <Button onClick={handleCopyPaste} className="w-full">
-                <Copy className="mr-1 size-4" />
-                {copied ? t("copied") : t("copy")}
-              </Button>
-            </DialogContent>
-          </Dialog>
+            {/* ── Botón Exportar ── */}
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="shrink-0">
+                  <Download className="mr-1 size-4" />
+                  {t("export")}
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-xl">
+                <DialogHeader>
+                  <DialogTitle>{t("export")}</DialogTitle>
+                </DialogHeader>
+                <textarea
+                  readOnly
+                  value={teamToPokepaste(team)}
+                  className="h-80 w-full resize-none rounded-md border bg-muted p-3 font-mono text-xs"
+                  aria-label={t("export")}
+                />
+                <Button onClick={handleCopyPaste} className="w-full">
+                  <Copy className="mr-1 size-4" />
+                  {copied ? t("copied") : t("copy")}
+                </Button>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         {types.length > 0 && (
