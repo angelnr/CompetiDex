@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Menu, X } from "lucide-react";
+import { CircleDot, Menu, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 import { Link, usePathname } from "@/i18n/routing";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { AuthMenu } from "@/components/auth/AuthMenu";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const NAV_LINKS = [
   { href: "/equipos", key: "teams" },
@@ -26,8 +27,14 @@ export function NavBar() {
   return (
     <nav className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-4 px-4">
-        <Link href="/" className="shrink-0 text-sm font-semibold tracking-tight">
-          {t("brand")}
+        <Link
+          href="/"
+          className="flex shrink-0 items-center gap-1.5 text-sm font-bold tracking-tight"
+        >
+          <CircleDot className="size-5 text-primary" aria-hidden />
+          <span className="bg-gradient-to-r from-primary to-[hsl(var(--brand-2))] bg-clip-text text-transparent">
+            {t("brand")}
+          </span>
         </Link>
 
         <div className="hidden items-center gap-6 md:flex">
@@ -45,6 +52,7 @@ export function NavBar() {
         <div className="ml-auto flex items-center gap-1 sm:gap-2">
           <AuthMenu />
           <LanguageSwitcher />
+          <ThemeToggle />
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}

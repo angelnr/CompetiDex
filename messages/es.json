@@ -8,6 +8,14 @@
     "closeMenu": "Cerrar menú",
     "calculador": "Calculadora"
   },
+  "theme": {
+    "toLight": "Cambiar a modo claro",
+    "toDark": "Cambiar a modo oscuro"
+  },
+  "footer": {
+    "disclaimer": "Pokémon y los nombres de personajes de Pokémon son marcas registradas de Nintendo, Creatures Inc. y GAME FREAK inc. CompetiDex es un proyecto de fans sin afiliación oficial; todos los derechos sobre Pokémon pertenecen a sus respectivos propietarios.",
+    "poweredBy": "Datos de"
+  },
   "home": {
     "title": "CompetiDex",
     "subtitle": "Pokédex all-in-one con stats, tipos, evoluciones, habilidades, movimientos y debilidades.",
