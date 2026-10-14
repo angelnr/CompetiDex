@@ -28,7 +28,13 @@ import {
   totalEvs,
 } from "@/lib/team";
 import type { Pokemon } from "@/lib/pokeapi";
-import { baseSpeciesSlug, formatPokedexId, getName, getPixelSpriteById } from "@/lib/pokemon-utils";
+import {
+  baseSpeciesSlug,
+  formatPokedexId,
+  getName,
+  getPixelSpriteById,
+  isMegaName,
+} from "@/lib/pokemon-utils";
 import { useLocalizedSpeciesName } from "@/hooks/useLocalizedSpeciesName";
 import { findItem, localizeItem } from "@/lib/items";
 import { NATURES } from "@/lib/natures";
@@ -113,10 +119,13 @@ export function TeamMemberEditor({
     ? localizeItem(selectedItem, heldItemData, locale).description
     : null;
 
-  // Movepool del Pokémon. Las megas nuevas (Champions) vienen con `moves: []`
-  // en PokeAPI; en ese caso se cae al movepool de la especie base.
+  // Movepool del Pokémon. Las megas comparten el learnset de la especie base
+  // (PokeAPI les da uno parcial, p. ej. solo "champions"), así que se unen.
   const baseSlug = useMemo(
-    () => (pokemon.moves.length === 0 ? baseSpeciesSlug(member.name) : undefined),
+    () =>
+      isMegaName(member.name) || pokemon.moves.length === 0
+        ? baseSpeciesSlug(member.name)
+        : undefined,
     [pokemon.moves, member.name],
   );
   const { data: basePokemon } = usePokemon(baseSlug);
@@ -127,7 +136,7 @@ export function TeamMemberEditor({
     pokemon.moves.length > 0 ? member.pokemonId : baseSlug;
 
   const availableMoves = useMemo(() => {
-    const source = pokemon.moves.length > 0 ? pokemon.moves : (basePokemon?.moves ?? []);
+    const source = [...pokemon.moves, ...(basePokemon?.moves ?? [])];
     const seen = new Set<string>();
     return source
       .map((m) => m.move.name)

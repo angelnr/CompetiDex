@@ -86,7 +86,7 @@ describe("getMovepool", () => {
     expect(pool.versionGroups).toEqual(["sword-shield", "scarlet-violet"]);
 
     const [key, , ttl] = getOrSetMock.mock.calls[0]!;
-    expect(key).toBe("pokeapi:moveset:10186:v1");
+    expect(key).toBe("pokeapi:moveset:10186:v2");
     expect(ttl).toBe(604_800);
   });
 
@@ -141,5 +141,41 @@ describe("getMovepool", () => {
     expect(pool.moves).toEqual([]);
     expect(pool.versionGroups).toEqual([]);
     expect(getMoveMock).not.toHaveBeenCalled();
+  });
+
+  it("une el learnset de una mega con el de su especie base", async () => {
+    getPokemonMock.mockImplementation((id: string) => {
+      if (id === "charizard-mega-y") {
+        return Promise.resolve({
+          id: 10035,
+          name: "charizard-mega-y",
+          moves: [
+            {
+              move: { name: "dragon-dance" },
+              version_group_details: [{ version_group: { name: "champions" } }],
+            },
+          ],
+        });
+      }
+      return Promise.resolve({
+        id: 6,
+        name: "charizard",
+        moves: [
+          {
+            move: { name: "dragon-dance" },
+            version_group_details: [{ version_group: { name: "scarlet-violet" } }],
+          },
+        ],
+      });
+    });
+    getMoveMock.mockResolvedValue(MYSTICAL_FIRE);
+
+    const pool = await getMovepool("charizard-mega-y");
+    const dd = pool.moves.find((m) => m.slug === "dragon-dance");
+
+    expect(dd).toBeDefined();
+    // El vg "champions" está excluido; el de la especie base sí se conserva.
+    expect(dd!.vgs).toContain("scarlet-violet");
+    expect(dd!.vgs).not.toContain("champions");
   });
 });

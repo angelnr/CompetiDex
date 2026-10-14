@@ -12,9 +12,10 @@
  * que cambiar de juego es instantáneo y la caché sirve para cualquier juego.
  */
 
-import { getMove, getPokemon } from "@/lib/pokeapi";
+import { getMove, getPokemon, type Pokemon, type PokemonMoveSlot } from "@/lib/pokeapi";
 import { getOrSet } from "@/lib/redis";
 import { isExcludedVersionGroup, versionGroupOrder } from "@/lib/version-names";
+import { baseSpeciesSlug, isMegaName } from "@/lib/pokemon-utils";
 
 /** Locales soportados en la app (ver i18n/routing.ts). */
 const APP_LOCALES = ["es", "en", "fr", "de", "ja"] as const;
@@ -71,12 +72,48 @@ async function mapWithConcurrency<T, R>(
   return results;
 }
 
+/** Une dos learnsets por movimiento, combinando sus version-group details. */
+function mergeSlots(a: PokemonMoveSlot[], b: PokemonMoveSlot[]): PokemonMoveSlot[] {
+  const byName = new Map<string, PokemonMoveSlot>();
+  for (const slot of [...a, ...b]) {
+    const existing = byName.get(slot.move.name);
+    if (existing) {
+      existing.version_group_details.push(...slot.version_group_details);
+    } else {
+      byName.set(slot.move.name, {
+        move: slot.move,
+        version_group_details: [...slot.version_group_details],
+      });
+    }
+  }
+  return [...byName.values()];
+}
+
+/**
+ * Learnset a usar. Las formas mega comparten el learnset de su especie base,
+ * pero PokeAPI les da uno parcial (a veces solo el version-group "champions"),
+ * así que se unen ambos. Para el resto de formas se usa el propio.
+ */
+async function resolveSlots(pokemon: Pokemon): Promise<PokemonMoveSlot[]> {
+  const own = pokemon.moves ?? [];
+  if (!isMegaName(pokemon.name)) return own;
+  const baseSlug = baseSpeciesSlug(pokemon.name);
+  if (baseSlug === pokemon.name) return own;
+  try {
+    const base = await getPokemon(baseSlug);
+    return mergeSlots(own, base.moves ?? []);
+  } catch {
+    return own;
+  }
+}
+
 async function buildMovepool(idOrName: number | string): Promise<Movepool> {
   const pokemon = await getPokemon(idOrName);
+  const slots = await resolveSlots(pokemon);
 
   // Agrupa version-groups legales por movimiento (deduplicado).
   const vgsBySlug = new Map<string, { vgs: Set<string>; hasDetails: boolean }>();
-  for (const slot of pokemon.moves ?? []) {
+  for (const slot of slots) {
     const slug = slot.move.name;
     const entry = vgsBySlug.get(slug) ?? {
       vgs: new Set<string>(),
@@ -149,10 +186,10 @@ async function buildMovepool(idOrName: number | string): Promise<Movepool> {
 
 /**
  * Movepool completo de una especie. Cachea el DTO ensamblado en Redis (7d)
- * bajo `pokeapi:moveset:{id}:v1`. Devuelve un pool vacío para formas sin
+ * bajo `pokeapi:moveset:{id}:v2`. Devuelve un pool vacío para formas sin
  * movimientos (p. ej. megas sin learnset en PokeAPI).
  */
 export function getMovepool(idOrName: number | string): Promise<Movepool> {
-  const key = `pokeapi:moveset:${idOrName}:v1`;
+  const key = `pokeapi:moveset:${idOrName}:v2`;
   return getOrSet(key, () => buildMovepool(idOrName), MOVESET_TTL_S);
 }
