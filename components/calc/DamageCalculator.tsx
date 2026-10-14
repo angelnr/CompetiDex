@@ -17,7 +17,7 @@ import {
 import { useTeams } from "@/hooks/useTeams";
 import { usePokemon } from "@/lib/queries";
 import { teamMemberToCalcInput, titleCase } from "@/lib/calc/convert";
-import { computeCalcStats, computeMatchups } from "@/lib/calc/engine";
+import { computeMatchups, computeOneStats } from "@/lib/calc/engine";
 import {
   EMPTY_CALC_FIELD,
   EMPTY_CALC_INPUT,
@@ -35,7 +35,8 @@ export function DamageCalculator() {
   const [defender, setDefender] = useState<CalcPokemonInput>({ ...EMPTY_CALC_INPUT });
   const [field, setField] = useState<CalcFieldInput>(EMPTY_CALC_FIELD);
 
-  const [stats, setStats] = useState<CalcStats | null>(null);
+  const [attackerStats, setAttackerStats] = useState<CalcStats["attacker"] | null>(null);
+  const [defenderStats, setDefenderStats] = useState<CalcStats["defender"] | null>(null);
   const [results, setResults] = useState<CalcResult[]>([]);
   const [busy, setBusy] = useState(false);
 
@@ -52,16 +53,25 @@ export function DamageCalculator() {
     setDefender((d) => ({ ...d, level: field.level }));
   }, [field.level]);
 
-  // Stats finales de ambos lados.
+  // Stats finales de cada lado, independientes (no requiere el otro lado).
   useEffect(() => {
-    if (!attacker.species || !defender.species) {
-      setStats(null);
+    if (!attacker.species) {
+      setAttackerStats(null);
       return;
     }
-    computeCalcStats(attacker, defender)
-      .then(setStats)
-      .catch(() => setStats(null));
-  }, [attacker, defender]);
+    computeOneStats(attacker)
+      .then(setAttackerStats)
+      .catch(() => setAttackerStats(null));
+  }, [attacker]);
+  useEffect(() => {
+    if (!defender.species) {
+      setDefenderStats(null);
+      return;
+    }
+    computeOneStats(defender)
+      .then(setDefenderStats)
+      .catch(() => setDefenderStats(null));
+  }, [defender]);
 
   // Matchups con debounce pequeño (recalcula al escribir EVs/movimientos).
   useEffect(() => {
@@ -100,7 +110,7 @@ export function DamageCalculator() {
         <CalcSetPanel
           side="attacker"
           input={attacker}
-          stats={stats?.attacker ?? null}
+          stats={attackerStats}
           abilities={attackerAbilities}
           level={field.level}
           onChange={(patch) => setAttacker((a) => ({ ...a, ...patch }))}
@@ -113,7 +123,7 @@ export function DamageCalculator() {
         <CalcSetPanel
           side="defender"
           input={defender}
-          stats={stats?.defender ?? null}
+          stats={defenderStats}
           abilities={defenderAbilities}
           level={field.level}
           onChange={(patch) => setDefender((d) => ({ ...d, ...patch }))}

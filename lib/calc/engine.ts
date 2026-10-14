@@ -122,6 +122,20 @@ export async function computeCalcStats(
   };
 }
 
+/** Stats finales de un solo Pokémon (base + IV + EV + naturaleza al nivel). */
+export async function computeOneStats(input: CalcPokemonInput): Promise<CalcStats["attacker"]> {
+  const calc = await loadCalc();
+  const p = buildPokemon(calc, input);
+  return {
+    hp: p.stats.hp,
+    atk: p.stats.atk,
+    def: p.stats.def,
+    spa: p.stats.spa,
+    spd: p.stats.spd,
+    spe: p.stats.spe,
+  };
+}
+
 function fallbackDesc(move: string, pctMin: number, pctMax: number): string {
   return `${move}: ${Math.round(pctMin)} - ${Math.round(pctMax)}%`;
 }

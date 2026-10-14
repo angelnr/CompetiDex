@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { computeCalcStats, computeMatchups } from "@/lib/calc/engine";
+import { computeCalcStats, computeMatchups, computeOneStats } from "@/lib/calc/engine";
 import { EMPTY_CALC_FIELD, EMPTY_CALC_INPUT, type CalcPokemonInput } from "@/lib/calc/types";
 import { teamMemberToCalcInput, toSpeciesGenslug, titleCase } from "@/lib/calc/convert";
 import { DEFAULT_IVS, type TeamMember } from "@/lib/team";
@@ -39,6 +39,12 @@ describe("lib/calc/engine", () => {
     expect(stats.attacker.hp).toBe(321);
     expect(stats.attacker.spa).toBe(283);
     expect(stats.defender.spd).toBe(206);
+  });
+
+  it("calcula las stats de un solo lado sin necesitar el otro", async () => {
+    const stats = await computeOneStats(ABOMASNOW);
+    expect(stats.hp).toBe(321);
+    expect(stats.spa).toBe(283);
   });
 
   it("pantalla de luz reduce el daño especial", async () => {
