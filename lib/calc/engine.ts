@@ -177,7 +177,14 @@ export async function computeMatchups(
       const override = moveOverride(moveGenslug, field);
       const move = new calc.Move(gen, moveGenslug as never, {
         isCrit: field.critical,
-        ...(override ? { overrides: { basePower: override.basePower, type: override.type } } : {}),
+        ...(override
+          ? {
+              overrides: {
+                ...(override.basePower !== undefined ? { basePower: override.basePower } : {}),
+                type: override.type,
+              },
+            }
+          : {}),
       });
       result = calc.calculate(gen, atk, defForMove, move, fieldObj);
     } catch {

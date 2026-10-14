@@ -10,7 +10,7 @@ export type WeatherMoveType =
   "Fire" | "Water" | "Rock" | "Ice" | "Electric" | "Grass" | "Psychic" | "Fairy";
 
 export interface MoveOverride {
-  basePower: number;
+  basePower?: number;
   type: WeatherMoveType;
 }
 
@@ -28,13 +28,19 @@ const TERRAIN_TYPES: Record<string, WeatherMoveType> = {
   misty: "Fairy",
 };
 
-/** Weather Ball: 100 de potencia y tipo según clima; null si no hay clima. */
+/**
+ * Weather Ball: `@smogon/calc` ya dobla su potencia (50→100) cuando hay clima;
+ * solo hay que corregir el tipo. Null si no hay clima (50 Normal).
+ */
 export function weatherBallOverride(field: CalcFieldInput): MoveOverride | null {
   const type = WEATHER_TYPES[field.weather];
-  return type ? { basePower: 100, type } : null;
+  return type ? { type } : null;
 }
 
-/** Terrain Pulse: 100 de potencia y tipo según terreno; null si no hay. */
+/**
+ * Terrain Pulse: `@smogon/calc` NO implementa el doblado por terreno, así que
+ * hay que fijar la potencia a 100 y el tipo. Null si no hay terreno.
+ */
 export function terrainPulseOverride(field: CalcFieldInput): MoveOverride | null {
   const type = TERRAIN_TYPES[field.terrain];
   return type ? { basePower: 100, type } : null;

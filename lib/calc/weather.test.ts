@@ -12,29 +12,17 @@ describe("weatherBallOverride", () => {
     expect(weatherBallOverride(field({ weather: "none" }))).toBeNull();
   });
 
-  it("en sol es 100 Fuego", () => {
-    expect(weatherBallOverride(field({ weather: "sun" }))).toEqual({
-      basePower: 100,
-      type: "Fire",
-    });
+  it("en sol corrige el tipo a Fuego (calc ya dobla la potencia)", () => {
+    expect(weatherBallOverride(field({ weather: "sun" }))).toEqual({ type: "Fire" });
   });
 
-  it("en lluvia es 100 Agua", () => {
-    expect(weatherBallOverride(field({ weather: "rain" }))).toEqual({
-      basePower: 100,
-      type: "Water",
-    });
+  it("en lluvia corrige el tipo a Agua", () => {
+    expect(weatherBallOverride(field({ weather: "rain" }))).toEqual({ type: "Water" });
   });
 
-  it("en arena es 100 Roca y en nieve 100 Hielo", () => {
-    expect(weatherBallOverride(field({ weather: "sand" }))).toEqual({
-      basePower: 100,
-      type: "Rock",
-    });
-    expect(weatherBallOverride(field({ weather: "snow" }))).toEqual({
-      basePower: 100,
-      type: "Ice",
-    });
+  it("en arena es Roca y en nieve Hielo", () => {
+    expect(weatherBallOverride(field({ weather: "sand" }))).toEqual({ type: "Rock" });
+    expect(weatherBallOverride(field({ weather: "snow" }))).toEqual({ type: "Ice" });
   });
 });
 

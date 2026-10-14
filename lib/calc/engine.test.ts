@@ -69,11 +69,13 @@ describe("lib/calc/engine", () => {
     expect(boosted[0]?.damageMax).toBeGreaterThan(base[0]!.damageMax);
   });
 
-  it("Meteorobola pega más en sol (100 base, tipo fuego)", async () => {
+  it("Meteorobola pega más en sol y se calcula a 100 BP (no 200)", async () => {
     const atk = { ...ABOMASNOW, moves: ["weather-ball"] };
     const none = await computeMatchups(atk, ABOMASNOW, EMPTY_CALC_FIELD);
     const sun = await computeMatchups(atk, ABOMASNOW, { ...EMPTY_CALC_FIELD, weather: "sun" });
     expect(sun[0]?.damageMax).toBeGreaterThan(none[0]!.damageMax);
+    expect(sun[0]?.desc).toContain("(100 BP)");
+    expect(sun[0]?.desc).not.toContain("(200 BP)");
   });
 
   it("expone las habilidades de una especie según el dex de Gen 9", async () => {
