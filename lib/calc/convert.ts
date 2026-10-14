@@ -15,6 +15,10 @@ export function toGenslug(slug: string): string {
 /** Correcciones puntuales de formas con orden distinto al de Showdown. */
 export function toSpeciesGenslug(slug: string): string {
   if (slug.startsWith("raticate-totem-alola")) return "raticatealolatotem";
+  // Formas de género: en Showdown el macho usa la especie base y la hembra
+  // lleva sufijo "f" ("basculegion" / "basculegionf").
+  if (slug.endsWith("-male")) return toGenslug(slug.slice(0, -5));
+  if (slug.endsWith("-female")) return `${toGenslug(slug.slice(0, -7))}f`;
   if (slug.startsWith("minior-")) {
     const color = slug.replace("minior-", "").replace(/-meteor/, "");
     return `minior${color}`;

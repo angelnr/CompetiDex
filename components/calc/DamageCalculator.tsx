@@ -15,8 +15,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useTeams } from "@/hooks/useTeams";
+import { usePokemon } from "@/lib/queries";
 import { teamMemberToCalcInput, titleCase } from "@/lib/calc/convert";
-import { computeCalcStats, computeMatchups, getSpeciesAbilities } from "@/lib/calc/engine";
+import { computeCalcStats, computeMatchups } from "@/lib/calc/engine";
 import {
   EMPTY_CALC_FIELD,
   EMPTY_CALC_INPUT,
@@ -35,36 +36,21 @@ export function DamageCalculator() {
   const [field, setField] = useState<CalcFieldInput>(EMPTY_CALC_FIELD);
 
   const [stats, setStats] = useState<CalcStats | null>(null);
-  const [attackerAbilities, setAttackerAbilities] = useState<string[]>([]);
-  const [defenderAbilities, setDefenderAbilities] = useState<string[]>([]);
   const [results, setResults] = useState<CalcResult[]>([]);
   const [busy, setBusy] = useState(false);
+
+  // Habilidades de PokeAPI (todas las ranuras; @smogon/calc solo trae la
+  // primera). El valor es el slug kebab y el panel lo localiza.
+  const { data: attackerData } = usePokemon(attacker.species ?? undefined);
+  const { data: defenderData } = usePokemon(defender.species ?? undefined);
+  const attackerAbilities = attackerData?.abilities.map((a) => a.ability.name) ?? [];
+  const defenderAbilities = defenderData?.abilities.map((a) => a.ability.name) ?? [];
 
   // El nivel global se propaga a ambos lados.
   useEffect(() => {
     setAttacker((a) => ({ ...a, level: field.level }));
     setDefender((d) => ({ ...d, level: field.level }));
   }, [field.level]);
-
-  // Habilidades disponibles según la especie de cada lado.
-  useEffect(() => {
-    if (!attacker.species) {
-      setAttackerAbilities([]);
-      return;
-    }
-    getSpeciesAbilities(attacker.species)
-      .then(setAttackerAbilities)
-      .catch(() => setAttackerAbilities([]));
-  }, [attacker.species]);
-  useEffect(() => {
-    if (!defender.species) {
-      setDefenderAbilities([]);
-      return;
-    }
-    getSpeciesAbilities(defender.species)
-      .then(setDefenderAbilities)
-      .catch(() => setDefenderAbilities([]));
-  }, [defender.species]);
 
   // Stats finales de ambos lados.
   useEffect(() => {

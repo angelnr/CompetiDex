@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { computeCalcStats, computeMatchups, getSpeciesAbilities } from "@/lib/calc/engine";
+import { computeCalcStats, computeMatchups } from "@/lib/calc/engine";
 import { EMPTY_CALC_FIELD, EMPTY_CALC_INPUT, type CalcPokemonInput } from "@/lib/calc/types";
 import { teamMemberToCalcInput, toSpeciesGenslug, titleCase } from "@/lib/calc/convert";
 import { DEFAULT_IVS, type TeamMember } from "@/lib/team";
@@ -78,9 +78,11 @@ describe("lib/calc/engine", () => {
     expect(sun[0]?.desc).not.toContain("(200 BP)");
   });
 
-  it("expone las habilidades de una especie según el dex de Gen 9", async () => {
-    const abilities = await getSpeciesAbilities("abomasnow");
-    expect(abilities).toContain("Snow Warning");
+  it("resuelve formas de género (basculegion-male) sin romper las stats", async () => {
+    const male: CalcPokemonInput = { ...ABOMASNOW, species: "basculegion-male" };
+    const stats = await computeCalcStats(male, male);
+    expect(stats.attacker.spa).toBeGreaterThan(0);
+    expect(stats.attacker.hp).toBeGreaterThan(0);
   });
 });
 
@@ -88,6 +90,13 @@ describe("lib/calc/convert", () => {
   it("convierte slugs kebab a slugs compactos de Showdown", () => {
     expect(toSpeciesGenslug("charizard-mega-x")).toBe("charizardmegax");
     expect(titleCase("life-orb")).toBe("Life Orb");
+  });
+
+  it("mapea las formas de género (male → base, female → sufijo f)", () => {
+    expect(toSpeciesGenslug("basculegion-male")).toBe("basculegion");
+    expect(toSpeciesGenslug("basculegion-female")).toBe("basculegionf");
+    expect(toSpeciesGenslug("indeedee-male")).toBe("indeedee");
+    expect(toSpeciesGenslug("meowstic-female")).toBe("meowsticf");
   });
 
   it("reutiliza un miembro de equipo como entrada", () => {

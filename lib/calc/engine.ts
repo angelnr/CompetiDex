@@ -67,9 +67,13 @@ function buildField(calc: CalcModule, field: CalcFieldInput) {
 
 function buildPokemon(calc: CalcModule, input: CalcPokemonInput, curHP?: number) {
   type PokemonOptions = NonNullable<ConstructorParameters<typeof calc.Pokemon>[2]>;
-  // El nombre legible (p. ej. "Charizard-Mega-X") lo entiende el constructor
-  // del motor y además se usa tal cual en `desc()`.
-  const displayName = input.species ? titleCase(input.species) : "";
+  const gen = calc.Generations.get(9);
+  // Nombre canónico del motor: las formas -male/-female, mega, regionales, etc.
+  // no coinciden con el slug de PokeAPI. `desc()` usa este nombre tal cual.
+  const species = input.species
+    ? gen.species.get(toSpeciesGenslug(input.species) as never)
+    : undefined;
+  const displayName = species?.name ?? (input.species ? titleCase(input.species) : "");
 
   const options: PokemonOptions = {
     level: input.level,
@@ -82,7 +86,7 @@ function buildPokemon(calc: CalcModule, input: CalcPokemonInput, curHP?: number)
   if (input.item) options.item = toGenslug(input.item);
   if (curHP !== undefined) options.curHP = curHP;
 
-  return new calc.Pokemon(calc.Generations.get(9), displayName, options);
+  return new calc.Pokemon(gen, displayName, options);
 }
 
 function moveExists(calc: CalcModule, moveGenslug: string): boolean {
@@ -116,15 +120,6 @@ export async function computeCalcStats(
       spe: d.stats.spe,
     },
   };
-}
-
-/** Habilidades disponibles de una especie según el dex de Gen 9. */
-export async function getSpeciesAbilities(speciesSlug: string): Promise<string[]> {
-  const calc = await loadCalc();
-  const gen = calc.Generations.get(9);
-  const species = gen.species.get(toSpeciesGenslug(speciesSlug) as never);
-  if (!species) return [];
-  return Object.values(species.abilities ?? {}).filter(Boolean) as string[];
 }
 
 function fallbackDesc(move: string, pctMin: number, pctMax: number): string {
