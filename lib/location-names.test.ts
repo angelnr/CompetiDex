@@ -106,7 +106,7 @@ describe("resolveLocationName", () => {
         localized: { ja: "１２５番水道" },
       }),
     ).toBe("１２５番水道");
-    // El nombre de PokeAPI ya incluye el sufijo de zona: no se añade otro.
+    // ja se resuelve a nivel de localización: se le añade el sufijo de zona.
     expect(
       resolveLocationName({
         areaName: "petalburg-city-area",
@@ -114,6 +114,6 @@ describe("resolveLocationName", () => {
         localized: { ja: "トウカシティ" },
         suffixLabel,
       }),
-    ).toBe("トウカシティ");
+    ).toBe("トウカシティ (área)");
   });
 });

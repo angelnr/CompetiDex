@@ -781,9 +781,10 @@ export interface ResolveLocationNameArgs {
  * Resuelve el nombre visible de un área de localización.
  *
  * Prioridad:
- * 1. Español -> diccionario curado y, si falta, PokeAPI; con sufijo de zona.
- * 2. Otros idiomas -> nombre de PokeAPI (las áreas ya incluyen el sufijo).
- * 3. Fallback -> slug humanizado, con el sufijo de zona localizado.
+ * 1. Español -> diccionario curado y, si falta, PokeAPI/offline; + sufijo.
+ * 2. Japonés -> PokeAPI u offline (nivel de localización); + sufijo de zona.
+ * 3. en/fr/de -> nombre de PokeAPI (las áreas ya incluyen el sufijo).
+ * 4. Fallback -> slug humanizado, con el sufijo de zona localizado.
  */
 export function resolveLocationName({
   areaName,
@@ -794,12 +795,15 @@ export function resolveLocationName({
   const { base, suffix } = splitLocationName(areaName);
 
   if (locale === "es") {
-    // El diccionario curado es más completo; PokeAPI cubre el resto.
+    // El diccionario curado es más completo; PokeAPI/offline cubren el resto.
     const name = getCuratedLocationName(base) ?? localized?.es;
     if (name) return appendSuffix(name, suffix, suffixLabel);
   } else {
     const translated = localized?.[locale as LocationNameLocale];
-    if (translated) return translated;
+    if (translated) {
+      // es/ja vienen del nivel de localización; las áreas ya traen el sufijo.
+      return locale === "ja" ? appendSuffix(translated, suffix, suffixLabel) : translated;
+    }
   }
 
   return appendSuffix(humanizeLocationSlug(base), suffix, suffixLabel);

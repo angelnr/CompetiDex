@@ -27,6 +27,18 @@ vi.mock("@/lib/pokeapi", () => ({
           { name: "Route 1", language: { name: "de" } },
         ],
       },
+      // Galar: ni el área ni la localización traen es/ja -> diccionario offline.
+      "700": {
+        id: 700,
+        name: "stony-wilderness-area",
+        game_index: 3,
+        location: { name: "stony-wilderness", url: "https://pokeapi.co/api/v2/location/800/" },
+        names: [
+          { name: "Stony Wilderness", language: { name: "en" } },
+          { name: "Plaine Rocheuse", language: { name: "fr" } },
+          { name: "Steinbruch", language: { name: "de" } },
+        ],
+      },
     };
     const fixture = fixtures[String(id)];
     if (!fixture) throw new Error("not found");
@@ -59,11 +71,28 @@ vi.mock("@/lib/pokeapi", () => ({
           { name: "１ばんどうろ", language: { name: "ja-hrkt" } },
         ],
       },
+      "stony-wilderness": {
+        id: 800,
+        name: "stony-wilderness",
+        region: null,
+        areas: [],
+        names: [
+          { name: "Stony Wilderness", language: { name: "en" } },
+          { name: "Plaine Rocheuse", language: { name: "fr" } },
+          { name: "Steinbruch", language: { name: "de" } },
+        ],
+      },
     };
     const fixture = fixtures[String(idOrName)];
     if (!fixture) throw new Error("not found");
     return fixture;
   }),
+}));
+
+vi.mock("@/lib/location-names-offline", () => ({
+  LOCATION_NAMES_OFFLINE: {
+    "stony-wilderness": { es: "Llanura Pétrea", ja: "ストーンズげんや" },
+  },
 }));
 
 import { getLocalizedLocationNames } from "@/lib/location-area-names";
@@ -83,6 +112,17 @@ describe("getLocalizedLocationNames", () => {
   it("usa ja-hrkt como respaldo del japonés", async () => {
     const dict = await getLocalizedLocationNames([623]);
     expect(dict["623"]).toEqual({ en: "Road 1", fr: "Route 1", de: "Route 1", ja: "１ばんどうろ" });
+  });
+
+  it("rellena es/ja desde el diccionario offline cuando PokeAPI no los tiene", async () => {
+    const dict = await getLocalizedLocationNames([700]);
+    expect(dict["700"]).toEqual({
+      en: "Stony Wilderness",
+      fr: "Plaine Rocheuse",
+      de: "Steinbruch",
+      es: "Llanura Pétrea",
+      ja: "ストーンズげんや",
+    });
   });
 
   it("omite las áreas que fallan sin romper el resto", async () => {

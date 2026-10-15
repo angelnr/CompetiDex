@@ -6,9 +6,11 @@
  *   el sufijo de zona ya incluido ("Stony Wilderness (Area 2)").
  * - La **localización padre** (`/location/{name}`) es donde aparecen `es`/`ja`
  *   (y otras), aunque solo en algunas regiones: Hoenn, Kalos, Alola y, como
- *   `ja-hrkt`, Unova. En Kanto/Johto/Sinnoh/Galar/Hisui/Paldea no hay es/ja
- *   upstream: el español cae al diccionario curado (`lib/location-names.ts`) y
- *   el japonés al slug humanizado.
+ *   `ja-hrkt`, Unova.
+ *
+ * Para las regiones que PokeAPI no cubre (Kanto, Johto, Sinnoh, Galar, Hisui y
+ * Paldea) se usa el diccionario offline `lib/location-names-offline.ts`,
+ * generado desde los textos de los juegos.
  *
  * Se piden SOLO las áreas que el cliente necesita (las de la versión mostrada
  * en la tabla de encuentros) y tanto áreas como localizaciones quedan cacheadas
@@ -17,12 +19,16 @@
 
 import { getLocation, getLocationArea } from "@/lib/pokeapi";
 import { mapWithConcurrency } from "@/lib/async";
+import { LOCATION_NAMES_OFFLINE } from "@/lib/location-names-offline";
 import type { LocationNameLocale } from "@/lib/location-names";
 
 export type { LocationNameLocale };
 
 /** Idiomas de la app que se intentan extraer de PokeAPI. */
 const POKEAPI_LOCALES: readonly LocationNameLocale[] = ["en", "fr", "de", "es", "ja"];
+
+/** Idiomas que suele traer el área; es/ja viven en la localización padre. */
+const AREA_LOCALES: readonly LocationNameLocale[] = ["en", "fr", "de"];
 
 /** Variantes que PokeAPI usa cuando no hay entrada del idioma principal. */
 const LOCALE_FALLBACKS: Partial<Record<LocationNameLocale, readonly string[]>> = {
@@ -46,9 +52,10 @@ interface NameEntry {
 function fillMissingNames(
   target: Partial<Record<LocationNameLocale, string>>,
   entries: readonly NameEntry[],
+  locales: readonly LocationNameLocale[] = POKEAPI_LOCALES,
 ): void {
   const byLanguage = new Map(entries.map((n) => [n.language.name.toLowerCase(), n.name]));
-  for (const locale of POKEAPI_LOCALES) {
+  for (const locale of locales) {
     if (target[locale] !== undefined) continue;
     for (const candidate of [locale, ...(LOCALE_FALLBACKS[locale] ?? [])]) {
       const hit = byLanguage.get(candidate);
@@ -58,6 +65,17 @@ function fillMissingNames(
       }
     }
   }
+}
+
+/** Último recurso: diccionario offline (PKHeX) por slug de localización. */
+function fillOfflineNames(
+  target: Partial<Record<LocationNameLocale, string>>,
+  locationSlug: string,
+): void {
+  const offline = LOCATION_NAMES_OFFLINE[locationSlug];
+  if (!offline) return;
+  if (target.es === undefined && offline.es) target.es = offline.es;
+  if (target.ja === undefined && offline.ja) target.ja = offline.ja;
 }
 
 /**
@@ -73,12 +91,13 @@ export async function getLocalizedLocationNames(
     const names: Partial<Record<LocationNameLocale, string>> = {};
     try {
       const area = await getLocationArea(id);
-      fillMissingNames(names, area.names);
+      fillMissingNames(names, area.names, AREA_LOCALES);
       if (POKEAPI_LOCALES.some((locale) => names[locale] === undefined)) {
         // El área no trae todos los idiomas: la localización padre aporta es/ja.
         const location = await getLocation(area.location.name);
         fillMissingNames(names, location.names);
       }
+      fillOfflineNames(names, area.location.name);
     } catch {
       // Área sin detalle en PokeAPI: se omite y el cliente cae al fallback.
     }
