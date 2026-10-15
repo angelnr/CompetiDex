@@ -72,12 +72,12 @@ export function MovesSection({ moveSlots }: MovesSectionProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <label htmlFor="move-game-select" className="text-sm font-medium">
           {t("gameLabel")}
         </label>
         <Select value={selectedGame ?? ""} onValueChange={(v) => setSelectedGame(v)}>
-          <SelectTrigger id="move-game-select" className="w-56">
+          <SelectTrigger id="move-game-select" className="w-56 max-w-full">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -91,7 +91,7 @@ export function MovesSection({ moveSlots }: MovesSectionProps) {
       </div>
 
       <Tabs defaultValue="level-up">
-        <TabsList>
+        <TabsList className="h-auto flex-wrap justify-start">
           {METHODS.map((m) => (
             <TabsTrigger key={m} value={m}>
               {methodLabel(m)}
