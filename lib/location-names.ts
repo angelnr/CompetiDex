@@ -757,13 +757,22 @@ export function humanizeLocationSlug(name: string): string {
     .join(" ");
 }
 
+/**
+ * Idiomas para los que PokeAPI puede aportar nombres de localización.
+ *
+ * La cobertura es irregular: `en/fr/de` están casi completos, pero `es` y `ja`
+ * solo existen en algunas regiones (Hoenn, Kalos, Alola y, como `ja-hrkt`,
+ * Unova). El resto cae al diccionario curado o al slug humanizado.
+ */
+export type LocationNameLocale = "en" | "fr" | "de" | "es" | "ja";
+
 export interface ResolveLocationNameArgs {
   /** Slug del área de PokeAPI (ej. "kanto-route-7-area"). */
   areaName: string;
   /** Locale activo de la app. */
   locale: string;
-  /** Nombre localizado desde PokeAPI (solo en/fr/de; no hay es/ja upstream). */
-  localized?: Partial<Record<"en" | "fr" | "de", string>> | undefined;
+  /** Nombre localizado desde PokeAPI, si existe para el idioma activo. */
+  localized?: Partial<Record<LocationNameLocale, string>> | undefined;
   /** Traduce el sufijo de zona (namespace `locationSuffixes`); null si falta. */
   suffixLabel?: (suffix: string) => string | null;
 }
@@ -772,8 +781,8 @@ export interface ResolveLocationNameArgs {
  * Resuelve el nombre visible de un área de localización.
  *
  * Prioridad:
- * 1. Español -> diccionario curado, con el sufijo de zona localizado.
- * 2. en/fr/de -> nombre localizado de PokeAPI (ya incluye los sufijos).
+ * 1. Español -> diccionario curado y, si falta, PokeAPI; con sufijo de zona.
+ * 2. Otros idiomas -> nombre de PokeAPI (las áreas ya incluyen el sufijo).
  * 3. Fallback -> slug humanizado, con el sufijo de zona localizado.
  */
 export function resolveLocationName({
@@ -785,12 +794,13 @@ export function resolveLocationName({
   const { base, suffix } = splitLocationName(areaName);
 
   if (locale === "es") {
-    const curated = getCuratedLocationName(base);
-    if (curated) return appendSuffix(curated, suffix, suffixLabel);
+    // El diccionario curado es más completo; PokeAPI cubre el resto.
+    const name = getCuratedLocationName(base) ?? localized?.es;
+    if (name) return appendSuffix(name, suffix, suffixLabel);
+  } else {
+    const translated = localized?.[locale as LocationNameLocale];
+    if (translated) return translated;
   }
-
-  const translated = localized?.[locale as "en" | "fr" | "de"];
-  if (translated) return translated;
 
   return appendSuffix(humanizeLocationSlug(base), suffix, suffixLabel);
 }

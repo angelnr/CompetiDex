@@ -387,8 +387,9 @@ export interface LocationAreaName {
 }
 
 /**
- * Área de localización (location-area). PokeAPI solo aporta nombres en
- * `en`/`fr`/`de`; es y ja no existen upstream (ver `lib/location-names.ts`).
+ * Área de localización (location-area). `names` incluye los idiomas que
+ * PokeAPI tenga para la localización padre: `en`/`fr`/`de` casi completos y
+ * `es`/`ja` solo en algunas regiones (ver `lib/location-area-names.ts`).
  */
 export interface LocationArea {
   id: number;
@@ -396,6 +397,19 @@ export interface LocationArea {
   game_index: number;
   names: LocationAreaName[];
   location: NamedAPIResource;
+}
+
+/**
+ * Localización (location) padre de una o varias áreas. Es la que concentra los
+ * nombres traducidos: las áreas solo suelen traer `en`/`fr`/`de`, mientras que
+ * `es`/`ja` (y otras) aparecen a nivel de localización.
+ */
+export interface Location {
+  id: number;
+  name: string;
+  names: LocationAreaName[];
+  region: NamedAPIResource | null;
+  areas: NamedAPIResource[];
 }
 
 // ---------------------------------------------------------------------------
@@ -555,6 +569,12 @@ export function getEncounters(idOrName: number | string): Promise<LocationAreaEn
 export function getLocationArea(idOrName: number | string): Promise<LocationArea> {
   const id = typeof idOrName === "number" ? String(idOrName) : idOrName;
   return pokeapiFetch<LocationArea>(`/location-area/${id}`, CACHE_TTL.locationArea);
+}
+
+/** Detalle de una localización por id o nombre: /location/{idOrName} */
+export function getLocation(idOrName: number | string): Promise<Location> {
+  const id = typeof idOrName === "number" ? String(idOrName) : idOrName;
+  return pokeapiFetch<Location>(`/location/${id}`, CACHE_TTL.locationArea);
 }
 
 export { PokeAPIError };

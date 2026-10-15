@@ -86,4 +86,34 @@ describe("resolveLocationName", () => {
       "Mt Moon (1F)",
     );
   });
+
+  it("en español usa el nombre de PokeAPI si el diccionario no lo tiene", () => {
+    expect(
+      resolveLocationName({
+        areaName: "totally-unknown-place-area",
+        locale: "es",
+        localized: { es: "Sitio Desconocido" },
+        suffixLabel,
+      }),
+    ).toBe("Sitio Desconocido (área)");
+  });
+
+  it("usa el japonés de PokeAPI cuando existe", () => {
+    expect(
+      resolveLocationName({
+        areaName: "hoenn-route-125",
+        locale: "ja",
+        localized: { ja: "１２５番水道" },
+      }),
+    ).toBe("１２５番水道");
+    // El nombre de PokeAPI ya incluye el sufijo de zona: no se añade otro.
+    expect(
+      resolveLocationName({
+        areaName: "petalburg-city-area",
+        locale: "ja",
+        localized: { ja: "トウカシティ" },
+        suffixLabel,
+      }),
+    ).toBe("トウカシティ");
+  });
 });

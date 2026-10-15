@@ -345,8 +345,8 @@ export function useMoveNames(enabled: boolean) {
 }
 
 /**
- * Nombres localizados (en/fr/de) de las áreas de localización indicadas.
- * PokeAPI no expone es/ja, así que en esos idiomas no llega a habilitarse.
+ * Nombres localizados de las áreas de localización indicadas (los idiomas que
+ * PokeAPI tenga: en/fr/de casi completos; es/ja solo en algunas regiones).
  */
 export function useLocationAreaNames(ids: number[], enabled = true) {
   const sorted = [...ids].sort((a, b) => a - b);

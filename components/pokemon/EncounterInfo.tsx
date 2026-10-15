@@ -47,14 +47,14 @@ export function EncounterInfo({ encounters }: EncounterInfoProps) {
   );
   const currentVersion = selectedVersion ?? versionNames[0];
 
-  // Solo se piden los nombres de las áreas de la versión visible. En español
-  // no hace falta red: se resuelve con el diccionario curado.
+  // Solo se piden los nombres de las áreas de la versión visible. El español
+  // resuelve primero con el diccionario curado; PokeAPI cubre el resto.
   const locationAreaIds = useMemo(
     () =>
       encounters && currentVersion ? getVersionLocationAreaIds(encounters, currentVersion) : [],
     [encounters, currentVersion],
   );
-  const { data: localizedNames } = useLocationAreaNames(locationAreaIds, locale !== "es");
+  const { data: localizedNames } = useLocationAreaNames(locationAreaIds);
 
   const suffixLabel = (suffix: string) => {
     const label = tSuffixes(suffix);

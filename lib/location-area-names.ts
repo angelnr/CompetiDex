@@ -1,38 +1,68 @@
 /**
- * Nombres localizados de áreas de localización (`location-area`) para las
- * lenguas que PokeAPI sí expone: `en`, `fr` y `de`.
+ * Nombres localizados de áreas de localización (`location-area`).
  *
- * PokeAPI no ofrece un endpoint batch de nombres ni nombres en `es`/`ja`, así
- * que:
- * - Se piden SOLO las áreas que el cliente necesita (las de la versión
- *   mostrada en la tabla de encuentros).
- * - Cada área queda cacheada en Redis vía `getLocationArea` (TTL 7d), de modo
- *   que compartir área entre Pokémon es prácticamente gratis.
- * - El español se resuelve en el cliente con el diccionario curado
- *   (`lib/location-names.ts`) y el japonés cae al slug humanizado.
+ * PokeAPI reparte los idiomas en dos recursos:
+ * - El **área** (`/location-area/{id}`) suele traer `en`/`fr`/`de`, a veces con
+ *   el sufijo de zona ya incluido ("Stony Wilderness (Area 2)").
+ * - La **localización padre** (`/location/{name}`) es donde aparecen `es`/`ja`
+ *   (y otras), aunque solo en algunas regiones: Hoenn, Kalos, Alola y, como
+ *   `ja-hrkt`, Unova. En Kanto/Johto/Sinnoh/Galar/Hisui/Paldea no hay es/ja
+ *   upstream: el español cae al diccionario curado (`lib/location-names.ts`) y
+ *   el japonés al slug humanizado.
  *
- * Mismo enfoque que `lib/move-names.ts` / `lib/item-names.ts`, pero acotado a
- * las áreas solicitadas en lugar de construir el catálogo completo.
+ * Se piden SOLO las áreas que el cliente necesita (las de la versión mostrada
+ * en la tabla de encuentros) y tanto áreas como localizaciones quedan cacheadas
+ * en Redis (TTL 7d). Mismo enfoque que `lib/move-names.ts` / `lib/item-names.ts`.
  */
 
-import { getLocationArea } from "@/lib/pokeapi";
+import { getLocation, getLocationArea } from "@/lib/pokeapi";
 import { mapWithConcurrency } from "@/lib/async";
+import type { LocationNameLocale } from "@/lib/location-names";
 
-const APP_LOCALES = ["en", "fr", "de"] as const;
+export type { LocationNameLocale };
 
-export type LocationNameLocale = (typeof APP_LOCALES)[number];
+/** Idiomas de la app que se intentan extraer de PokeAPI. */
+const POKEAPI_LOCALES: readonly LocationNameLocale[] = ["en", "fr", "de", "es", "ja"];
 
-/** `{ [locationAreaId]: { en?, fr?, de? } }`. */
+/** Variantes que PokeAPI usa cuando no hay entrada del idioma principal. */
+const LOCALE_FALLBACKS: Partial<Record<LocationNameLocale, readonly string[]>> = {
+  ja: ["ja-hrkt"],
+  es: ["es-419"],
+};
+
+/** `{ [locationAreaId]: { en?, fr?, de?, es?, ja? } }`. */
 export type LocalizedLocationNames = Record<string, Partial<Record<LocationNameLocale, string>>>;
 
 const FETCH_CONCURRENCY = 8;
 /** Tope defensivo: la tabla de encuentros usa muchas menos áreas. */
 export const MAX_LOCATION_AREAS = 120;
 
+interface NameEntry {
+  name: string;
+  language: { name: string };
+}
+
+/** Rellena los idiomas que aún falten, sin pisar los ya resueltos. */
+function fillMissingNames(
+  target: Partial<Record<LocationNameLocale, string>>,
+  entries: readonly NameEntry[],
+): void {
+  const byLanguage = new Map(entries.map((n) => [n.language.name.toLowerCase(), n.name]));
+  for (const locale of POKEAPI_LOCALES) {
+    if (target[locale] !== undefined) continue;
+    for (const candidate of [locale, ...(LOCALE_FALLBACKS[locale] ?? [])]) {
+      const hit = byLanguage.get(candidate);
+      if (hit) {
+        target[locale] = hit;
+        break;
+      }
+    }
+  }
+}
+
 /**
- * Devuelve los nombres localizados (en/fr/de) de las áreas indicadas,
- * claveados por su id. Las áreas que fallan se omiten y el cliente cae al
- * slug humanizado.
+ * Devuelve los nombres localizados de las áreas indicadas, claveados por su id.
+ * Las áreas que fallan se omiten y el cliente cae al fallback.
  */
 export async function getLocalizedLocationNames(
   identifiers: Array<string | number>,
@@ -43,9 +73,11 @@ export async function getLocalizedLocationNames(
     const names: Partial<Record<LocationNameLocale, string>> = {};
     try {
       const area = await getLocationArea(id);
-      for (const locale of APP_LOCALES) {
-        const hit = area.names.find((n) => n.language.name === locale);
-        if (hit) names[locale] = hit.name;
+      fillMissingNames(names, area.names);
+      if (POKEAPI_LOCALES.some((locale) => names[locale] === undefined)) {
+        // El área no trae todos los idiomas: la localización padre aporta es/ja.
+        const location = await getLocation(area.location.name);
+        fillMissingNames(names, location.names);
       }
     } catch {
       // Área sin detalle en PokeAPI: se omite y el cliente cae al fallback.
