@@ -29,6 +29,7 @@ import type {
 } from "@/lib/pokeapi";
 import type { Movepool } from "@/lib/moveset";
 import type { LocalizedMoveNames } from "@/lib/move-names";
+import type { LocalizedLocationNames } from "@/lib/location-area-names";
 
 const STALE_STATIC = Infinity;
 const STALE_LIST = 60 * 60 * 1000; // 1h
@@ -340,5 +341,20 @@ export function useMoveNames(enabled: boolean) {
     queryFn: () => fetchJson<LocalizedMoveNames>("/api/pokemon?move-names=true"),
     enabled,
     staleTime: STALE_LIST,
+  });
+}
+
+/**
+ * Nombres localizados (en/fr/de) de las áreas de localización indicadas.
+ * PokeAPI no expone es/ja, así que en esos idiomas no llega a habilitarse.
+ */
+export function useLocationAreaNames(ids: number[], enabled = true) {
+  const sorted = [...ids].sort((a, b) => a - b);
+  return useQuery<LocalizedLocationNames>({
+    queryKey: ["location-area-names", sorted],
+    queryFn: () =>
+      fetchJson<LocalizedLocationNames>(`/api/pokemon?location-areas=${sorted.join(",")}`),
+    enabled: enabled && sorted.length > 0,
+    staleTime: STALE_STATIC,
   });
 }

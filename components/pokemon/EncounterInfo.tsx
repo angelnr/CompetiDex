@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useMemo, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 
 import {
   Table,
@@ -19,8 +19,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { LocationAreaEncounter } from "@/lib/pokeapi";
-import { capitalize } from "@/lib/pokemon-utils";
-import { getLocationNameEs } from "@/lib/location-names";
+import { capitalize, extractIdFromUrl } from "@/lib/pokemon-utils";
+import { resolveLocationName } from "@/lib/location-names";
+import { useLocationAreaNames } from "@/lib/queries";
 import { isExcludedVersion, versionOrder } from "@/lib/version-names";
 
 export interface EncounterInfoProps {
@@ -29,21 +30,40 @@ export interface EncounterInfoProps {
 
 export function EncounterInfo({ encounters }: EncounterInfoProps) {
   const [selectedVersion, setSelectedVersion] = useState<string | undefined>();
+  const locale = useLocale();
   const t = useTranslations("encounters");
   const tMethods = useTranslations("encounterMethods");
   const tVersions = useTranslations("versions");
+  const tSuffixes = useTranslations("locationSuffixes");
 
   const versionLabel = (v: string) => {
     const label = tVersions(v);
     return label === `versions.${v}` || label === v ? capitalize(v.replace(/-/g, " ")) : label;
   };
 
+  const versionNames = useMemo(
+    () => (encounters && encounters.length > 0 ? getUniqueVersions(encounters) : []),
+    [encounters],
+  );
+  const currentVersion = selectedVersion ?? versionNames[0];
+
+  // Solo se piden los nombres de las áreas de la versión visible. En español
+  // no hace falta red: se resuelve con el diccionario curado.
+  const locationAreaIds = useMemo(
+    () =>
+      encounters && currentVersion ? getVersionLocationAreaIds(encounters, currentVersion) : [],
+    [encounters, currentVersion],
+  );
+  const { data: localizedNames } = useLocationAreaNames(locationAreaIds, locale !== "es");
+
+  const suffixLabel = (suffix: string) => {
+    const label = tSuffixes(suffix);
+    return label === `locationSuffixes.${suffix}` ? null : label;
+  };
+
   if (!encounters || encounters.length === 0) {
     return <p className="text-sm text-muted-foreground">{t("noEncounters")}</p>;
   }
-
-  const versionNames = getUniqueVersions(encounters);
-  const currentVersion = selectedVersion ?? versionNames[0];
 
   const rows = encounters.flatMap((area) =>
     area.version_details
@@ -51,6 +71,7 @@ export function EncounterInfo({ encounters }: EncounterInfoProps) {
       .flatMap((vd) =>
         vd.encounter_details.map((ed) => ({
           location: area.location_area.name,
+          locationAreaId: extractIdFromUrl(area.location_area.url),
           method: ed.method.name,
           minLevel: ed.min_level,
           maxLevel: ed.max_level,
@@ -95,7 +116,14 @@ export function EncounterInfo({ encounters }: EncounterInfoProps) {
           <TableBody>
             {rows.map((r, i) => (
               <TableRow key={i}>
-                <TableCell className="font-medium">{getLocationNameEs(r.location)}</TableCell>
+                <TableCell className="font-medium">
+                  {resolveLocationName({
+                    areaName: r.location,
+                    locale,
+                    localized: localizedNames?.[String(r.locationAreaId)],
+                    suffixLabel,
+                  })}
+                </TableCell>
                 <TableCell>{formatMethodName(r.method, tMethods)}</TableCell>
                 <TableCell>{r.minLevel}</TableCell>
                 <TableCell>{r.maxLevel}</TableCell>
@@ -119,6 +147,17 @@ function getUniqueVersions(encounters: LocationAreaEncounter[]): string[] {
     }
   }
   return Array.from(seen).sort(versionOrder);
+}
+
+/** Ids de las áreas de localización con encuentros en la versión indicada. */
+function getVersionLocationAreaIds(encounters: LocationAreaEncounter[], version: string): number[] {
+  const ids = new Set<number>();
+  for (const area of encounters) {
+    if (area.version_details.some((vd) => vd.version.name === version)) {
+      ids.add(extractIdFromUrl(area.location_area.url));
+    }
+  }
+  return Array.from(ids).sort((a, b) => a - b);
 }
 
 function formatMethodName(name: string, t: (key: string) => string): string {

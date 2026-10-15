@@ -13,6 +13,7 @@
  *   GET /api/pokemon?type=electric    -> tipo
  *   GET /api/pokemon?type-list=true   -> lista de tipos
  *   GET /api/pokemon?moveset=25       -> movepool completo de una especie
+ *   GET /api/pokemon?location-areas=1,2 -> nombres localizados (en/fr/de) de áreas
  *
  * Respuestas normalizadas: 200 con body, 400 param faltante,
  * 404 upstream (PokeAPI no encontrado), 500 error inesperado.
@@ -39,6 +40,7 @@ import {
 import { getLocalizedItemNames } from "@/lib/item-names";
 import { getMovepool } from "@/lib/moveset";
 import { getLocalizedMoveNames } from "@/lib/move-names";
+import { getLocalizedLocationNames, MAX_LOCATION_AREAS } from "@/lib/location-area-names";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -133,6 +135,21 @@ export async function GET(request: Request): Promise<NextResponse> {
     if (searchParams.has("encounters")) {
       const id = idParam.parse(searchParams.get("encounters"));
       const data = await getEncounters(id);
+      return NextResponse.json(data);
+    }
+
+    if (searchParams.has("location-areas")) {
+      const ids = z
+        .array(z.coerce.number().int().positive())
+        .min(1)
+        .max(MAX_LOCATION_AREAS)
+        .parse(
+          (searchParams.get("location-areas") ?? "")
+            .split(",")
+            .map((value) => value.trim())
+            .filter(Boolean),
+        );
+      const data = await getLocalizedLocationNames(ids);
       return NextResponse.json(data);
     }
 
