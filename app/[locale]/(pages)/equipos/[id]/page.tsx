@@ -235,9 +235,14 @@ export default function TeamEditorPage() {
             {/* ── Exportar / Importar ── */}
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="outline" size="sm" className="shrink-0">
-                  <Download className="mr-1 size-4" />
-                  {t("importExport")}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0"
+                  aria-label={t("importExport")}
+                >
+                  <Download className="size-4 sm:mr-1" />
+                  <span className="hidden sm:inline">{t("importExport")}</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-xl">
@@ -310,7 +315,7 @@ export default function TeamEditorPage() {
           <h2 className="mb-2 text-sm font-semibold">
             {t("members", { count: team.members.length })}
           </h2>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 justify-items-center gap-2">
             {Array.from({ length: 6 }).map((_, i) => {
               const member = team.members.find((m) => m.slot === i);
               const isActive = activeSlot === i;
@@ -347,7 +352,7 @@ export default function TeamEditorPage() {
                     setDragOverSlot(null);
                   }}
                   className={cn(
-                    "rounded-full transition-all",
+                    "w-fit rounded-full transition-all",
                     isActive && "ring-2 ring-primary",
                     isDragOver && "bg-muted/60 ring-2 ring-primary/60",
                     isDragging && "opacity-50",
