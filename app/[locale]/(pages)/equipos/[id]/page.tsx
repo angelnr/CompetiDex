@@ -245,113 +245,111 @@ export default function TeamEditorPage() {
         )}
       </div>
 
-      {/* Columna izquierda: slots + editor. Derecha: buscador siempre accesible. */}
+      {/* Añadir Pokémon: fila propia justo debajo de los tipos. */}
+      {team.members.length < 6 && (
+        <section className="mb-6 rounded-lg border bg-card p-4">
+          <h2 className="mb-3 text-lg font-semibold">{t("addPokemon")}</h2>
+          <div className="max-w-xl">
+            <SearchBar
+              showSprite
+              onSelect={(id) => {
+                handleAddById(id);
+                setActiveSlot(null);
+              }}
+              excludeIds={team.members.map((m) => m.pokemonId)}
+              placeholderKey="forTeamPlaceholder"
+              ariaKey="forTeamAria"
+            />
+          </div>
+        </section>
+      )}
+
+      {/* Miembros y editor del miembro activo en la misma fila. */}
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-        <div className="min-w-0 flex-1 space-y-6">
-          <section className="rounded-lg border bg-card p-6">
+        <section className="rounded-lg border bg-card p-6">
+          <h2 className="mb-4 text-lg font-semibold">
+            {t("members", { count: team.members.length })}
+          </h2>
+          <div className="flex flex-wrap gap-3">
+            {Array.from({ length: 6 }).map((_, i) => {
+              const member = team.members.find((m) => m.slot === i);
+              const isActive = activeSlot === i;
+              const isDragging = dragSlot === i;
+              const isDragOver = dragOverSlot === i && dragSlot !== i;
+              return (
+                <div
+                  key={i}
+                  draggable={!!member}
+                  onDragStart={(e) => {
+                    if (!member) return;
+                    setDragSlot(i);
+                    e.dataTransfer.effectAllowed = "move";
+                    // Firefox exige setData para iniciar el arrastre.
+                    e.dataTransfer.setData("text/plain", String(i));
+                  }}
+                  onDragOver={(e) => {
+                    if (dragSlot === null) return;
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = "move";
+                    if (dragOverSlot !== i) setDragOverSlot(i);
+                  }}
+                  onDragLeave={() => {
+                    if (dragOverSlot === i) setDragOverSlot(null);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (dragSlot !== null) void swapPokemonSlots(team.id, dragSlot, i);
+                    setDragSlot(null);
+                    setDragOverSlot(null);
+                  }}
+                  onDragEnd={() => {
+                    setDragSlot(null);
+                    setDragOverSlot(null);
+                  }}
+                  className={cn(
+                    "rounded-lg transition-all",
+                    isActive && "ring-2 ring-primary",
+                    isDragOver && "bg-muted/60 ring-2 ring-primary/60",
+                    isDragging && "opacity-50",
+                  )}
+                >
+                  <TeamSlot
+                    member={member ?? null}
+                    onClick={member ? () => setActiveSlot(isActive ? null : i) : undefined}
+                    onRemove={
+                      member
+                        ? (id) => {
+                            removePokemon(team.id, id);
+                            setActiveSlot(null);
+                          }
+                        : undefined
+                    }
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* Panel editor del miembro activo, junto a los miembros. */}
+        {activeMember && activePokemon && (
+          <section className="min-w-0 flex-1">
             <h2 className="mb-4 text-lg font-semibold">
-              {t("members", { count: team.members.length })}
+              {t("editMember", { name: formatSpeciesLabel(activeMember.name) })}
             </h2>
-            <div className="flex flex-wrap gap-3">
-              {Array.from({ length: 6 }).map((_, i) => {
-                const member = team.members.find((m) => m.slot === i);
-                const isActive = activeSlot === i;
-                const isDragging = dragSlot === i;
-                const isDragOver = dragOverSlot === i && dragSlot !== i;
-                return (
-                  <div
-                    key={i}
-                    draggable={!!member}
-                    onDragStart={(e) => {
-                      if (!member) return;
-                      setDragSlot(i);
-                      e.dataTransfer.effectAllowed = "move";
-                      // Firefox exige setData para iniciar el arrastre.
-                      e.dataTransfer.setData("text/plain", String(i));
-                    }}
-                    onDragOver={(e) => {
-                      if (dragSlot === null) return;
-                      e.preventDefault();
-                      e.dataTransfer.dropEffect = "move";
-                      if (dragOverSlot !== i) setDragOverSlot(i);
-                    }}
-                    onDragLeave={() => {
-                      if (dragOverSlot === i) setDragOverSlot(null);
-                    }}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      if (dragSlot !== null) void swapPokemonSlots(team.id, dragSlot, i);
-                      setDragSlot(null);
-                      setDragOverSlot(null);
-                    }}
-                    onDragEnd={() => {
-                      setDragSlot(null);
-                      setDragOverSlot(null);
-                    }}
-                    className={cn(
-                      "rounded-lg transition-all",
-                      isActive && "ring-2 ring-primary",
-                      isDragOver && "bg-muted/60 ring-2 ring-primary/60",
-                      isDragging && "opacity-50",
-                    )}
-                  >
-                    <TeamSlot
-                      member={member ?? null}
-                      onClick={member ? () => setActiveSlot(isActive ? null : i) : undefined}
-                      onRemove={
-                        member
-                          ? (id) => {
-                              removePokemon(team.id, id);
-                              setActiveSlot(null);
-                            }
-                          : undefined
-                      }
-                    />
-                  </div>
-                );
-              })}
-            </div>
+            <TeamMemberEditor
+              member={activeMember}
+              pokemon={activePokemon}
+              champions={!!team.champions}
+              onChange={(patch) => {
+                updateMember(team.id, activeMember.pokemonId, patch);
+              }}
+              onRemove={() => {
+                removePokemon(team.id, activeMember.pokemonId);
+                setActiveSlot(null);
+              }}
+            />
           </section>
-
-          {/* Panel editor del miembro activo */}
-          {activeMember && activePokemon && (
-            <section>
-              <h2 className="mb-4 text-lg font-semibold">
-                {t("editMember", { name: formatSpeciesLabel(activeMember.name) })}
-              </h2>
-              <TeamMemberEditor
-                member={activeMember}
-                pokemon={activePokemon}
-                champions={!!team.champions}
-                onChange={(patch) => {
-                  updateMember(team.id, activeMember.pokemonId, patch);
-                }}
-                onRemove={() => {
-                  removePokemon(team.id, activeMember.pokemonId);
-                  setActiveSlot(null);
-                }}
-              />
-            </section>
-          )}
-        </div>
-
-        {/* Buscador para añadir (columna derecha fija al hacer scroll) */}
-        {team.members.length < 6 && (
-          <aside className="w-full shrink-0 self-start lg:sticky lg:top-20 lg:w-80">
-            <section className="rounded-lg border bg-card p-6">
-              <h2 className="mb-4 text-lg font-semibold">{t("addPokemon")}</h2>
-              <SearchBar
-                showSprite
-                onSelect={(id) => {
-                  handleAddById(id);
-                  setActiveSlot(null);
-                }}
-                excludeIds={team.members.map((m) => m.pokemonId)}
-                placeholderKey="forTeamPlaceholder"
-                ariaKey="forTeamAria"
-              />
-            </section>
-          </aside>
         )}
       </div>
     </main>
