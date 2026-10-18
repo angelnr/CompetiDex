@@ -86,8 +86,33 @@ describe("getMovepool", () => {
     expect(pool.versionGroups).toEqual(["sword-shield", "scarlet-violet"]);
 
     const [key, , ttl] = getOrSetMock.mock.calls[0]!;
-    expect(key).toBe("pokeapi:moveset:10186:v2");
+    expect(key).toBe("pokeapi:moveset:10186:v3");
     expect(ttl).toBe(604_800);
+  });
+
+  it("incluye movimientos presentes solo en el version-group champions", async () => {
+    getPokemonMock.mockResolvedValue({
+      id: 1,
+      moves: [
+        {
+          move: { name: "mystical-fire" },
+          version_group_details: [{ version_group: { name: "scarlet-violet" } }],
+        },
+        {
+          move: { name: "follow-me" },
+          version_group_details: [{ version_group: { name: "champions" } }],
+        },
+      ],
+    });
+    getMoveMock.mockImplementation((slug: string) =>
+      Promise.resolve(slug === "mystical-fire" ? MYSTICAL_FIRE : FOLLOW_ME),
+    );
+
+    const pool = await getMovepool(1);
+
+    expect(pool.moves.map((m) => m.slug)).toEqual(["follow-me", "mystical-fire"]);
+    expect(pool.moves.find((m) => m.slug === "follow-me")!.vgs).toEqual(["champions"]);
+    expect(pool.versionGroups).toContain("champions");
   });
 
   it("descarta movimientos solo presentes en versiones excluidas", async () => {
@@ -100,7 +125,7 @@ describe("getMovepool", () => {
         },
         {
           move: { name: "follow-me" },
-          version_group_details: [{ version_group: { name: "champions" } }],
+          version_group_details: [{ version_group: { name: "colosseum" } }],
         },
       ],
     });
@@ -174,8 +199,8 @@ describe("getMovepool", () => {
     const dd = pool.moves.find((m) => m.slug === "dragon-dance");
 
     expect(dd).toBeDefined();
-    // El vg "champions" está excluido; el de la especie base sí se conserva.
+    // El learnset propio (champions) se une al de la especie base.
+    expect(dd!.vgs).toContain("champions");
     expect(dd!.vgs).toContain("scarlet-violet");
-    expect(dd!.vgs).not.toContain("champions");
   });
 });
