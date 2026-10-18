@@ -205,6 +205,20 @@ export function reindexSlots(members: TeamMember[]): TeamMember[] {
   return members.sort((a, b) => a.slot - b.slot).map((m, i) => ({ ...m, slot: i }));
 }
 
+/**
+ * Intercambia los slots de dos miembros. Si el destino está vacío, el miembro
+ * de origen se mueve a ese hueco. No reindexa: `slot` es la posición visual en
+ * la rejilla de 6.
+ */
+export function swapMemberSlots(members: TeamMember[], slotA: number, slotB: number): TeamMember[] {
+  if (slotA === slotB || !members.some((m) => m.slot === slotA)) return members;
+  return members.map((m) => {
+    if (m.slot === slotA) return { ...m, slot: slotB };
+    if (m.slot === slotB) return { ...m, slot: slotA };
+    return m;
+  });
+}
+
 /** Previsualización rápida: tipos únicos del equipo. */
 export function teamTypes(members: TeamMember[]): string[] {
   const types = new Set<string>();

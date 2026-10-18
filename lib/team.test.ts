@@ -12,6 +12,7 @@ import {
   normalizeMember,
   reindexSlots,
   removeMember,
+  swapMemberSlots,
   teamTypes,
   totalEvs,
   validateEvs,
@@ -272,5 +273,38 @@ describe("validateIvs", () => {
         speed: 31,
       }),
     ).not.toBeNull();
+  });
+});
+
+describe("swapMemberSlots", () => {
+  it("intercambia los slots de dos miembros ocupados", () => {
+    const members = [pikachu, bulbasaur];
+    const result = swapMemberSlots(members, 0, 1);
+
+    expect(result.find((m) => m.pokemonId === 25)?.slot).toBe(1);
+    expect(result.find((m) => m.pokemonId === 1)?.slot).toBe(0);
+  });
+
+  it("mueve el miembro a un slot vacío", () => {
+    const result = swapMemberSlots([pikachu, bulbasaur], 1, 5);
+
+    expect(result.find((m) => m.pokemonId === 1)?.slot).toBe(5);
+    expect(result.find((m) => m.pokemonId === 25)?.slot).toBe(0);
+  });
+
+  it("no hace nada si el slot de origen está vacío o es el mismo", () => {
+    const members = [pikachu, bulbasaur];
+
+    expect(swapMemberSlots(members, 3, 4)).toBe(members);
+    expect(swapMemberSlots(members, 0, 0)).toBe(members);
+  });
+
+  it("no muta el array original", () => {
+    const members = [pikachu, bulbasaur];
+
+    swapMemberSlots(members, 0, 1);
+
+    expect(members[0]!.slot).toBe(0);
+    expect(members[1]!.slot).toBe(1);
   });
 });

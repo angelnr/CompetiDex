@@ -32,9 +32,11 @@ export default function TeamEditorPage() {
   const tNav = useTranslations("nav");
   const params = useParams();
   const teamId = params?.id as string | undefined;
-  const { teams, loaded, addPokemon, removePokemon, updateMember, setChampions, renameTeam } =
+  const { teams, loaded, addPokemon, removePokemon, updateMember, swapPokemonSlots, setChampions, renameTeam } =
     useTeams();
   const [activeSlot, setActiveSlot] = useState<number | null>(null);
+  const [dragSlot, setDragSlot] = useState<number | null>(null);
+  const [dragOverSlot, setDragOverSlot] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
   const [editingName, setEditingName] = useState(false);
   const [nameDraft, setNameDraft] = useState("");
@@ -254,10 +256,44 @@ export default function TeamEditorPage() {
               {Array.from({ length: 6 }).map((_, i) => {
                 const member = team.members.find((m) => m.slot === i);
                 const isActive = activeSlot === i;
+                const isDragging = dragSlot === i;
+                const isDragOver = dragOverSlot === i && dragSlot !== i;
                 return (
                   <div
                     key={i}
-                    className={`rounded-lg transition-all ${isActive ? "ring-2 ring-primary" : ""}`}
+                    draggable={!!member}
+                    onDragStart={(e) => {
+                      if (!member) return;
+                      setDragSlot(i);
+                      e.dataTransfer.effectAllowed = "move";
+                      // Firefox exige setData para iniciar el arrastre.
+                      e.dataTransfer.setData("text/plain", String(i));
+                    }}
+                    onDragOver={(e) => {
+                      if (dragSlot === null) return;
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = "move";
+                      if (dragOverSlot !== i) setDragOverSlot(i);
+                    }}
+                    onDragLeave={() => {
+                      if (dragOverSlot === i) setDragOverSlot(null);
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      if (dragSlot !== null) void swapPokemonSlots(team.id, dragSlot, i);
+                      setDragSlot(null);
+                      setDragOverSlot(null);
+                    }}
+                    onDragEnd={() => {
+                      setDragSlot(null);
+                      setDragOverSlot(null);
+                    }}
+                    className={cn(
+                      "rounded-lg transition-all",
+                      isActive && "ring-2 ring-primary",
+                      isDragOver && "bg-muted/60 ring-2 ring-primary/60",
+                      isDragging && "opacity-50",
+                    )}
                   >
                     <TeamSlot
                       member={member ?? null}

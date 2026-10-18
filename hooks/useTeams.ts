@@ -9,6 +9,7 @@ import {
   normalizeMember,
   reindexSlots,
   removeMember,
+  swapMemberSlots,
   validateTeamName,
 } from "@/lib/team";
 import type { Folder } from "@/lib/folders";
@@ -52,6 +53,7 @@ export interface UseTeamsResult {
     pokemonId: number,
     patch: TeamMemberPatch,
   ) => Promise<{ ok: true; team: Team } | { ok: false; error: string }>;
+  swapPokemonSlots: (teamId: string, slotA: number, slotB: number) => Promise<void>;
   setChampions: (
     teamId: string,
     champions: boolean,
@@ -240,6 +242,19 @@ export function useTeams(storage?: TeamStorage): UseTeamsResult {
     [teams, effectiveStorage],
   );
 
+  const swapPokemonSlots = useCallback(
+    async (teamId: string, slotA: number, slotB: number) => {
+      const team = teams.find((t) => t.id === teamId);
+      if (!team) return;
+      const members = swapMemberSlots(team.members, slotA, slotB);
+      if (members === team.members) return;
+      const updated: Team = { ...team, members, updatedAt: Date.now() };
+      setTeams((prev) => prev.map((t) => (t.id === teamId ? updated : t)));
+      await effectiveStorage.save(updated);
+    },
+    [teams, effectiveStorage],
+  );
+
   const setChampions = useCallback(
     async (teamId: string, champions: boolean): ReturnType<UseTeamsResult["setChampions"]> => {
       const team = teams.find((t) => t.id === teamId);
@@ -352,6 +367,7 @@ export function useTeams(storage?: TeamStorage): UseTeamsResult {
     addPokemon,
     removePokemon,
     updateMember,
+    swapPokemonSlots,
     setChampions,
     createFolder,
     renameFolder,
