@@ -14,7 +14,7 @@ const APP_LOCALES = ["es", "en", "fr", "de", "ja"] as const;
 export type MoveNameLocale = (typeof APP_LOCALES)[number];
 export type LocalizedMoveNames = Record<string, Partial<Record<MoveNameLocale, string>>>;
 
-const DICT_KEY = "pokeapi:move-names-dict";
+const DICT_KEY = "pokeapi:move-names-dict:v2";
 const DICT_TTL_S = 604_800; // 7d
 const FETCH_CONCURRENCY = 8;
 

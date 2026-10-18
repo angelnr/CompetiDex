@@ -12,6 +12,7 @@
  */
 
 import { getOrSet } from "@/lib/redis";
+import { applyMoveNameOverrides } from "@/lib/move-name-overrides";
 
 // ---------------------------------------------------------------------------
 // Configuración
@@ -542,9 +543,10 @@ export function getAbility(idOrName: number | string): Promise<Ability> {
 }
 
 /** Detalle de un movimiento: /move/{idOrName} */
-export function getMove(idOrName: number | string): Promise<Move> {
+export async function getMove(idOrName: number | string): Promise<Move> {
   const id = typeof idOrName === "number" ? String(idOrName) : idOrName;
-  return pokeapiFetch<Move>(`/move/${id}`, CACHE_TTL.move);
+  const move = await pokeapiFetch<Move>(`/move/${id}`, CACHE_TTL.move);
+  return applyMoveNameOverrides(move);
 }
 
 /** Naturaleza con nombres localizados: /nature/{idOrName} */
