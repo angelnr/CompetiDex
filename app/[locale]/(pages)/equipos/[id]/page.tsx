@@ -9,9 +9,11 @@ import { useTranslations } from "next-intl";
 import { SearchBar } from "@/components/pokemon/SearchBar";
 import { TeamSlot } from "@/components/pokemon/TeamSlot";
 import { TeamMemberEditor } from "@/components/pokemon/TeamMemberEditor";
+import { PokepasteImport } from "@/components/teams/PokepasteImport";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { TypeBadge } from "@/components/pokemon/TypeBadge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -32,7 +34,7 @@ export default function TeamEditorPage() {
   const tNav = useTranslations("nav");
   const params = useParams();
   const teamId = params?.id as string | undefined;
-  const { teams, loaded, addPokemon, removePokemon, updateMember, swapPokemonSlots, replacePokemon, setChampions, renameTeam } =
+  const { teams, loaded, addPokemon, removePokemon, updateMember, swapPokemonSlots, replacePokemon, replaceMembers, setChampions, renameTeam } =
     useTeams();
   const [activeSlot, setActiveSlot] = useState<number | null>(null);
   const [dragSlot, setDragSlot] = useState<number | null>(null);
@@ -230,28 +232,45 @@ export default function TeamEditorPage() {
               </button>
             </div>
 
-            {/* ── Botón Exportar ── */}
+            {/* ── Exportar / Importar ── */}
             <Dialog>
               <DialogTrigger asChild>
                 <Button variant="outline" size="sm" className="shrink-0">
                   <Download className="mr-1 size-4" />
-                  {t("export")}
+                  {t("importExport")}
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-xl">
                 <DialogHeader>
-                  <DialogTitle>{t("export")}</DialogTitle>
+                  <DialogTitle>{t("importExport")}</DialogTitle>
                 </DialogHeader>
-                <textarea
-                  readOnly
-                  value={teamToPokepaste(team)}
-                  className="h-80 w-full resize-none rounded-md border bg-muted p-3 font-mono text-xs"
-                  aria-label={t("export")}
-                />
-                <Button onClick={handleCopyPaste} className="w-full">
-                  <Copy className="mr-1 size-4" />
-                  {copied ? t("copied") : t("copy")}
-                </Button>
+                <Tabs defaultValue="export">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="export">{t("exportTab")}</TabsTrigger>
+                    <TabsTrigger value="import">{t("importTab")}</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="export" className="space-y-3 pt-3">
+                    <textarea
+                      readOnly
+                      value={teamToPokepaste(team)}
+                      className="h-80 w-full resize-none rounded-md border bg-muted p-3 font-mono text-xs"
+                      aria-label={t("exportTab")}
+                    />
+                    <Button onClick={handleCopyPaste} className="w-full">
+                      <Copy className="mr-1 size-4" />
+                      {copied ? t("copied") : t("copy")}
+                    </Button>
+                  </TabsContent>
+                  <TabsContent value="import" className="pt-3">
+                    <PokepasteImport
+                      champions={!!team.champions}
+                      onImport={(members) => {
+                        setActiveSlot(null);
+                        return replaceMembers(team.id, members);
+                      }}
+                    />
+                  </TabsContent>
+                </Tabs>
               </DialogContent>
             </Dialog>
           </div>

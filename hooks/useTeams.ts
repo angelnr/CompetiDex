@@ -60,6 +60,7 @@ export interface UseTeamsResult {
     currentPokemonId: number,
     member: Omit<TeamMember, "slot">,
   ) => Promise<{ ok: true; team: Team } | { ok: false; error: string }>;
+  replaceMembers: (teamId: string, members: TeamMember[]) => Promise<void>;
   setChampions: (
     teamId: string,
     champions: boolean,
@@ -281,6 +282,22 @@ export function useTeams(storage?: TeamStorage): UseTeamsResult {
     [teams, effectiveStorage],
   );
 
+  /** Reemplaza todos los miembros de un equipo (importación Poképaste). */
+  const replaceMembers = useCallback(
+    async (teamId: string, members: TeamMember[]) => {
+      const team = teams.find((t) => t.id === teamId);
+      if (!team) return;
+      const updated: Team = {
+        ...team,
+        members: members.map((m, i) => normalizeMember({ ...m, slot: i })),
+        updatedAt: Date.now(),
+      };
+      setTeams((prev) => prev.map((t) => (t.id === teamId ? updated : t)));
+      await effectiveStorage.save(updated);
+    },
+    [teams, effectiveStorage],
+  );
+
   const setChampions = useCallback(
     async (teamId: string, champions: boolean): ReturnType<UseTeamsResult["setChampions"]> => {
       const team = teams.find((t) => t.id === teamId);
@@ -395,6 +412,7 @@ export function useTeams(storage?: TeamStorage): UseTeamsResult {
     updateMember,
     swapPokemonSlots,
     replacePokemon,
+    replaceMembers,
     setChampions,
     createFolder,
     renameFolder,
