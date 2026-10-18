@@ -25,7 +25,6 @@ import { useTeams } from "@/hooks/useTeams";
 import { usePokemon } from "@/lib/queries";
 import { teamTypes } from "@/lib/team";
 import { teamToPokepaste } from "@/lib/pokepaste";
-import { formatSpeciesLabel } from "@/lib/pokemon-utils";
 import { cn } from "@/lib/utils";
 
 export default function TeamEditorPage() {
@@ -380,9 +379,6 @@ export default function TeamEditorPage() {
         {/* Panel editor del miembro activo, junto a los miembros. */}
         {activeMember && activePokemon && (
           <section className="min-w-0 flex-1">
-            <h2 className="mb-4 text-lg font-semibold">
-              {t("editMember", { name: formatSpeciesLabel(activeMember.name) })}
-            </h2>
             <TeamMemberEditor
               member={activeMember}
               pokemon={activePokemon}

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { List, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
+import { Link } from "@/i18n/routing";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -238,19 +239,25 @@ export function TeamMemberEditor({
     <div className="space-y-4 rounded-lg border bg-card p-4">
       {/* ── Cabecera ── */}
       <div className="flex items-center gap-3">
-        <Image
-          src={getPixelSpriteById(member.pokemonId)}
-          alt={member.name}
-          width={48}
-          height={48}
-          className="size-12 shrink-0 object-contain"
-        />
-        <div className="flex-1">
-          <span className="font-semibold">{localizedName}</span>
-          <span className="ml-2 font-mono text-xs text-muted-foreground">
-            {formatPokedexId(member.pokemonId)}
+        <Link
+          href={`/pokemon/${member.pokemonId}`}
+          className="group flex min-w-0 flex-1 items-center gap-3"
+          title={localizedName}
+        >
+          <Image
+            src={getPixelSpriteById(member.pokemonId)}
+            alt=""
+            width={48}
+            height={48}
+            className="size-12 shrink-0 object-contain"
+          />
+          <span className="min-w-0">
+            <span className="font-semibold group-hover:underline">{localizedName}</span>
+            <span className="ml-2 font-mono text-xs text-muted-foreground">
+              {formatPokedexId(member.pokemonId)}
+            </span>
           </span>
-        </div>
+        </Link>
         <Button
           type="button"
           variant="destructive"
