@@ -6,8 +6,9 @@ import { useLocale, useTranslations } from "next-intl";
 
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMove, useMoves } from "@/lib/queries";
-import { getName } from "@/lib/pokemon-utils";
+import { getName, getMoveEffectText } from "@/lib/pokemon-utils";
 import { cn } from "@/lib/utils";
 
 export interface MovePickerProps {
@@ -59,6 +60,12 @@ export function MovePicker({ value, pool, onChange, disabled = false }: MovePick
     if (selectedMove) return getName(selectedMove.names, selectedMove.name, locale);
     return value;
   }, [value, selectedMove, locale]);
+
+  // Descripción del movimiento seleccionado (tooltip al pasar el ratón).
+  const selectedEffect = useMemo(
+    () => (value ? getMoveEffectText(selectedMove, locale) : null),
+    [value, selectedMove, locale],
+  );
 
   // Sincroniza el input con el movimiento seleccionado cuando no se está editando.
   useEffect(() => {
@@ -120,6 +127,30 @@ export function MovePicker({ value, pool, onChange, disabled = false }: MovePick
     setActiveIndex(-1);
   };
 
+  // El input se reutiliza con y sin tooltip sin duplicar props.
+  const renderInput = () => (
+    <Input
+      type="text"
+      value={query}
+      onChange={(e) => {
+        setQuery(e.target.value);
+        setOpen(true);
+        setActiveIndex(-1);
+      }}
+      onFocus={() => setOpen(true)}
+      onKeyDown={handleKeyDown}
+      placeholder={t("moveSearch")}
+      className="pl-9 pr-8"
+      aria-label={t("moves")}
+      role="combobox"
+      aria-expanded={open}
+      aria-controls="move-suggestions"
+      aria-activedescendant={activeIndex >= 0 ? `move-option-${activeIndex}` : undefined}
+      autoComplete="off"
+      disabled={disabled}
+    />
+  );
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "ArrowDown") {
       e.preventDefault();
@@ -147,26 +178,21 @@ export function MovePicker({ value, pool, onChange, disabled = false }: MovePick
           className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
           aria-hidden
         />
-        <Input
-          type="text"
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setOpen(true);
-            setActiveIndex(-1);
-          }}
-          onFocus={() => setOpen(true)}
-          onKeyDown={handleKeyDown}
-          placeholder={t("moveSearch")}
-          className="pl-9 pr-8"
-          aria-label={t("moves")}
-          role="combobox"
-          aria-expanded={open}
-          aria-controls="move-suggestions"
-          aria-activedescendant={activeIndex >= 0 ? `move-option-${activeIndex}` : undefined}
-          autoComplete="off"
-          disabled={disabled}
-        />
+        {selectedEffect ? (
+          <TooltipProvider delayDuration={300}>
+            <Tooltip>
+              <TooltipTrigger asChild>{renderInput()}</TooltipTrigger>
+              <TooltipContent
+                side="top"
+                className="max-w-xs whitespace-normal text-xs leading-relaxed"
+              >
+                {selectedEffect}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : (
+          renderInput()
+        )}
         {query && (
           <button
             type="button"
@@ -180,64 +206,84 @@ export function MovePicker({ value, pool, onChange, disabled = false }: MovePick
       </div>
 
       {open && (
-        <ul
-          id="move-suggestions"
-          role="listbox"
-          className="absolute z-30 mt-1 max-h-72 w-full overflow-auto rounded-md border bg-popover py-1 shadow-md"
-        >
-          {poolLoading && results.length === 0 ? (
-            <li className="space-y-1 px-3 py-2">
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
-              <Skeleton className="h-4 w-2/3" />
-            </li>
-          ) : results.length === 0 ? (
-            <li className="px-3 py-2 text-sm text-muted-foreground">{t("moveNoResults")}</li>
-          ) : (
-            <>
-              {results.map((m, i) => (
-                <li
-                  key={m.slug}
-                  id={`move-option-${i}`}
-                  role="option"
-                  aria-selected={i === activeIndex}
-                >
-                  <button
-                    type="button"
-                    onClick={() => select(m.slug)}
-                    onMouseEnter={() => setActiveIndex(i)}
-                    className={cn(
-                      "flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground",
-                      i === activeIndex && "bg-accent text-accent-foreground",
-                    )}
-                  >
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate">{m.name}</span>
-                      {m.englishName && m.englishName !== m.name && (
-                        <span className="block truncate text-xs text-muted-foreground">
-                          {m.englishName}
+        <TooltipProvider delayDuration={300}>
+          <ul
+            id="move-suggestions"
+            role="listbox"
+            className="absolute z-30 mt-1 max-h-72 w-full overflow-auto rounded-md border bg-popover py-1 shadow-md"
+          >
+            {poolLoading && results.length === 0 ? (
+              <li className="space-y-1 px-3 py-2">
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-4 w-2/3" />
+              </li>
+            ) : results.length === 0 ? (
+              <li className="px-3 py-2 text-sm text-muted-foreground">{t("moveNoResults")}</li>
+            ) : (
+              <>
+                {results.map((m, i) => {
+                  const effect = getMoveEffectText(poolQueries[i]?.data, locale);
+                  const optionButton = (
+                    <button
+                      type="button"
+                      onClick={() => select(m.slug)}
+                      onMouseEnter={() => setActiveIndex(i)}
+                      className={cn(
+                        "flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground",
+                        i === activeIndex && "bg-accent text-accent-foreground",
+                      )}
+                    >
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate">{m.name}</span>
+                        {m.englishName && m.englishName !== m.name && (
+                          <span className="block truncate text-xs text-muted-foreground">
+                            {m.englishName}
+                          </span>
+                        )}
+                      </span>
+                      {value === m.slug && (
+                        <span className="shrink-0 rounded bg-muted px-1 text-[10px] text-muted-foreground">
+                          ✓
                         </span>
                       )}
-                    </span>
-                    {value === m.slug && (
-                      <span className="shrink-0 rounded bg-muted px-1 text-[10px] text-muted-foreground">
-                        ✓
-                      </span>
-                    )}
-                  </button>
+                    </button>
+                  );
+                  return (
+                    <li
+                      key={m.slug}
+                      id={`move-option-${i}`}
+                      role="option"
+                      aria-selected={i === activeIndex}
+                    >
+                      {effect ? (
+                        <Tooltip>
+                          <TooltipTrigger asChild>{optionButton}</TooltipTrigger>
+                          <TooltipContent
+                            side="right"
+                            className="max-w-xs whitespace-normal text-xs leading-relaxed"
+                          >
+                            {effect}
+                          </TooltipContent>
+                        </Tooltip>
+                      ) : (
+                        optionButton
+                      )}
+                    </li>
+                  );
+                })}
+                <li
+                  role="presentation"
+                  className="border-t px-3 py-1.5 text-[11px] text-muted-foreground"
+                >
+                  {results.length < total
+                    ? t("movepoolShowing", { shown: results.length, total })
+                    : t("movepoolCount", { count: total })}
                 </li>
-              ))}
-              <li
-                role="presentation"
-                className="border-t px-3 py-1.5 text-[11px] text-muted-foreground"
-              >
-                {results.length < total
-                  ? t("movepoolShowing", { shown: results.length, total })
-                  : t("movepoolCount", { count: total })}
-              </li>
-            </>
-          )}
-        </ul>
+              </>
+            )}
+          </ul>
+        </TooltipProvider>
       )}
     </div>
   );

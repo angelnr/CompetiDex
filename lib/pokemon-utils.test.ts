@@ -28,9 +28,10 @@ import {
   baseSpeciesSlug,
   speciesLabelWithGender,
   getLocalizedItemFlavor,
+  getMoveEffectText,
   type MegaVarietyInfo,
 } from "@/lib/pokemon-utils";
-import type { PokemonSpecies } from "@/lib/pokeapi";
+import type { Move, PokemonSpecies } from "@/lib/pokeapi";
 
 describe("formatHeight", () => {
   it("convierte decimetros a metros", () => {
@@ -580,5 +581,54 @@ describe("getRegionalFormSuggestions", () => {
 
   it("tres razas para tauros paldea", () => {
     expect(getRegionalFormSuggestions("tauros")).toHaveLength(3);
+  });
+});
+
+describe("getMoveEffectText", () => {
+  const makeMove = (
+    flavor: { flavor_text: string; language: string; version_group: string }[],
+    effects: { short_effect: string; language: string }[] = [],
+  ): Pick<Move, "flavor_text_entries" | "effect_entries"> => ({
+    flavor_text_entries: flavor.map((f) => ({
+      flavor_text: f.flavor_text,
+      language: { name: f.language, url: "" },
+      version_group: { name: f.version_group, url: "" },
+    })),
+    effect_entries: effects.map((e) => ({
+      effect: e.short_effect,
+      short_effect: e.short_effect,
+      language: { name: e.language, url: "" },
+    })),
+  });
+
+  it("usa el flavor más reciente del locale pedido", () => {
+    const move = makeMove([
+      { flavor_text: "Antiguo", language: "es", version_group: "black-white" },
+      { flavor_text: "Reciente", language: "es", version_group: "scarlet-violet" },
+    ]);
+    expect(getMoveEffectText(move, "es")).toBe("Reciente");
+  });
+
+  it("cae al inglés cuando no hay texto en el locale", () => {
+    const move = makeMove([{ flavor_text: "English text", language: "en", version_group: "x-y" }]);
+    expect(getMoveEffectText(move, "es")).toBe("English text");
+  });
+
+  it("ignora version-groups excluidos", () => {
+    const move = makeMove([
+      { flavor_text: "Español válido", language: "es", version_group: "x-y" },
+      { flavor_text: "Colosseum", language: "es", version_group: "colosseum" },
+    ]);
+    expect(getMoveEffectText(move, "es")).toBe("Español válido");
+  });
+
+  it("cae al short_effect inglés si no hay flavor", () => {
+    const move = makeMove([], [{ short_effect: "Inflicts regular damage.", language: "en" }]);
+    expect(getMoveEffectText(move, "es")).toBe("Inflicts regular damage.");
+  });
+
+  it("devuelve null sin datos", () => {
+    expect(getMoveEffectText(null, "es")).toBeNull();
+    expect(getMoveEffectText(makeMove([]), "es")).toBeNull();
   });
 });
