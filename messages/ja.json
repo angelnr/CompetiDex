@@ -8,6 +8,14 @@
     "closeMenu": "メニューを閉じる",
     "calculador": "計算機"
   },
+  "theme": {
+    "toLight": "ライトモードに切り替える",
+    "toDark": "ダークモードに切り替える"
+  },
+  "footer": {
+    "disclaimer": "ポケットモンスターおよびキャラクター名は、任天堂・クリーチャーズ・ゲームフリークの登録商標です。CompetiDexは非公式のファンプロジェクトであり、ポケットモンスターに関するすべての権利はそれぞれの権利者に帰属します。",
+    "poweredBy": "データ提供："
+  },
   "home": {
     "title": "CompetiDex",
     "subtitle": "ステータス、タイプ、進化、特性、技、弱点を網羅したオールインワン図鑑。",
@@ -208,10 +216,12 @@
       "ability": "特性",
       "abilityPlaceholder": "特性を選択",
       "hidden": "隠れ特性",
+      "species": "種族",
       "nature": "性格",
       "ivs": "個体値",
       "evs": "努力値",
       "evOver": "努力値の合計が{max}を超えています！",
+      "statTotal": "合計",
       "moves": "わざ",
       "movePlaceholder": "わざ名を入力…",
       "moveSearch": "わざを検索…",
@@ -221,6 +231,8 @@
       "removeMove": "わざを削除",
       "moveViewAll": "わざをすべて表示",
       "moveViewAllAria": "このポケモンのわざをすべて表示",
+      "movepoolSearchPlaceholder": "名前・タイプ（フェアリー）・分類（物理）で検索…",
+      "movepoolFiltered": "フィルター: {filters}",
       "movepoolTitle": "{name}のわざ",
       "movepoolCount": "わざ {count}個",
       "movepoolShowing": "{total}件中{shown}件を表示 — 入力で絞り込み",
@@ -245,6 +257,22 @@
       "noSlots": "空きスロットがありません",
       "notFound": "チームが見つかりません"
     },
+    "importExport": "エクスポート / インポート",
+    "exportTab": "エクスポート",
+    "importTab": "インポート",
+    "importPlaceholder": "Poképaste / Showdown 形式のチームを貼り付けてください…",
+    "importAction": "インポート",
+    "importing": "インポート中…",
+    "importEmpty": "テキストにポケモンが見つかりません。",
+    "importError": "インポートしたチームを解析できませんでした。",
+    "importUnknownSpecies": "不明な種族: {name}",
+    "importUnknownMove": "不明なわざ: {name}",
+    "importUnknownItem": "不明な道具: {name}",
+    "importUnknownNature": "不明な性格: {name}",
+    "importUnknownAbility": "{species} には使用できないとくせい: {name}",
+    "importTooMany": "ポケモンは6匹のみインポートされます（余分なセットは無視）",
+    "importDuplicated": "{name} が重複していたため、最初の1匹を残しました",
+    "importSuccess": "{count}匹のポケモンをインポートしました",
     "localImportTitle": "ローカルのチームをインポート",
     "localImportBody": "このブラウザにアカウント外で保存されたチームが {count} 件あります。アカウントにインポートしますか？",
     "localImportSkip": "あとで",
@@ -352,7 +380,8 @@
     "legends-arceus": "LEGENDS アルセウス",
     "scarlet-violet": "スカーレット／バイオレット",
     "the-teal-mask": "碧の仮面",
-    "the-indigo-disk": "藍の円盤"
+    "the-indigo-disk": "藍の円盤",
+    "champions": "チャンピオンズ"
   },
   "versions": {
     "red": "赤",

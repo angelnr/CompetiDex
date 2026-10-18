@@ -15,7 +15,12 @@ export const EXCLUDED_VERSIONS = new Set([
   "crystal-japan",
 ]);
 
-/** Version-groups (movimientos) a filtrar: japonesas, spinoffs. */
+/**
+ * Version-groups (movimientos) a filtrar: japonesas y spinoffs.
+ * "champions" NO se excluye: es el juego donde PokeAPI aloja los learnsets
+ * más recientes (y los de las megas nuevas); filtrarlo ocultaba movimientos
+ * legales introducidos en ese formato.
+ */
 export const EXCLUDED_VERSION_GROUPS = new Set([
   "colosseum",
   "xd",
@@ -23,7 +28,6 @@ export const EXCLUDED_VERSION_GROUPS = new Set([
   "pokemon-tcg",
   "red-green-japan",
   "blue-japan",
-  "champions",
 ]);
 
 export function isExcludedVersion(name: string): boolean {
@@ -64,6 +68,7 @@ const VERSION_GROUP_ORDER = [
   "scarlet-violet",
   "the-teal-mask",
   "the-indigo-disk",
+  "champions",
 ];
 
 const VERSION_ORDER = [

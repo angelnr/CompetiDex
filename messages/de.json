@@ -8,6 +8,14 @@
     "closeMenu": "Menü schließen",
     "calculador": "Rechner"
   },
+  "theme": {
+    "toLight": "Zu hellem Modus wechseln",
+    "toDark": "Zu dunklem Modus wechseln"
+  },
+  "footer": {
+    "disclaimer": "Pokémon und Namen von Pokémon-Figuren sind Marken von Nintendo, Creatures Inc. und GAME FREAK inc. CompetiDex ist ein inoffizielles Fanprojekt; alle Rechte an Pokémon liegen bei den jeweiligen Eigentümern.",
+    "poweredBy": "Daten von"
+  },
   "home": {
     "title": "CompetiDex",
     "subtitle": "All-in-One-Pokédex mit Statuswerten, Typen, Entwicklungen, Fähigkeiten, Attacken und Schwächen.",
@@ -208,10 +216,12 @@
       "ability": "Fähigkeit",
       "abilityPlaceholder": "Fähigkeit wählen",
       "hidden": "Versteckt",
+      "species": "Spezies",
       "nature": "Wesen",
       "ivs": "ISs",
       "evs": "FPs",
       "evOver": "Gesamt-FPs über {max}!",
+      "statTotal": "Gesamt",
       "moves": "Attacken",
       "movePlaceholder": "Attacke eingeben…",
       "moveSearch": "Attacke suchen…",
@@ -221,6 +231,8 @@
       "removeMove": "Attacke entfernen",
       "moveViewAll": "Alle Attacken anzeigen",
       "moveViewAllAria": "Alle Attacken dieses Pokémon anzeigen",
+      "movepoolSearchPlaceholder": "Nach Name, Typ (Fee) oder Kategorie (Physisch) suchen…",
+      "movepoolFiltered": "Filter: {filters}",
       "movepoolTitle": "Attacken von {name}",
       "movepoolCount": "{count} Attacken",
       "movepoolShowing": "{shown} von {total} — zum Filtern tippen",
@@ -245,6 +257,22 @@
       "noSlots": "Keine freien Plätze",
       "notFound": "Team nicht gefunden"
     },
+    "importExport": "Exportieren / Importieren",
+    "exportTab": "Exportieren",
+    "importTab": "Importieren",
+    "importPlaceholder": "Team im Poképaste-/Showdown-Format einfügen…",
+    "importAction": "Importieren",
+    "importing": "Importiere…",
+    "importEmpty": "Im Text wurde kein Pokémon gefunden.",
+    "importError": "Das importierte Team konnte nicht gelesen werden.",
+    "importUnknownSpecies": "Unbekannte Spezies: {name}",
+    "importUnknownMove": "Unbekannte Attacke: {name}",
+    "importUnknownItem": "Unbekannter Gegenstand: {name}",
+    "importUnknownNature": "Unbekanntes Wesen: {name}",
+    "importUnknownAbility": "Fähigkeit für {species} nicht verfügbar: {name}",
+    "importTooMany": "Es werden nur 6 Pokémon importiert; weitere Sets wurden ignoriert",
+    "importDuplicated": "{name} war doppelt; das erste wurde behalten",
+    "importSuccess": "{count} Pokémon importiert",
     "localImportTitle": "Lokale Teams importieren",
     "localImportBody": "Du hast {count} Teams in diesem Browser ohne dein Konto gespeichert. Auf dein Konto importieren?",
     "localImportSkip": "Später",
@@ -352,7 +380,8 @@
     "legends-arceus": "Legenden: Arceus",
     "scarlet-violet": "Karmesinrot/Purpur",
     "the-teal-mask": "Die Türkisgrüne Maske",
-    "the-indigo-disk": "Die Indigoblaue Scheibe"
+    "the-indigo-disk": "Die Indigoblaue Scheibe",
+    "champions": "Champions"
   },
   "versions": {
     "red": "Rot",

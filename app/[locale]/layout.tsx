@@ -10,6 +10,7 @@ import { routing } from "@/i18n/routing";
 import "../globals.css";
 import { Providers } from "./providers";
 import { NavBar } from "@/components/nav-bar";
+import { SiteFooter } from "@/components/site-footer";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -50,8 +51,11 @@ export default async function LocaleLayout({ children, params: { locale } }: Loc
       <body className={`${manrope.variable} ${geistMono.variable} antialiased`}>
         <IntlProvider locale={locale} messages={messages}>
           <Providers>
-            <NavBar />
-            {children}
+            <div className="flex min-h-svh flex-col">
+              <NavBar />
+              <div className="flex-1">{children}</div>
+              <SiteFooter locale={locale} />
+            </div>
           </Providers>
         </IntlProvider>
       </body>

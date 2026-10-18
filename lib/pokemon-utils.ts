@@ -3,7 +3,7 @@
  * Sin JSX ni dependencias — seguro en Server y cliente.
  */
 
-import type { Pokemon, PokemonSpecies } from "@/lib/pokeapi";
+import type { Move, Pokemon, PokemonSpecies } from "@/lib/pokeapi";
 import { isExcludedVersionGroup, versionGroupOrder } from "@/lib/version-names";
 
 /** Extrae el id numérico de una URL de PokeAPI: /api/v2/pokemon/25/ -> 25 */
@@ -697,4 +697,38 @@ export function getDisplayName(
   const pick = pickByLocale(names, "name", locale);
   if (pick) return pick.name as string;
   return capitalize(fallback);
+}
+
+/**
+ * Texto de efecto localizado de un movimiento.
+ *
+ * Prioriza el flavor text del version-group más reciente (PokeAPI los devuelve
+ * por inserción, no en orden cronológico), con fallback a inglés y, por
+ * último, al `short_effect` inglés. Ideal para tooltips donde no hay un juego
+ * seleccionado.
+ */
+export function getMoveEffectText(
+  move: Pick<Move, "flavor_text_entries" | "effect_entries"> | null | undefined,
+  locale = "es",
+): string | null {
+  if (!move) return null;
+
+  const newestFlavor = (language: string): string | null => {
+    const pool = move.flavor_text_entries.filter(
+      (e) => e.language.name === language && !isExcludedVersionGroup(e.version_group.name),
+    );
+    const newest = [...pool]
+      .sort((a, b) => versionGroupOrder(a.version_group.name, b.version_group.name))
+      .at(-1);
+    return newest ? sanitizeFlavorText(newest.flavor_text) : null;
+  };
+
+  const localized = newestFlavor(locale);
+  if (localized) return localized;
+
+  const english = locale !== "en" ? newestFlavor("en") : null;
+  if (english) return english;
+
+  const shortEffect = move.effect_entries.find((e) => e.language.name === "en")?.short_effect;
+  return shortEffect ? sanitizeFlavorText(shortEffect) : null;
 }

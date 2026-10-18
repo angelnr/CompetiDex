@@ -200,9 +200,48 @@ export function removeMember(members: TeamMember[], pokemonId: number): TeamMemb
   return members.filter((m) => m.pokemonId !== pokemonId);
 }
 
+/**
+ * Sustituye un miembro por otro conservando su slot y reseteando el set
+ * (objeto, habilidad, naturaleza, IVs, EVs y movimientos), como hace Showdown
+ * al cambiar la especie. Si el nuevo Pokémon ya está en el equipo devuelve
+ * error; si es el mismo, no hace nada.
+ */
+export function replaceMember(
+  members: TeamMember[],
+  pokemonId: number,
+  member: Omit<TeamMember, "slot">,
+): { ok: true; members: TeamMember[] } | { ok: false; error: string } {
+  const current = members.find((m) => m.pokemonId === pokemonId);
+  if (!current) return { ok: false, error: "Pokémon no encontrado en el equipo" };
+  if (member.pokemonId === pokemonId) return { ok: true, members };
+  if (isPokemonInTeam(members, member.pokemonId)) {
+    return { ok: false, error: `${member.name} ya está en el equipo` };
+  }
+  return {
+    ok: true,
+    members: members.map((m) =>
+      m.pokemonId === pokemonId ? normalizeMember({ ...member, slot: m.slot }) : m,
+    ),
+  };
+}
+
 /** Reordena los slots para que sean contiguos después de eliminar. */
 export function reindexSlots(members: TeamMember[]): TeamMember[] {
   return members.sort((a, b) => a.slot - b.slot).map((m, i) => ({ ...m, slot: i }));
+}
+
+/**
+ * Intercambia los slots de dos miembros. Si el destino está vacío, el miembro
+ * de origen se mueve a ese hueco. No reindexa: `slot` es la posición visual en
+ * la rejilla de 6.
+ */
+export function swapMemberSlots(members: TeamMember[], slotA: number, slotB: number): TeamMember[] {
+  if (slotA === slotB || !members.some((m) => m.slot === slotA)) return members;
+  return members.map((m) => {
+    if (m.slot === slotA) return { ...m, slot: slotB };
+    if (m.slot === slotB) return { ...m, slot: slotA };
+    return m;
+  });
 }
 
 /** Previsualización rápida: tipos únicos del equipo. */

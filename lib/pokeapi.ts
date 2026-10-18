@@ -12,6 +12,7 @@
  */
 
 import { getOrSet } from "@/lib/redis";
+import { applyMoveNameOverrides } from "@/lib/move-name-overrides";
 
 // ---------------------------------------------------------------------------
 // Configuración
@@ -30,6 +31,7 @@ const CACHE_TTL = {
   move: 604_800, // 7d
   item: 604_800, // 7d
   encounters: 86_400,
+  locationArea: 604_800, // 7d
 } as const;
 
 const FETCH_TIMEOUT_MS = 8_000;
@@ -380,6 +382,37 @@ export interface LocationAreaEncounter {
   version_details: VersionEncounterDetail[];
 }
 
+export interface LocationAreaName {
+  name: string;
+  language: NamedAPIResource;
+}
+
+/**
+ * Área de localización (location-area). `names` incluye los idiomas que
+ * PokeAPI tenga para la localización padre: `en`/`fr`/`de` casi completos y
+ * `es`/`ja` solo en algunas regiones (ver `lib/location-area-names.ts`).
+ */
+export interface LocationArea {
+  id: number;
+  name: string;
+  game_index: number;
+  names: LocationAreaName[];
+  location: NamedAPIResource;
+}
+
+/**
+ * Localización (location) padre de una o varias áreas. Es la que concentra los
+ * nombres traducidos: las áreas solo suelen traer `en`/`fr`/`de`, mientras que
+ * `es`/`ja` (y otras) aparecen a nivel de localización.
+ */
+export interface Location {
+  id: number;
+  name: string;
+  names: LocationAreaName[];
+  region: NamedAPIResource | null;
+  areas: NamedAPIResource[];
+}
+
 // ---------------------------------------------------------------------------
 // Fetcher cacheado
 // ---------------------------------------------------------------------------
@@ -510,9 +543,10 @@ export function getAbility(idOrName: number | string): Promise<Ability> {
 }
 
 /** Detalle de un movimiento: /move/{idOrName} */
-export function getMove(idOrName: number | string): Promise<Move> {
+export async function getMove(idOrName: number | string): Promise<Move> {
   const id = typeof idOrName === "number" ? String(idOrName) : idOrName;
-  return pokeapiFetch<Move>(`/move/${id}`, CACHE_TTL.move);
+  const move = await pokeapiFetch<Move>(`/move/${id}`, CACHE_TTL.move);
+  return applyMoveNameOverrides(move);
 }
 
 /** Naturaleza con nombres localizados: /nature/{idOrName} */
@@ -531,6 +565,18 @@ export function getItem(idOrName: number | string): Promise<Item> {
 export function getEncounters(idOrName: number | string): Promise<LocationAreaEncounter[]> {
   const id = typeof idOrName === "number" ? String(idOrName) : idOrName;
   return pokeapiFetch<LocationAreaEncounter[]>(`/pokemon/${id}/encounters`, CACHE_TTL.encounters);
+}
+
+/** Detalle de un área de localización por id: /location-area/{id} */
+export function getLocationArea(idOrName: number | string): Promise<LocationArea> {
+  const id = typeof idOrName === "number" ? String(idOrName) : idOrName;
+  return pokeapiFetch<LocationArea>(`/location-area/${id}`, CACHE_TTL.locationArea);
+}
+
+/** Detalle de una localización por id o nombre: /location/{idOrName} */
+export function getLocation(idOrName: number | string): Promise<Location> {
+  const id = typeof idOrName === "number" ? String(idOrName) : idOrName;
+  return pokeapiFetch<Location>(`/location/${id}`, CACHE_TTL.locationArea);
 }
 
 export { PokeAPIError };

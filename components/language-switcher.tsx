@@ -27,13 +27,13 @@ export function LanguageSwitcher() {
 
   return (
     <Select value={locale} onValueChange={onSelect}>
-      <SelectTrigger className="w-[130px]" aria-label={t("switcherAria")}>
-        <SelectValue />
+      <SelectTrigger className="w-[68px]" aria-label={t("switcherAria")}>
+        <SelectValue placeholder={locale}>{locale}</SelectValue>
       </SelectTrigger>
       <SelectContent>
         {routing.locales.map((l) => (
-          <SelectItem key={l} value={l}>
-            {t(l)}
+          <SelectItem key={l} value={l} title={t(l)}>
+            {l}
           </SelectItem>
         ))}
       </SelectContent>

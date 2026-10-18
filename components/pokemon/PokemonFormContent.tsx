@@ -12,6 +12,7 @@ import { TypeEffectiveness } from "@/components/pokemon/TypeEffectiveness";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePokemon, useTypes, useAbilities } from "@/lib/queries";
+import { getTypeMeta } from "@/lib/pokemon-types";
 import type { Pokemon, PokemonSpecies, Type, Ability } from "@/lib/pokeapi";
 import type { MegaVarietyInfo } from "@/lib/pokemon-utils";
 import {
@@ -113,17 +114,28 @@ export function PokemonFormContent({
     <div className="mb-8 grid items-start gap-6 lg:grid-cols-2">
       {/* Columna izquierda: header */}
       <header className="rounded-lg border bg-card p-6">
-        <div className="flex flex-col items-center justify-center">
-          {megaLoading && selectedMega ? (
-            <Skeleton className="size-64 rounded-lg" />
-          ) : (
-            <SpriteViewer
-              name={pokemon.name}
-              artwork={artwork}
-              artworkShiny={artworkShiny}
-              defaultSprite={defaultSprite}
+        <div className="relative flex flex-col items-center justify-center">
+          {/* Halo del color del primer tipo (excepción documentada en lib/pokemon-types.ts). */}
+          <div aria-hidden className="absolute inset-0 flex items-center justify-center">
+            <div
+              className="size-56 rounded-full opacity-25 blur-3xl"
+              style={{
+                backgroundColor: getTypeMeta(pokemon.types[0]?.type.name ?? "unknown").color,
+              }}
             />
-          )}
+          </div>
+          <div className="relative z-10">
+            {megaLoading && selectedMega ? (
+              <Skeleton className="size-64 rounded-lg" />
+            ) : (
+              <SpriteViewer
+                name={pokemon.name}
+                artwork={artwork}
+                artworkShiny={artworkShiny}
+                defaultSprite={defaultSprite}
+              />
+            )}
+          </div>
         </div>
 
         <div className="flex flex-col justify-center gap-4">

@@ -8,6 +8,14 @@
     "closeMenu": "Cerrar menú",
     "calculador": "Calculadora"
   },
+  "theme": {
+    "toLight": "Cambiar a modo claro",
+    "toDark": "Cambiar a modo oscuro"
+  },
+  "footer": {
+    "disclaimer": "Pokémon y los nombres de personajes de Pokémon son marcas registradas de Nintendo, Creatures Inc. y GAME FREAK inc. CompetiDex es un proyecto de fans sin afiliación oficial; todos los derechos sobre Pokémon pertenecen a sus respectivos propietarios.",
+    "poweredBy": "Datos de"
+  },
   "home": {
     "title": "CompetiDex",
     "subtitle": "Pokédex all-in-one con stats, tipos, evoluciones, habilidades, movimientos y debilidades.",
@@ -208,10 +216,12 @@
       "ability": "Habilidad",
       "abilityPlaceholder": "Seleccionar habilidad",
       "hidden": "Oculta",
+      "species": "Especie",
       "nature": "Naturaleza",
       "ivs": "IVs",
       "evs": "EVs",
       "evOver": "¡EVs totales superan {max}!",
+      "statTotal": "Total",
       "moves": "Movimientos",
       "movePlaceholder": "Escribe un movimiento…",
       "moveSearch": "Buscar movimiento…",
@@ -221,6 +231,8 @@
       "removeMove": "Quitar movimiento",
       "moveViewAll": "Ver todos los movimientos",
       "moveViewAllAria": "Ver todos los movimientos de este Pokémon",
+      "movepoolSearchPlaceholder": "Buscar por nombre, tipo (Hada) o categoría (Físico)…",
+      "movepoolFiltered": "Filtros: {filters}",
       "movepoolTitle": "Movimientos de {name}",
       "movepoolCount": "{count} movimientos",
       "movepoolShowing": "Mostrando {shown} de {total} — escribe para filtrar",
@@ -245,6 +257,22 @@
       "noSlots": "No hay slots libres",
       "notFound": "Equipo no encontrado"
     },
+    "importExport": "Exportar / Importar",
+    "exportTab": "Exportar",
+    "importTab": "Importar",
+    "importPlaceholder": "Pega un equipo en formato Poképaste / Showdown…",
+    "importAction": "Importar",
+    "importing": "Importando…",
+    "importEmpty": "No se ha detectado ningún Pokémon en el texto.",
+    "importError": "No se pudo interpretar el equipo importado.",
+    "importUnknownSpecies": "Especie desconocida: {name}",
+    "importUnknownMove": "Movimiento desconocido: {name}",
+    "importUnknownItem": "Objeto desconocido: {name}",
+    "importUnknownNature": "Naturaleza desconocida: {name}",
+    "importUnknownAbility": "Habilidad no disponible para {species}: {name}",
+    "importTooMany": "Solo se importan 6 Pokémon; se ignoraron sets extra",
+    "importDuplicated": "{name} estaba duplicado; se conserva el primero",
+    "importSuccess": "Importados {count} Pokémon",
     "localImportTitle": "Importar equipos locales",
     "localImportBody": "Tienes {count} equipos guardados en este navegador sin tu cuenta. ¿Los importamos a tu cuenta?",
     "localImportSkip": "Ahora no",
@@ -352,7 +380,8 @@
     "legends-arceus": "Leyendas: Arceus",
     "scarlet-violet": "Escarlata/Púrpura",
     "the-teal-mask": "La Máscara Turquesa",
-    "the-indigo-disk": "El Disco Índigo"
+    "the-indigo-disk": "El Disco Índigo",
+    "champions": "Champions"
   },
   "versions": {
     "red": "Rojo",

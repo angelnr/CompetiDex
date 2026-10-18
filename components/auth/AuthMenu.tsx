@@ -50,9 +50,9 @@ export function AuthMenu() {
 
   return (
     <Button asChild variant="outline" size="sm">
-      <Link href="/acceder" className="text-sm">
+      <Link href="/acceder" className="text-sm" aria-label={t("signIn")}>
         <LogIn className="size-4" />
-        {t("signIn")}
+        <span className="hidden sm:inline">{t("signIn")}</span>
       </Link>
     </Button>
   );

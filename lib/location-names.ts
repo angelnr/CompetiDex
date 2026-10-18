@@ -1,14 +1,13 @@
 /**
- * Mapa estático de nombres de rutas, ciudades y áreas de Pokémon
- * traducidas al español.
+ * Nombres de rutas, ciudades y áreas de Pokémon, con resolución por idioma.
  *
- * PokeAPI no proporciona nombres en español para las localizaciones — solo
- * en/de/fr —, así que este diccionario es la única fuente de verdad.
+ * PokeAPI no proporciona nombres de localización en español ni en japonés
+ * — solo en/fr/de —, así que este diccionario curado es la fuente de verdad
+ * para el español. Para el resto de idiomas, el módulo servidor
+ * `lib/location-area-names.ts` aporta los nombres de PokeAPI y
+ * `resolveLocationName` decide el fallback.
  *
- * Las entradas sin traducción conocida se mostrarán en inglés con el nombre
- * capitalizado (fallback definido en `getLocationNameEs`).
- *
- * Para añadir más traducciones, solo hay que añadir entradas aquí:
+ * Para añadir traducciones al español, solo hay que añadir entradas aquí:
  *   "nombre-pokeapi": "Nombre en español"
  */
 
@@ -697,7 +696,8 @@ const AREA_SUFFIXES = [
   "-inside",
 ];
 
-function extractBaseLocationName(name: string): {
+/** Separa un slug de área en nombre base y sufijo de zona (ej. "-area"). */
+export function splitLocationName(name: string): {
   base: string;
   suffix: string | null;
 } {
@@ -710,76 +710,113 @@ function extractBaseLocationName(name: string): {
   return { base: name, suffix: null };
 }
 
-/**
- * Traduce un nombre de localización (location_area.name) al español.
- *
- * El algoritmo:
- * 1. Quita sufijos de zona (-area, -main, -water, etc.)
- * 2. Busca el nombre base en `LOCATION_ES`
- * 3. Si encuentra: devuelve la traducción + sufijo limplio opcional
- * 4. Si no: capitaliza y devuelve el nombre crudo en inglés
- *
- * @param name Nombre interno de PokeAPI (ej. "pallet-town-area")
- * @returns Nombre localizado (ej. "Pueblo Paleta")
- */
-export function getLocationNameEs(name: string): string {
-  const { base, suffix } = extractBaseLocationName(name);
-  const translated = LOCATION_ES[base] ?? null;
+/** Prefijos de región que PokeAPI añade a los slugs y el diccionario no usa. */
+const REGION_PREFIXES = [
+  "kanto-",
+  "johto-",
+  "hoenn-",
+  "sinnoh-",
+  "unova-",
+  "kalos-",
+  "alola-",
+  "galar-",
+  "paldea-",
+  "hisui-",
+  "sevii-",
+];
 
-  if (translated) {
-    return suffix ? `${translated} (${cleanSuffix(suffix)})` : translated;
+function stripRegionPrefix(name: string): string {
+  for (const prefix of REGION_PREFIXES) {
+    if (name.startsWith(prefix)) return name.slice(prefix.length);
   }
+  return name;
+}
 
-  // Fallback: capitalizar el nombre en inglés
-  const fallback = name
+/**
+ * Busca el nombre base en el diccionario curado (español).
+ * Devuelve `null` si no hay traducción real: las entradas placeholder del
+ * diccionario repiten el slug y no aportan nada.
+ */
+export function getCuratedLocationName(base: string): string | null {
+  const direct = LOCATION_ES[base];
+  if (direct && direct !== base) return direct;
+
+  const stripped = stripRegionPrefix(base);
+  if (stripped !== base) {
+    const hit = LOCATION_ES[stripped];
+    if (hit && hit !== stripped) return hit;
+  }
+  return null;
+}
+
+/** Humaniza un slug de PokeAPI como último recurso ("mt-moon" -> "Mt Moon"). */
+export function humanizeLocationSlug(name: string): string {
+  return name
     .split("-")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
-  return fallback;
 }
 
-function cleanSuffix(suffix: string): string {
-  const map: Record<string, string> = {
-    "-area": "área",
-    "-main": "principal",
-    "-water": "agua",
-    "-cave": "cueva",
-    "-entrance": "entrada",
-    "-exit": "salida",
-    "-1f": "1F",
-    "-2f": "2F",
-    "-3f": "3F",
-    "-b1f": "S1",
-    "-b2f": "S2",
-    "-b3f": "S3",
-    "-b4f": "S4",
-    "-roof": "azotea",
-    "-exterior": "exterior",
-    "-interior": "interior",
-    "-back": "trasera",
-    "-front": "frontal",
-    "-south": "sur",
-    "-north": "norte",
-    "-east": "este",
-    "-west": "oeste",
-    "-center": "centro",
-    "-outside": "exterior",
-    "-underground": "subterráneo",
-    "-depths": "profundidades",
-    "-peak": "cima",
-    "-bonus": "extra",
-    "-special": "especial",
-    "-room": "sala",
-    "-deep": "fondo",
-    "-shore": "orilla",
-    "-sea": "mar",
-    "-path": "sendero",
-    "-tunnel": "túnel",
-    "-overworld": "exterior",
-    "-inside": "interior",
-    "-championship": "campeonato",
-  };
-  return map[suffix] ?? suffix.replace(/^-/, "").replace(/-/g, " ");
+/**
+ * Idiomas para los que PokeAPI puede aportar nombres de localización.
+ *
+ * La cobertura es irregular: `en/fr/de` están casi completos, pero `es` y `ja`
+ * solo existen en algunas regiones (Hoenn, Kalos, Alola y, como `ja-hrkt`,
+ * Unova). El resto cae al diccionario curado o al slug humanizado.
+ */
+export type LocationNameLocale = "en" | "fr" | "de" | "es" | "ja";
+
+export interface ResolveLocationNameArgs {
+  /** Slug del área de PokeAPI (ej. "kanto-route-7-area"). */
+  areaName: string;
+  /** Locale activo de la app. */
+  locale: string;
+  /** Nombre localizado desde PokeAPI, si existe para el idioma activo. */
+  localized?: Partial<Record<LocationNameLocale, string>> | undefined;
+  /** Traduce el sufijo de zona (namespace `locationSuffixes`); null si falta. */
+  suffixLabel?: (suffix: string) => string | null;
+}
+
+/**
+ * Resuelve el nombre visible de un área de localización.
+ *
+ * Prioridad:
+ * 1. Español -> diccionario curado y, si falta, PokeAPI/offline; + sufijo.
+ * 2. Japonés -> PokeAPI u offline (nivel de localización); + sufijo de zona.
+ * 3. en/fr/de -> nombre de PokeAPI (las áreas ya incluyen el sufijo).
+ * 4. Fallback -> slug humanizado, con el sufijo de zona localizado.
+ */
+export function resolveLocationName({
+  areaName,
+  locale,
+  localized,
+  suffixLabel,
+}: ResolveLocationNameArgs): string {
+  const { base, suffix } = splitLocationName(areaName);
+
+  if (locale === "es") {
+    // El diccionario curado es más completo; PokeAPI/offline cubren el resto.
+    const name = getCuratedLocationName(base) ?? localized?.es;
+    if (name) return appendSuffix(name, suffix, suffixLabel);
+  } else {
+    const translated = localized?.[locale as LocationNameLocale];
+    if (translated) {
+      // es/ja vienen del nivel de localización; las áreas ya traen el sufijo.
+      return locale === "ja" ? appendSuffix(translated, suffix, suffixLabel) : translated;
+    }
+  }
+
+  return appendSuffix(humanizeLocationSlug(base), suffix, suffixLabel);
+}
+
+function appendSuffix(
+  name: string,
+  suffix: string | null,
+  suffixLabel?: (suffix: string) => string | null,
+): string {
+  if (!suffix) return name;
+  const label = suffixLabel?.(suffix) ?? suffix.replace(/^-/, "").replace(/-/g, " ");
+  return `${name} (${label})`;
 }
 
 /**

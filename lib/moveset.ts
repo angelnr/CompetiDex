@@ -186,10 +186,10 @@ async function buildMovepool(idOrName: number | string): Promise<Movepool> {
 
 /**
  * Movepool completo de una especie. Cachea el DTO ensamblado en Redis (7d)
- * bajo `pokeapi:moveset:{id}:v2`. Devuelve un pool vacío para formas sin
+ * bajo `pokeapi:moveset:{id}:v3`. Devuelve un pool vacío para formas sin
  * movimientos (p. ej. megas sin learnset en PokeAPI).
  */
 export function getMovepool(idOrName: number | string): Promise<Movepool> {
-  const key = `pokeapi:moveset:${idOrName}:v2`;
+  const key = `pokeapi:moveset:${idOrName}:v3`;
   return getOrSet(key, () => buildMovepool(idOrName), MOVESET_TTL_S);
 }

@@ -8,6 +8,7 @@ import { TypeBadge } from "@/components/pokemon/TypeBadge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePokemon } from "@/lib/queries";
+import { getTypeMeta } from "@/lib/pokemon-types";
 import {
   capitalize,
   extractIdFromUrl,
@@ -53,7 +54,7 @@ export function PokemonCard({ resource, eagerId }: PokemonCardProps) {
 
   return (
     <Link href={href} className="group block h-full">
-      <Card className="flex h-full flex-col transition-all group-hover:shadow-md group-hover:ring-1 group-hover:ring-ring">
+      <Card className="flex h-full flex-col transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-xl group-hover:ring-1 group-hover:ring-ring/40">
         <CardHeader className="flex flex-row items-start justify-between gap-2 pb-0">
           <span className="font-mono text-xs text-muted-foreground">
             {formatPokedexId(data.id)}
@@ -61,14 +62,22 @@ export function PokemonCard({ resource, eagerId }: PokemonCardProps) {
           <span className="text-xs font-medium text-muted-foreground">{capitalize(data.name)}</span>
         </CardHeader>
 
-        <CardContent className="flex flex-1 items-center justify-center p-4">
+        <CardContent className="relative flex flex-1 items-center justify-center p-4">
+          {/* Halo del color del primer tipo (excepción documentada en lib/pokemon-types.ts). */}
+          <div
+            aria-hidden
+            className="absolute size-28 rounded-full opacity-20 blur-2xl"
+            style={{
+              backgroundColor: getTypeMeta(data.types[0]?.type.name ?? "unknown").color,
+            }}
+          />
           {artwork && (
             <Image
               src={artwork}
               alt={`Sprite oficial de ${capitalize(data.name)}`}
               width={120}
               height={120}
-              className="size-28 object-contain transition-transform group-hover:scale-105"
+              className="relative size-28 object-contain transition-transform group-hover:scale-105"
               loading="lazy"
             />
           )}

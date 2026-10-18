@@ -80,7 +80,7 @@ export function StatsCalculator({ stats }: StatsCalculatorProps) {
   };
 
   return (
-    <div className="rounded-lg border bg-card p-6">
+    <div className="rounded-lg border bg-card p-4 sm:p-6">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h3 className="text-xl font-semibold">{t("title")}</h3>
         <Button variant="ghost" size="sm" onClick={reset} aria-label={t("reset")}>
@@ -109,7 +109,7 @@ export function StatsCalculator({ stats }: StatsCalculatorProps) {
           </div>
         </fieldset>
 
-        <div>
+        <div className="w-full min-w-0 sm:w-auto">
           <label htmlFor="nature-select" className="mb-1 block text-xs text-muted-foreground">
             {t("nature")}
           </label>
@@ -117,7 +117,7 @@ export function StatsCalculator({ stats }: StatsCalculatorProps) {
             id="nature-select"
             value={natureName}
             onChange={(e) => setNatureName(e.target.value)}
-            className="rounded-md border bg-background px-3 py-1.5 text-sm"
+            className="w-full max-w-full rounded-md border bg-background px-3 py-1.5 text-sm"
           >
             {NATURES.map((n) => {
               const suffix =
@@ -142,40 +142,40 @@ export function StatsCalculator({ stats }: StatsCalculatorProps) {
           return (
             <div
               key={row.key}
-              className="grid grid-cols-[7rem_1fr_4rem_5rem_4rem] items-center gap-2 text-sm"
+              className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-[7rem_1fr_4rem_5rem_4rem] sm:items-center"
             >
-              <span
-                className={cn(
-                  "font-medium",
-                  isIncreased && "text-green-600",
-                  isDecreased && "text-red-500",
-                )}
-              >
-                {statNameLabel}
-                {isIncreased && " ↑"}
-                {isDecreased && " ↓"}
-              </span>
+              {/* Nombre del stat (+ naturaleza). En móvil el valor final va aquí. */}
+              <div className="flex items-baseline justify-between gap-2 sm:block">
+                <span
+                  className={cn(
+                    "font-medium",
+                    isIncreased && "text-green-600",
+                    isDecreased && "text-red-500",
+                  )}
+                >
+                  {statNameLabel}
+                  {isIncreased && " ↑"}
+                  {isDecreased && " ↓"}
+                </span>
+                <span className="font-mono font-bold tabular-nums sm:hidden">{row.value}</span>
+              </div>
 
               {/* Barra de base */}
               <div className="min-w-0">
                 <StatBar statName={row.key} value={row.base} />
               </div>
 
-              {/* IV */}
-              <div>
+              {/* IV y EV: fila propia en móvil, columnas propias en ≥sm */}
+              <div className="flex items-center gap-2 sm:contents">
                 <Input
                   type="number"
                   min={0}
                   max={31}
                   value={row.iv}
                   onChange={(e) => handleIvChange(row.key, e.target.value)}
-                  className="h-7 w-full text-center text-xs tabular-nums"
+                  className="h-7 min-w-0 flex-1 text-center text-xs tabular-nums"
                   aria-label={`IV ${statNameLabel}`}
                 />
-              </div>
-
-              {/* EV */}
-              <div>
                 <Input
                   type="number"
                   min={0}
@@ -183,13 +183,15 @@ export function StatsCalculator({ stats }: StatsCalculatorProps) {
                   step={EV_STEP}
                   value={row.ev}
                   onChange={(e) => handleEvChange(row.key, e.target.value)}
-                  className="h-7 w-full text-center text-xs tabular-nums"
+                  className="h-7 min-w-0 flex-1 text-center text-xs tabular-nums"
                   aria-label={`EV ${statNameLabel}`}
                 />
               </div>
 
-              {/* Valor calculado */}
-              <div className="text-right font-mono text-sm font-bold tabular-nums">{row.value}</div>
+              {/* Valor calculado (columna propia en ≥sm) */}
+              <div className="hidden text-right font-mono text-sm font-bold tabular-nums sm:block">
+                {row.value}
+              </div>
             </div>
           );
         })}
