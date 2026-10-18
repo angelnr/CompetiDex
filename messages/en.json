@@ -231,6 +231,8 @@
       "removeMove": "Remove move",
       "moveViewAll": "View all moves",
       "moveViewAllAria": "View all moves for this Pokémon",
+      "movepoolSearchPlaceholder": "Search by name, type (Fairy) or category (Physical)…",
+      "movepoolFiltered": "Filters: {filters}",
       "movepoolTitle": "{name} moves",
       "movepoolCount": "{count} moves",
       "movepoolShowing": "Showing {shown} of {total} — type to filter",

@@ -231,6 +231,8 @@
       "removeMove": "Attacke entfernen",
       "moveViewAll": "Alle Attacken anzeigen",
       "moveViewAllAria": "Alle Attacken dieses Pokémon anzeigen",
+      "movepoolSearchPlaceholder": "Nach Name, Typ (Fee) oder Kategorie (Physisch) suchen…",
+      "movepoolFiltered": "Filter: {filters}",
       "movepoolTitle": "Attacken von {name}",
       "movepoolCount": "{count} Attacken",
       "movepoolShowing": "{shown} von {total} — zum Filtern tippen",

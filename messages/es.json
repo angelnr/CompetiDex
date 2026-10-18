@@ -231,6 +231,8 @@
       "removeMove": "Quitar movimiento",
       "moveViewAll": "Ver todos los movimientos",
       "moveViewAllAria": "Ver todos los movimientos de este Pokémon",
+      "movepoolSearchPlaceholder": "Buscar por nombre, tipo (Hada) o categoría (Físico)…",
+      "movepoolFiltered": "Filtros: {filters}",
       "movepoolTitle": "Movimientos de {name}",
       "movepoolCount": "{count} movimientos",
       "movepoolShowing": "Mostrando {shown} de {total} — escribe para filtrar",

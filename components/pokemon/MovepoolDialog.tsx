@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { ChevronDown, ChevronUp, Search } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -25,6 +25,17 @@ import {
 import { TypeBadge } from "@/components/pokemon/TypeBadge";
 import { useMovepool } from "@/lib/queries";
 import type { MovepoolMove } from "@/lib/moveset";
+import {
+  filterMovepool,
+  isNumericSortColumn,
+  normalizeQuery,
+  parseMovepoolQuery,
+  sortMovepool,
+  type MovepoolLabels,
+  type MovepoolSortColumn,
+  type MovepoolSortState,
+} from "@/lib/movepool-filter";
+import { POKEMON_TYPES_ES } from "@/lib/pokemon-types";
 import { capitalize } from "@/lib/pokemon-utils";
 import { cn } from "@/lib/utils";
 
@@ -32,13 +43,7 @@ import { cn } from "@/lib/utils";
 const MAX_ROWS = 200;
 
 const CATEGORIES = new Set(["physical", "special", "status"]);
-
-function normalize(text: string): string {
-  return text
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-}
+const CATEGORY_ORDER = ["physical", "special", "status"] as const;
 
 function slugTitle(slug: string): string {
   return capitalize(slug.replace(/-/g, " "));
@@ -76,12 +81,14 @@ export function MovepoolDialog({
 }: MovepoolDialogProps) {
   const t = useTranslations("teams.member");
   const tMoves = useTranslations("moves");
+  const tTypes = useTranslations("pokemonTypes");
   const tVersionGroups = useTranslations("versionGroups");
   const locale = useLocale();
 
   const { data, isLoading, isError } = useMovepool(open ? sourceId : undefined);
   const [query, setQuery] = useState("");
   const [game, setGame] = useState<string | undefined>(undefined);
+  const [sort, setSort] = useState<MovepoolSortState | null>(null);
 
   // Juego por defecto: el más reciente (prefiriendo Escarlata/Púrpura).
   useEffect(() => {
@@ -95,9 +102,12 @@ export function MovepoolDialog({
     );
   }, [data]);
 
-  // Limpia la búsqueda al abrir para arrancar siempre desde cero.
+  // Limpia búsqueda y orden al abrir para arrancar siempre desde cero.
   useEffect(() => {
-    if (open) setQuery("");
+    if (open) {
+      setQuery("");
+      setSort(null);
+    }
   }, [open]);
 
   const vgLabel = (vg: string) => {
@@ -105,20 +115,97 @@ export function MovepoolDialog({
     return label === `versionGroups.${vg}` || label === vg ? slugTitle(vg) : label;
   };
 
+  // Tokens del buscador que actúan como filtro: nombres de tipo y de categoría
+  // (localizados o en slug). El resto se busca por nombre de movimiento.
+  const typeByToken = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const slug of POKEMON_TYPES_ES) {
+      map.set(normalizeQuery(tTypes(slug)), slug);
+      map.set(slug, slug);
+    }
+    return map;
+  }, [tTypes]);
+
+  const categoryByToken = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const category of CATEGORY_ORDER) {
+      map.set(normalizeQuery(tMoves(`damageClass.${category}`)), category);
+      map.set(category, category);
+    }
+    return map;
+  }, [tMoves]);
+
+  const filter = useMemo(
+    () => parseMovepoolQuery(query, typeByToken, categoryByToken),
+    [query, typeByToken, categoryByToken],
+  );
+
+  const labels: MovepoolLabels = useMemo(
+    () => ({
+      name: (move) => pickName(move, locale),
+      type: (move) => tTypes(move.type),
+      category: (move) =>
+        CATEGORIES.has(move.category) ? tMoves(`damageClass.${move.category}`) : slugTitle(move.category),
+    }),
+    [locale, tTypes, tMoves],
+  );
+
   const filtered = useMemo(() => {
     if (!data) return [];
-    const q = normalize(query.trim());
-    return data.moves.filter((move) => {
-      if (game && move.vgs.length > 0 && !move.vgs.includes(game)) return false;
-      if (!q) return true;
-      const es = normalize(pickName(move, locale));
-      const en = normalize(move.names.en ?? "");
-      return es.includes(q) || en.includes(q) || move.slug.includes(q.replace(/\s+/g, "-"));
-    });
-  }, [data, game, query, locale]);
+    const byGame = data.moves.filter(
+      (move) => !game || move.vgs.length === 0 || move.vgs.includes(game),
+    );
+    return filterMovepool(byGame, filter, (move) => ({
+      name: pickName(move, locale),
+      englishName: move.names.en ?? "",
+    }));
+  }, [data, game, filter, locale]);
 
-  const rows = filtered.slice(0, MAX_ROWS);
-  const truncated = filtered.length > rows.length;
+  const sorted = useMemo(() => sortMovepool(filtered, sort, labels), [filtered, sort, labels]);
+
+  // Etiquetas de los filtros activos, para feedback bajo el buscador.
+  const activeFilters = useMemo(
+    () => [
+      ...filter.types.map((slug) => tTypes(slug)),
+      ...filter.categories.map((category) => tMoves(`damageClass.${category}`)),
+    ],
+    [filter, tTypes, tMoves],
+  );
+
+  const toggleSort = (column: MovepoolSortColumn) => {
+    setSort((prev) =>
+      prev && prev.column === column ? { column, reverse: !prev.reverse } : { column, reverse: false },
+    );
+  };
+
+  /** Dirección efectiva de la columna activa (el primario difiere por tipo). */
+  const sortDirectionOf = (column: MovepoolSortColumn): "ascending" | "descending" | "none" => {
+    if (sort?.column !== column) return "none";
+    const ascending = isNumericSortColumn(column) ? sort.reverse : !sort.reverse;
+    return ascending ? "ascending" : "descending";
+  };
+
+  const sortButton = (column: MovepoolSortColumn, label: string, align: "left" | "right") => {
+    const direction = sortDirectionOf(column);
+    return (
+      <button
+        type="button"
+        onClick={() => toggleSort(column)}
+        className={cn(
+          "flex w-full cursor-pointer items-center gap-1 hover:text-foreground",
+          align === "right" && "justify-end",
+          direction !== "none" && "text-foreground",
+        )}
+      >
+        {label}
+        {direction === "ascending" && <ChevronUp className="size-3 shrink-0" aria-hidden />}
+        {direction === "descending" && <ChevronDown className="size-3 shrink-0" aria-hidden />}
+      </button>
+    );
+  };
+
+  const rows = sorted.slice(0, MAX_ROWS);
+  const truncated = sorted.length > rows.length;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -138,8 +225,8 @@ export function MovepoolDialog({
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={t("moveSearch")}
-              aria-label={t("moveSearch")}
+              placeholder={t("movepoolSearchPlaceholder")}
+              aria-label={t("movepoolSearchPlaceholder")}
               className="pl-9"
               autoFocus
             />
@@ -160,12 +247,19 @@ export function MovepoolDialog({
           )}
         </div>
 
-        {/* Contador / aviso de recorte */}
+        {/* Contador, filtros activos y aviso de recorte */}
         {data && (
-          <p className="text-xs text-muted-foreground">
-            {truncated
-              ? t("movepoolShowing", { shown: rows.length, total: filtered.length })
-              : t("movepoolCount", { count: filtered.length })}
+          <p className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+            <span>
+              {truncated
+                ? t("movepoolShowing", { shown: rows.length, total: sorted.length })
+                : t("movepoolCount", { count: sorted.length })}
+            </span>
+            {activeFilters.length > 0 && (
+              <span className="font-medium text-foreground">
+                {t("movepoolFiltered", { filters: activeFilters.join(", ") })}
+              </span>
+            )}
           </p>
         )}
 
@@ -189,12 +283,24 @@ export function MovepoolDialog({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>{tMoves("table.name")}</TableHead>
-                  <TableHead>{tMoves("table.type")}</TableHead>
-                  <TableHead>{tMoves("table.category")}</TableHead>
-                  <TableHead className="text-right">{tMoves("table.power")}</TableHead>
-                  <TableHead className="text-right">{tMoves("table.accuracy")}</TableHead>
-                  <TableHead className="text-right">{tMoves("table.pp")}</TableHead>
+                  <TableHead aria-sort={sortDirectionOf("name")}>
+                    {sortButton("name", tMoves("table.name"), "left")}
+                  </TableHead>
+                  <TableHead aria-sort={sortDirectionOf("type")}>
+                    {sortButton("type", tMoves("table.type"), "left")}
+                  </TableHead>
+                  <TableHead aria-sort={sortDirectionOf("category")}>
+                    {sortButton("category", tMoves("table.category"), "left")}
+                  </TableHead>
+                  <TableHead className="text-right" aria-sort={sortDirectionOf("power")}>
+                    {sortButton("power", tMoves("table.power"), "right")}
+                  </TableHead>
+                  <TableHead className="text-right" aria-sort={sortDirectionOf("accuracy")}>
+                    {sortButton("accuracy", tMoves("table.accuracy"), "right")}
+                  </TableHead>
+                  <TableHead className="text-right" aria-sort={sortDirectionOf("pp")}>
+                    {sortButton("pp", tMoves("table.pp"), "right")}
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

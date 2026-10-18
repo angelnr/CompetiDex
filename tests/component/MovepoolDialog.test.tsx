@@ -33,6 +33,28 @@ const MOVES = [
     priority: 2,
     vgs: ["scarlet-violet"],
   },
+  {
+    slug: "moonblast",
+    names: { es: "Fuerza Lunar", en: "Moonblast" },
+    type: "fairy",
+    category: "special",
+    power: 95,
+    accuracy: 100,
+    pp: 15,
+    priority: 0,
+    vgs: ["scarlet-violet"],
+  },
+  {
+    slug: "play-rough",
+    names: { es: "Carantoña", en: "Play Rough" },
+    type: "fairy",
+    category: "physical",
+    power: 90,
+    accuracy: 90,
+    pp: 10,
+    priority: 0,
+    vgs: ["scarlet-violet"],
+  },
 ];
 
 beforeEach(() => {
@@ -86,5 +108,70 @@ describe("MovepoolDialog", () => {
     const { onSelect } = setup();
     fireEvent.click(screen.getByText("Llama Embrujada"));
     expect(onSelect).toHaveBeenCalledWith("mystical-fire");
+  });
+});
+
+describe("MovepoolDialog: ordenación", () => {
+  const dataRows = () => screen.getAllByRole("row").slice(1);
+
+  it("ordena por poder de mayor a menor y se invierte con un segundo clic", () => {
+    setup();
+    const header = screen.getByRole("button", { name: "Poder" });
+
+    fireEvent.click(header);
+    expect(screen.getByRole("columnheader", { name: "Poder" })).toHaveAttribute(
+      "aria-sort",
+      "descending",
+    );
+    expect(dataRows()[0]!.textContent).toContain("Fuerza Lunar");
+
+    fireEvent.click(header);
+    expect(screen.getByRole("columnheader", { name: "Poder" })).toHaveAttribute(
+      "aria-sort",
+      "ascending",
+    );
+    expect(dataRows()[0]!.textContent).toContain("Llama Embrujada");
+    // El movimiento sin poder (Señuelo) queda siempre al final.
+    expect(dataRows().at(-1)!.textContent).toContain("Señuelo");
+  });
+
+  it("ordena por nombre de A a Z al pulsar la cabecera", () => {
+    setup();
+    fireEvent.click(screen.getByRole("button", { name: "Nombre" }));
+    expect(dataRows()[0]!.textContent).toContain("Carantoña");
+  });
+});
+
+describe("MovepoolDialog: filtros por tipo y categoría", () => {
+  it("filtra por un tipo escrito en el buscador", () => {
+    setup();
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "Hada" } });
+
+    expect(screen.getByText("Fuerza Lunar")).toBeInTheDocument();
+    expect(screen.getByText("Carantoña")).toBeInTheDocument();
+    expect(screen.queryByText("Llama Embrujada")).not.toBeInTheDocument();
+    expect(screen.getByText("Filtros: Hada")).toBeInTheDocument();
+  });
+
+  it("acepta varios tipos separados por comas (OR)", () => {
+    setup();
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "Hada, Fuego" } });
+
+    expect(screen.getByText("Fuerza Lunar")).toBeInTheDocument();
+    expect(screen.getByText("Llama Embrujada")).toBeInTheDocument();
+    expect(screen.queryByText("Señuelo")).not.toBeInTheDocument();
+  });
+
+  it("filtra por categoría y la combina con el tipo", () => {
+    setup();
+    const input = screen.getByRole("textbox");
+
+    fireEvent.change(input, { target: { value: "Físico" } });
+    expect(screen.getByText("Carantoña")).toBeInTheDocument();
+    expect(screen.queryByText("Fuerza Lunar")).not.toBeInTheDocument();
+
+    fireEvent.change(input, { target: { value: "Hada, Especial" } });
+    expect(screen.getByText("Fuerza Lunar")).toBeInTheDocument();
+    expect(screen.queryByText("Carantoña")).not.toBeInTheDocument();
   });
 });

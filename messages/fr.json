@@ -231,6 +231,8 @@
       "removeMove": "Retirer la capacité",
       "moveViewAll": "Voir toutes les capacités",
       "moveViewAllAria": "Voir toutes les capacités de ce Pokémon",
+      "movepoolSearchPlaceholder": "Rechercher par nom, type (Fée) ou catégorie (Physique)…",
+      "movepoolFiltered": "Filtres : {filters}",
       "movepoolTitle": "Capacités de {name}",
       "movepoolCount": "{count} capacités",
       "movepoolShowing": "Affichage de {shown} sur {total} — saisissez pour filtrer",

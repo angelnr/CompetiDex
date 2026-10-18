@@ -231,6 +231,8 @@
       "removeMove": "わざを削除",
       "moveViewAll": "わざをすべて表示",
       "moveViewAllAria": "このポケモンのわざをすべて表示",
+      "movepoolSearchPlaceholder": "名前・タイプ（フェアリー）・分類（物理）で検索…",
+      "movepoolFiltered": "フィルター: {filters}",
       "movepoolTitle": "{name}のわざ",
       "movepoolCount": "わざ {count}個",
       "movepoolShowing": "{total}件中{shown}件を表示 — 入力で絞り込み",
