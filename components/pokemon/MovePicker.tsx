@@ -108,6 +108,9 @@ export function MovePicker({
         englishName: poolQueries[i]?.data
           ? getName(poolQueries[i]!.data!.names, poolQueries[i]!.data!.name, "en")
           : titleCase(slug),
+        // Descripción (tooltip). Se calcula aquí para mantener el índice del
+        // pool emparejado con su query también tras filtrar.
+        effect: getMoveEffectText(poolQueries[i]?.data, locale),
       })),
     [pool, poolQueries, locale],
   );
@@ -244,7 +247,6 @@ export function MovePicker({
             ) : (
               <>
                 {results.map((m, i) => {
-                  const effect = getMoveEffectText(poolQueries[i]?.data, locale);
                   const optionButton = (
                     <button
                       type="button"
@@ -277,14 +279,14 @@ export function MovePicker({
                       role="option"
                       aria-selected={i === activeIndex}
                     >
-                      {effect ? (
+                      {m.effect ? (
                         <Tooltip>
                           <TooltipTrigger asChild>{optionButton}</TooltipTrigger>
                           <TooltipContent
                             side="right"
                             className="max-w-xs whitespace-normal text-xs leading-relaxed"
                           >
-                            {effect}
+                            {m.effect}
                           </TooltipContent>
                         </Tooltip>
                       ) : (
