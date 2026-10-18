@@ -306,11 +306,11 @@ export default function TeamEditorPage() {
 
       {/* Miembros y editor del miembro activo en la misma fila. */}
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-        <section className="rounded-lg border bg-card p-6">
-          <h2 className="mb-4 text-lg font-semibold">
+        <section className="shrink-0 rounded-lg border bg-card p-3">
+          <h2 className="mb-2 text-sm font-semibold">
             {t("members", { count: team.members.length })}
           </h2>
-          <div className="flex flex-wrap gap-3">
+          <div className="grid grid-cols-3 gap-2">
             {Array.from({ length: 6 }).map((_, i) => {
               const member = team.members.find((m) => m.slot === i);
               const isActive = activeSlot === i;
@@ -347,13 +347,14 @@ export default function TeamEditorPage() {
                     setDragOverSlot(null);
                   }}
                   className={cn(
-                    "rounded-lg transition-all",
+                    "rounded-full transition-all",
                     isActive && "ring-2 ring-primary",
                     isDragOver && "bg-muted/60 ring-2 ring-primary/60",
                     isDragging && "opacity-50",
                   )}
                 >
                   <TeamSlot
+                    compact
                     member={member ?? null}
                     onClick={member ? () => setActiveSlot(isActive ? null : i) : undefined}
                     onRemove={
