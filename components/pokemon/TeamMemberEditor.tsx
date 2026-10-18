@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { List, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
@@ -109,6 +109,8 @@ export function TeamMemberEditor({
   const locale = useLocale();
   const localizedName = useLocalizedSpeciesName(member.name);
   const [movepoolSlot, setMovepoolSlot] = useState<number | null>(null);
+  // Refs de los 4 inputs de movimiento para saltar al siguiente con Tab.
+  const moveInputRefs = useRef<Array<HTMLInputElement | null>>([]);
 
   // Stat base por clave, para calcular el total (base + IVs + EVs + naturaleza).
   const baseStats = useMemo(() => {
@@ -442,6 +444,12 @@ export function TeamMemberEditor({
                     value={moveVal}
                     pool={availableMoves}
                     onChange={(slug) => handleMove(i, slug ?? "")}
+                    inputRef={(el) => {
+                      moveInputRefs.current[i] = el;
+                    }}
+                    onTabCommit={
+                      i < 3 ? () => moveInputRefs.current[i + 1]?.focus() : undefined
+                    }
                   />
                 </div>
                 <Button

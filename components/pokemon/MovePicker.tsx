@@ -18,6 +18,10 @@ export interface MovePickerProps {
   pool: string[];
   onChange: (slug: string | null) => void;
   disabled?: boolean;
+  /** Ref del input interno (el padre enfoca el siguiente campo al confirmar). */
+  inputRef?: React.Ref<HTMLInputElement> | undefined;
+  /** Se invoca tras confirmar una sugerencia con Tab. */
+  onTabCommit?: (() => void) | undefined;
 }
 
 const MAX_RESULTS = 200;
@@ -43,7 +47,14 @@ function titleCase(slug: string): string {
  * El movepool (nombres localizados) se descarga bajo demanda al abrir el
  * desplegable y queda cacheado en Redis + TanStack Query.
  */
-export function MovePicker({ value, pool, onChange, disabled = false }: MovePickerProps) {
+export function MovePicker({
+  value,
+  pool,
+  onChange,
+  disabled = false,
+  inputRef,
+  onTabCommit,
+}: MovePickerProps) {
   const t = useTranslations("teams.member");
   const locale = useLocale();
   const [query, setQuery] = useState(value ?? "");
@@ -130,6 +141,7 @@ export function MovePicker({ value, pool, onChange, disabled = false }: MovePick
   // El input se reutiliza con y sin tooltip sin duplicar props.
   const renderInput = () => (
     <Input
+      ref={inputRef}
       type="text"
       value={query}
       onChange={(e) => {
@@ -164,6 +176,15 @@ export function MovePicker({ value, pool, onChange, disabled = false }: MovePick
       if (suggestion) {
         e.preventDefault();
         select(suggestion.slug);
+      }
+    } else if (e.key === "Tab") {
+      // Escribiendo un movimiento, Tab confirma la primera sugerencia (o la
+      // activa con las flechas) y el padre salta al siguiente movimiento.
+      const suggestion = results[activeIndex >= 0 ? activeIndex : 0];
+      if (open && query.trim() !== "" && suggestion) {
+        e.preventDefault();
+        select(suggestion.slug);
+        onTabCommit?.();
       }
     } else if (e.key === "Escape") {
       setOpen(false);
