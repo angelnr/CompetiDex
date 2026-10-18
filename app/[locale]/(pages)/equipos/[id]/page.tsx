@@ -32,7 +32,7 @@ export default function TeamEditorPage() {
   const tNav = useTranslations("nav");
   const params = useParams();
   const teamId = params?.id as string | undefined;
-  const { teams, loaded, addPokemon, removePokemon, updateMember, swapPokemonSlots, setChampions, renameTeam } =
+  const { teams, loaded, addPokemon, removePokemon, updateMember, swapPokemonSlots, replacePokemon, setChampions, renameTeam } =
     useTeams();
   const [activeSlot, setActiveSlot] = useState<number | null>(null);
   const [dragSlot, setDragSlot] = useState<number | null>(null);
@@ -70,6 +70,27 @@ export default function TeamEditorPage() {
   }, [activeSlot, team]);
 
   const { data: activePokemon } = usePokemon(activeMember?.pokemonId);
+
+  /** Cambia la especie del miembro activo conservando su slot (como Showdown). */
+  const handleReplaceById = useCallback(
+    async (pokemonId: number) => {
+      if (!team || !activeMember) return;
+      const res = await fetch(`/api/pokemon?id=${pokemonId}`);
+      if (!res.ok) return;
+      const data: {
+        name: string;
+        sprites: { front_default: string | null };
+        types: { type: { name: string } }[];
+      } = await res.json();
+      await replacePokemon(team.id, activeMember.pokemonId, {
+        pokemonId,
+        name: data.name,
+        sprite: data.sprites.front_default,
+        types: data.types.map((t) => t.type.name),
+      });
+    },
+    [team, activeMember, replacePokemon],
+  );
 
   const handleCopyPaste = useCallback(async () => {
     if (!team) return;
@@ -341,6 +362,10 @@ export default function TeamEditorPage() {
               member={activeMember}
               pokemon={activePokemon}
               champions={!!team.champions}
+              speciesExcludeIds={team.members
+                .filter((m) => m.pokemonId !== activeMember.pokemonId)
+                .map((m) => m.pokemonId)}
+              onSpeciesChange={(id) => void handleReplaceById(id)}
               onChange={(patch) => {
                 updateMember(team.id, activeMember.pokemonId, patch);
               }}

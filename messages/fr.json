@@ -216,6 +216,7 @@
       "ability": "Talent",
       "abilityPlaceholder": "Choisir un talent",
       "hidden": "Caché",
+      "species": "Espèce",
       "nature": "Nature",
       "ivs": "IVs",
       "evs": "EVs",

@@ -216,6 +216,7 @@
       "ability": "Ability",
       "abilityPlaceholder": "Select ability",
       "hidden": "Hidden",
+      "species": "Species",
       "nature": "Nature",
       "ivs": "IVs",
       "evs": "EVs",

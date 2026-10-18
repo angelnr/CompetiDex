@@ -12,6 +12,7 @@ import { ItemPicker } from "@/components/pokemon/ItemPicker";
 import { ItemSprite } from "@/components/pokemon/ItemSprite";
 import { MovePicker } from "@/components/pokemon/MovePicker";
 import { MovepoolDialog } from "@/components/pokemon/MovepoolDialog";
+import { SearchBar } from "@/components/pokemon/SearchBar";
 import {
   Select,
   SelectContent,
@@ -49,6 +50,10 @@ export interface TeamMemberEditorProps {
   onChange: (patch: TeamMemberPatch) => void;
   onRemove: () => void;
   champions: boolean;
+  /** Cambia la especie del miembro activo (resetea el set como Showdown). */
+  onSpeciesChange?: ((pokemonId: number) => void) | undefined;
+  /** IDs ya presentes en el equipo (se excluyen del selector de especie). */
+  speciesExcludeIds?: number[] | undefined;
 }
 
 const STAT_LABEL_KEYS: Record<StatKey, string> = {
@@ -82,6 +87,8 @@ export function TeamMemberEditor({
   onChange,
   onRemove,
   champions = false,
+  onSpeciesChange,
+  speciesExcludeIds,
 }: TeamMemberEditorProps) {
   const t = useTranslations("teams.member");
   const tTeams = useTranslations("teams");
@@ -259,6 +266,20 @@ export function TeamMemberEditor({
           {tTeams("removeMember")}
         </Button>
       </div>
+
+      {/* ── Especie (cambia el Pokémon conservando el slot, como Showdown) ── */}
+      {onSpeciesChange && (
+        <div>
+          <label className="mb-1 block text-xs font-medium">{t("species")}</label>
+          <SearchBar
+            showSprite
+            onSelect={(id) => onSpeciesChange(id)}
+            excludeIds={speciesExcludeIds ?? []}
+            placeholderKey="forTeamPlaceholder"
+            ariaKey="forTeamAria"
+          />
+        </div>
+      )}
 
       {/* ── Nivel ── */}
       <div className="grid grid-cols-2 gap-4">
