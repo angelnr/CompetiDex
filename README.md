@@ -1,155 +1,155 @@
 # CompetiDex
 
-Pokédex competitiva todo-en-uno: consulta fichas completas, compara Pokémon, calcula daños y monta equipos de 6 con un editor estilo Showdown (import/export Poképaste). Next.js 14 sobre [PokeAPI](https://pokeapi.co) con caché Redis, cuentas de usuario y 5 idiomas.
+All-in-one competitive Pokédex: browse complete Pokémon entries, compare species, calculate damage and build 6-mon teams with a Showdown-style editor (Poképaste import/export). Next.js 14 on top of [PokeAPI](https://pokeapi.co) with Redis caching, user accounts and 5 languages.
 
-> Proyecto personal en desarrollo activo.
+> Personal project under active development.
 
-## Funcionalidades
+## Features
 
 ### Pokédex
 
-- **Buscador fuzzy** con navegación por teclado; incluye formas mega, regionales y de género.
-- **Ficha completa** (`/pokemon/:id`): artwork oficial con interruptor shiny, selector de mega, tipos, habilidades con descripción, efectividades defensivas, stats base, cadena evolutiva, movimientos por juego con su efecto, encuentros/localizaciones y calculadora de estadísticas.
-- **Habilidades** con página propia (`/habilidad/:id`).
+- **Fuzzy search** with keyboard navigation; includes mega, regional and gender forms.
+- **Full entry** (`/pokemon/:id`): official artwork with a shiny toggle, mega selector, types, abilities with descriptions, defensive effectiveness, base stats, evolution chain, moves per game with their effect, encounter/location data and a stat calculator.
+- **Abilities** with a dedicated page (`/habilidad/:id`).
 
-### Herramientas
+### Tools
 
-- **Comparador** (`/comparar`): dos Pokémon lado a lado con stats, tipos, habilidades, debilidades y matriz de cobertura.
-- **Calculadora de daño** (`/calculadora`): basada en `@smogon/calc`. Sets manuales o cargados desde tus equipos, nivel, clima, terreno, trampas, pantallas, crítico, boosts, porcentaje de daño y KO estimado. La antigua página de efectividades redirige aquí.
+- **Comparator** (`/comparar`): two Pokémon side by side with stats, types, abilities, weaknesses and a defensive coverage matrix.
+- **Damage calculator** (`/calculadora`): built on `@smogon/calc`. Manual sets or sets loaded from your teams, level, weather, terrain, hazards, screens, critical hits, boosts, damage percentage and estimated KO. The old effectiveness page redirects here.
 
-### Constructor de equipos
+### Team builder
 
-- **6 slots** con reordenación por drag & drop y modo **Estándar** o **Champions** (límites de EV propios).
-- **Set completo por Pokémon**: objeto con descripción, habilidad, naturaleza (muestra qué stat sube/baja y la colorea), IVs, sliders de EV con la **stat total calculada** (base + IVs + EVs + naturaleza) y 4 movimientos.
-- **Buscador de movimientos** con nombres localizados, tooltip con el efecto, `Tab` para confirmar y saltar al siguiente, y tabla completa (“ver todos”) **ordenable por cualquier columna** y **filtrable por tipo/categoría** (`Hada, Eléctrico`, `Físico`…).
-- **Cambio de especie** dentro del editor sin tener que quitar y volver a añadir.
-- **Exportar / Importar Poképaste** (formato Showdown), con avisos de lo que no se reconoce.
-- **Persistencia**: invitado en `localStorage`; con cuenta en base de datos (Better Auth, email + contraseña). Carpetas jerárquicas (3 niveles), renombrar/mover/borrar equipos y carpetas, e importación de los equipos locales al iniciar sesión.
+- **6 slots** with drag-and-drop reordering and **Standard** or **Champions** mode (its own EV limits).
+- **Full set per Pokémon**: item with description, ability, nature (shows which stat goes up or down and colour-codes it), IVs, EV sliders with the **computed stat total** (base + IVs + EVs + nature) and 4 moves.
+- **Move search** with localized names, effect tooltip, `Tab` to confirm and jump to the next move, and a full table (“view all”) **sortable by any column** and **filterable by type/category** (e.g. `Fairy, Electric` or `Physical`; names are matched in the UI language, so `Hada`/`Físico` work too).
+- **Species change** inside the editor without removing and re-adding the Pokémon.
+- **Poképaste export/import** (Showdown format), warning about anything it cannot recognise.
+- **Persistence**: guests in `localStorage`; signed-in users in the database (Better Auth, email + password). Nested folders (3 levels), rename/move/delete teams and folders, and importing local teams when you sign in.
 
-### Transversal
+### Cross-cutting
 
-- 5 idiomas con `next-intl`: español, inglés, francés, alemán y japonés.
-- Tema claro/oscuro, diseño responsive y accesibilidad (labels, `aria`, navegación por teclado).
-- SSR/ISR para SEO y caché Redis cache-aside para minimizar llamadas a PokeAPI (24 h fichas, 7 d tipos/movimientos/objetos).
-- Nombres localizados con correcciones curadas cuando PokeAPI está desactualizado (p. ej. _Ice Shard_ → “Canto Helado”) y diccionario offline de ubicaciones para `es`/`ja`.
+- 5 languages through `next-intl`: Spanish, English, French, German and Japanese.
+- Light/dark theme, responsive layout and accessibility (labels, `aria`, keyboard navigation).
+- SSR/ISR for SEO plus Redis cache-aside to minimise PokeAPI calls (24 h for entries, 7 d for types/moves/items).
+- Localized names with curated fixes when PokeAPI is outdated (e.g. _Ice Shard_ shows as “Canto Helado” in Spanish) and an offline location dictionary for `es`/`ja`.
 
 ## Stack
 
-| Capa            | Tecnología                                          |
-| --------------- | --------------------------------------------------- |
-| Framework       | Next.js 14 (App Router)                             |
-| Lenguaje        | TypeScript strict                                   |
-| Estilos         | Tailwind CSS + shadcn/ui + lucide-react             |
-| Data fetching   | TanStack Query                                      |
-| Caché servidor  | Redis 7 (`ioredis`)                                 |
-| Base de datos   | Prisma + SQLite (preparado para Postgres)           |
-| Autenticación   | Better Auth (email + contraseña)                    |
-| Validación      | Zod                                                 |
-| Cálculo de daño | `@smogon/calc`                                      |
-| i18n            | `next-intl` (es/en/fr/de/ja)                        |
-| Testing         | Vitest + Testing Library + Playwright               |
-| Contenedores    | Docker multi-stage + docker-compose                 |
-| CI/CD           | GitHub Actions (lint, typecheck, tests, build, e2e) |
+| Layer          | Technology                                          |
+| -------------- | --------------------------------------------------- |
+| Framework      | Next.js 14 (App Router)                             |
+| Language       | TypeScript strict                                   |
+| Styling        | Tailwind CSS + shadcn/ui + lucide-react             |
+| Data fetching  | TanStack Query                                      |
+| Server cache   | Redis 7 (`ioredis`)                                 |
+| Database       | Prisma + SQLite (Postgres-ready)                    |
+| Authentication | Better Auth (email + password)                      |
+| Validation     | Zod                                                 |
+| Damage calc    | `@smogon/calc`                                      |
+| i18n           | `next-intl` (es/en/fr/de/ja)                        |
+| Testing        | Vitest + Testing Library + Playwright               |
+| Containers     | Docker multi-stage + docker-compose                 |
+| CI/CD          | GitHub Actions (lint, typecheck, tests, build, e2e) |
 
-## Estructura del proyecto
+## Project structure
 
 ```
 app/
 ├── [locale]/(pages)/          # home, pokemon/:id, habilidad/:id, comparar,
 │                              # calculadora, equipos, equipos/:id, acceder
-├── api/pokemon/               # proxy cacheado a PokeAPI
-├── api/teams/ · api/folders/  # CRUD de equipos y carpetas
+├── api/pokemon/               # cached proxy to PokeAPI
+├── api/teams/ · api/folders/  # teams and folders CRUD
 └── api/auth/                  # Better Auth
 components/
-├── pokemon/                   # ficha, buscador, comparador, editor de equipo…
-├── teams/                     # carpetas, importación, diálogos
-├── calc/                      # calculadora de daño
+├── pokemon/                   # entry, search bar, comparator, team editor…
+├── teams/                     # folders, import, dialogs
+├── calc/                      # damage calculator
 └── ui/                        # shadcn/ui
 lib/
-├── pokeapi.ts · queries.ts    # cliente tipado + hooks de datos
-├── moveset.ts · movepool-*    # movepool y orden/filtros de la tabla
-├── team.ts · team-schema.ts   # modelo y validación de equipos
-├── pokepaste.ts               # export/import Showdown
-├── calc/                      # motor de la calculadora
-└── server/                    # acceso a datos (Prisma)
+├── pokeapi.ts · queries.ts    # typed client + data hooks
+├── moveset.ts · movepool-*    # movepool and table sorting/filtering
+├── team.ts · team-schema.ts   # team model and validation
+├── pokepaste.ts               # Showdown export/import
+├── calc/                      # calculator engine
+└── server/                    # data access (Prisma)
 hooks/ · messages/ · prisma/ · tests/ (component + e2e)
 ```
 
-## Requisitos
+## Requirements
 
-- Node.js 20 LTS y pnpm 9 (`npm i -g pnpm@9`).
-- Docker + Docker Compose (recomendado para producción).
-- Redis es opcional en desarrollo: si no está disponible, se salta la caché.
+- Node.js 20 LTS and pnpm 9 (`npm i -g pnpm@9`).
+- Docker + Docker Compose (recommended for production).
+- Redis is optional in development: if it is not available, caching is skipped.
 
-## Setup rápido (sin Docker)
+## Quick start (no Docker)
 
 ```bash
 git clone git@github.com:angelnr/CompetiDex.git
 cd CompetiDex
-cp .env.example .env      # ajusta BETTER_AUTH_SECRET
+cp .env.example .env      # set BETTER_AUTH_SECRET
 pnpm install
 pnpm prisma generate
-pnpm prisma migrate dev   # crea SQLite con usuarios, equipos y carpetas
+pnpm prisma migrate dev   # creates SQLite with users, teams and folders
 pnpm dev
 ```
 
-La app arranca en `http://localhost:3100`. Sin Redis sigue funcionando (las peticiones van directas a PokeAPI).
+The app runs at `http://localhost:3100`. It keeps working without Redis (requests go straight to PokeAPI).
 
-## Setup con Docker (recomendado)
+## Docker setup (recommended)
 
 ```bash
-cp .env.example .env      # BETTER_AUTH_SECRET es obligatorio
+cp .env.example .env      # BETTER_AUTH_SECRET is required
 docker compose up --build
 ```
 
-- App: `http://localhost:3001` (configurable con `WEB_PORT`).
-- Redis: interno del compose (sin puerto publicado).
-- SQLite persiste en el volumen `sqlite-data`; el servicio one-shot `migrate` aplica `prisma migrate deploy` antes de arrancar la app.
+- App: `http://localhost:3001` (configurable through `WEB_PORT`).
+- Redis: internal to the compose network (no published port).
+- SQLite persists in the `sqlite-data` volume; the one-shot `migrate` service runs `prisma migrate deploy` before the app starts.
 
 ## Scripts
 
 ```bash
-pnpm dev          # desarrollo (Next en :3100)
-pnpm build        # build de producción
-pnpm start        # servidor de producción
+pnpm dev          # development (Next on :3100)
+pnpm build        # production build
+pnpm start        # production server
 pnpm lint         # ESLint (next/core-web-vitals)
 pnpm typecheck    # tsc --noEmit
-pnpm test         # Vitest: unitarios + componentes
-pnpm test:e2e     # Playwright (levanta el server si hace falta)
+pnpm test         # Vitest: unit + component tests
+pnpm test:e2e     # Playwright (starts the server if needed)
 pnpm format       # Prettier
 ```
 
-## Variables de entorno
+## Environment variables
 
-| Variable               | Descripción                                  | Default                     |
-| ---------------------- | -------------------------------------------- | --------------------------- |
-| `NODE_ENV`             | `development` / `production`                 | `development`               |
-| `PORT`                 | Puerto de Next.js en local                   | `3100`                      |
-| `WEB_PORT`             | Puerto publicado por docker-compose          | `3001`                      |
-| `DATABASE_URL`         | URL de Prisma                                | `file:./dev.db`             |
-| `REDIS_URL`            | Conexión a Redis (opcional en dev)           | `redis://localhost:6379`    |
-| `POKEAPI_BASE`         | Base URL de PokeAPI                          | `https://pokeapi.co/api/v2` |
-| `POKEAPI_CACHE_TTL_S`  | TTL por defecto de caché Redis (segundos)    | `86400`                     |
-| `BETTER_AUTH_SECRET`   | Secreto de firma (`openssl rand -base64 32`) | — (obligatorio)             |
-| `BETTER_AUTH_URL`      | URL pública de la app                        | `http://localhost:3100`     |
-| `NEXT_PUBLIC_APP_NAME` | Nombre mostrado en la UI                     | `CompetiDex`                |
+| Variable               | Description                                | Default                     |
+| ---------------------- | ------------------------------------------ | --------------------------- |
+| `NODE_ENV`             | `development` / `production`               | `development`               |
+| `PORT`                 | Next.js port locally                       | `3100`                      |
+| `WEB_PORT`             | Port published by docker-compose           | `3001`                      |
+| `DATABASE_URL`         | Prisma URL                                 | `file:./dev.db`             |
+| `REDIS_URL`            | Redis connection (optional in dev)         | `redis://localhost:6379`    |
+| `POKEAPI_BASE`         | PokeAPI base URL                           | `https://pokeapi.co/api/v2` |
+| `POKEAPI_CACHE_TTL_S`  | Default Redis cache TTL (seconds)          | `86400`                     |
+| `BETTER_AUTH_SECRET`   | Signing secret (`openssl rand -base64 32`) | — (required)                |
+| `BETTER_AUTH_URL`      | Public app URL                             | `http://localhost:3100`     |
+| `NEXT_PUBLIC_APP_NAME` | Name shown in the UI                       | `CompetiDex`                |
 
-Solo se commitea `.env.example`; nunca subas un `.env` real.
+Only `.env.example` is committed; never push a real `.env`.
 
-## Testing y CI
+## Testing and CI
 
-- **Unitarios**: `lib/*.test.ts` (parseo de PokeAPI, equipos, Poképaste, filtros, calculadora…).
-- **Componentes**: `tests/component/` con Testing Library.
-- **E2E**: `tests/e2e/` con Playwright (home, ficha, calculadora, auth).
-- **CI** (`.github/workflows/ci.yml`): lint, typecheck, tests, build de producción y E2E en cada push/PR a `main`.
-- Husky + lint-staged ejecutan lint/typecheck y commitlint valida Conventional Commits.
+- **Unit**: `lib/*.test.ts` (PokeAPI parsing, teams, Poképaste, table filtering, calculator…).
+- **Component**: `tests/component/` with Testing Library.
+- **E2E**: `tests/e2e/` with Playwright (home, Pokémon entry, calculator, auth).
+- **CI** (`.github/workflows/ci.yml`): lint, typecheck, tests, production build and E2E on every push/PR to `main`.
+- Husky + lint-staged run lint/typecheck, and commitlint enforces Conventional Commits.
 
-## Estado del proyecto
+## Project status
 
-Completado: capa de datos PokeAPI + caché, buscador y fichas, comparador, constructor de equipos con cuenta y carpetas, calculadora de daño, internacionalización y CI.
+Done: PokeAPI data layer + caching, search and Pokémon entries, comparator, team builder with accounts and folders, damage calculator, internationalization and CI.
 
-Pendiente / futuro: favoritos persistentes, comparador ampliado y más formatos de importación.
+Pending / future: persistent favourites, an expanded comparator and more import formats.
 
-## Licencia y créditos
+## License and credits
 
-[MIT](LICENSE) © 2026 Angel_NR. Datos y sprites de [PokeAPI](https://pokeapi.co) y [Pokémon Showdown](https://pokemonshowdown.com) (cálculo de daño). Pokémon es una marca de Nintendo / Game Freak / The Pokémon Company; este proyecto no está afiliado a ellos.
+[MIT](LICENSE) © 2026 Angel_NR. Data and sprites from [PokeAPI](https://pokeapi.co) and [Pokémon Showdown](https://pokemonshowdown.com) (damage calculation). Pokémon is a trademark of Nintendo / Game Freak / The Pokémon Company; this project is not affiliated with them.
