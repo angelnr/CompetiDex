@@ -67,18 +67,12 @@ const STAT_LABEL_KEYS: Record<StatKey, string> = {
 
 /**
  * Clases de color por stat según la naturaleza: rojo si sube, azul si baja
- * (etiqueta, IV, slider de EV y total).
+ * (etiqueta, IV y total).
  */
 function natureClasses(relation: "up" | "down" | "neutral"): string {
   if (relation === "up") return "text-red-500 dark:text-red-400";
   if (relation === "down") return "text-blue-500 dark:text-blue-400";
   return "";
-}
-
-function natureSliderAccent(relation: "up" | "down" | "neutral"): string {
-  if (relation === "up") return "accent-red-500 dark:accent-red-400";
-  if (relation === "down") return "accent-blue-500 dark:accent-blue-400";
-  return "accent-primary";
 }
 
 export function TeamMemberEditor({
@@ -413,7 +407,7 @@ export function TeamMemberEditor({
                     step={1}
                     value={Math.min(ev, maxEvPerStat)}
                     onChange={(e) => handleEV(k, e.target.value)}
-                    className={cn("h-1.5 w-full cursor-pointer", natureSliderAccent(relation))}
+                    className="h-1.5 w-full cursor-pointer accent-primary"
                     aria-label={`EV ${k}`}
                   />
                   <span className="w-7 shrink-0 text-right font-mono text-[11px] text-muted-foreground">
