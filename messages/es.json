@@ -220,6 +220,7 @@
       "ivs": "IVs",
       "evs": "EVs",
       "evOver": "¡EVs totales superan {max}!",
+      "statTotal": "Total",
       "moves": "Movimientos",
       "movePlaceholder": "Escribe un movimiento…",
       "moveSearch": "Buscar movimiento…",

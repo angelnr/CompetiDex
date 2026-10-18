@@ -220,6 +220,7 @@
       "ivs": "IVs",
       "evs": "EVs",
       "evOver": "EVs total > {max} !",
+      "statTotal": "Total",
       "moves": "Capacités",
       "movePlaceholder": "Tapez un nom de capacité…",
       "moveSearch": "Rechercher une capacité…",

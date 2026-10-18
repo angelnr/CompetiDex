@@ -220,6 +220,7 @@
       "ivs": "個体値",
       "evs": "努力値",
       "evOver": "努力値の合計が{max}を超えています！",
+      "statTotal": "合計",
       "moves": "わざ",
       "movePlaceholder": "わざ名を入力…",
       "moveSearch": "わざを検索…",

@@ -220,6 +220,7 @@
       "ivs": "ISs",
       "evs": "FPs",
       "evOver": "Gesamt-FPs über {max}!",
+      "statTotal": "Gesamt",
       "moves": "Attacken",
       "movePlaceholder": "Attacke eingeben…",
       "moveSearch": "Attacke suchen…",

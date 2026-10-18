@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import Image from "next/image";
 import { List, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
@@ -22,6 +22,7 @@ import {
 import type { TeamMember, TeamMemberPatch } from "@/lib/team";
 import {
   STAT_KEYS,
+  MAX_EV_PER_STAT,
   MAX_EV_TOTAL,
   MAX_EV_TOTAL_CHAMPIONS,
   MAX_EV_PER_STAT_CHAMPIONS,
@@ -30,6 +31,7 @@ import {
 import type { Pokemon } from "@/lib/pokeapi";
 import {
   baseSpeciesSlug,
+  computeStat,
   formatPokedexId,
   getName,
   getPixelSpriteById,
@@ -37,8 +39,9 @@ import {
 } from "@/lib/pokemon-utils";
 import { useLocalizedSpeciesName } from "@/hooks/useLocalizedSpeciesName";
 import { findItem, localizeItem } from "@/lib/items";
-import { NATURES } from "@/lib/natures";
+import { NATURES, type StatKey } from "@/lib/natures";
 import { useAbilities, useItem, useNatures, usePokemon } from "@/lib/queries";
+import { cn } from "@/lib/utils";
 
 export interface TeamMemberEditorProps {
   member: TeamMember;
@@ -48,7 +51,7 @@ export interface TeamMemberEditorProps {
   champions: boolean;
 }
 
-const STAT_LABEL_KEYS: Record<string, string> = {
+const STAT_LABEL_KEYS: Record<StatKey, string> = {
   hp: "hp",
   attack: "atk",
   defense: "def",
@@ -56,6 +59,22 @@ const STAT_LABEL_KEYS: Record<string, string> = {
   "special-defense": "spd",
   speed: "spe",
 };
+
+/**
+ * Clases de color por stat según la naturaleza: rojo si sube, azul si baja
+ * (etiqueta, IV, slider de EV y total).
+ */
+function natureClasses(relation: "up" | "down" | "neutral"): string {
+  if (relation === "up") return "text-red-500 dark:text-red-400";
+  if (relation === "down") return "text-blue-500 dark:text-blue-400";
+  return "";
+}
+
+function natureSliderAccent(relation: "up" | "down" | "neutral"): string {
+  if (relation === "up") return "accent-red-500 dark:accent-red-400";
+  if (relation === "down") return "accent-blue-500 dark:accent-blue-400";
+  return "accent-primary";
+}
 
 export function TeamMemberEditor({
   member,
@@ -66,7 +85,7 @@ export function TeamMemberEditor({
 }: TeamMemberEditorProps) {
   const t = useTranslations("teams.member");
   const tTeams = useTranslations("teams");
-  const maxEvPerStat = champions ? MAX_EV_PER_STAT_CHAMPIONS : 252;
+  const maxEvPerStat = champions ? MAX_EV_PER_STAT_CHAMPIONS : MAX_EV_PER_STAT;
   const maxEvTotal = champions ? MAX_EV_TOTAL_CHAMPIONS : MAX_EV_TOTAL;
   const evTotal = totalEvs(
     member.evs ?? {
@@ -83,6 +102,25 @@ export function TeamMemberEditor({
   const locale = useLocale();
   const localizedName = useLocalizedSpeciesName(member.name);
   const [movepoolSlot, setMovepoolSlot] = useState<number | null>(null);
+
+  // Stat base por clave, para calcular el total (base + IVs + EVs + naturaleza).
+  const baseStats = useMemo(() => {
+    const map: Partial<Record<StatKey, number>> = {};
+    for (const s of pokemon.stats) map[s.stat.name as StatKey] = s.base_stat;
+    return map;
+  }, [pokemon.stats]);
+
+  const selectedNature = useMemo(
+    () => NATURES.find((n) => n.name === (member.nature ?? "hardy")),
+    [member.nature],
+  );
+
+  /** Relación de cada stat con la naturaleza activa (rojo sube, azul baja). */
+  const statRelation = (stat: StatKey): "up" | "down" | "neutral" => {
+    if (selectedNature?.increased === stat) return "up";
+    if (selectedNature?.decreased === stat) return "down";
+    return "neutral";
+  };
 
   const abilities = useMemo(
     () =>
@@ -110,6 +148,14 @@ export function TeamMemberEditor({
   const natureLabel = (n: (typeof NATURES)[number], i: number): string => {
     const data = natureQueries[i]?.data;
     return data ? getName(data.names, n.name, locale) : n.name;
+  };
+
+  /** Sufijo "(+atk / -spa)" con los cambios de la naturaleza. */
+  const natureHint = (n: (typeof NATURES)[number]): string => {
+    const parts: string[] = [];
+    if (n.increased) parts.push(`+${STAT_LABEL_KEYS[n.increased]}`);
+    if (n.decreased) parts.push(`-${STAT_LABEL_KEYS[n.decreased]}`);
+    return parts.length > 0 ? ` (${parts.join(" / ")})` : "";
   };
 
   // Descripción localizada del objeto equipado. localizeItem usa el texto del
@@ -156,18 +202,21 @@ export function TeamMemberEditor({
     if (!isNaN(n)) patch({ level: Math.min(Math.max(n, 1), 100) });
   };
 
-  const handleIV = (stat: string, val: string) => {
+  const handleIV = (stat: StatKey, val: string) => {
     const n = parseInt(val, 10);
     if (isNaN(n)) return;
     const clamped = Math.min(Math.max(n, 0), 31);
     patch({ ivs: { ...member.ivs!, [stat]: clamped } });
   };
 
-  const handleEV = (stat: string, val: string) => {
+  /** Slider de EVs: tope por stat y por total (sin robar EVs a otras stats). */
+  const handleEV = (stat: StatKey, val: string) => {
     const n = parseInt(val, 10);
     if (isNaN(n)) return;
-    const clamped = Math.min(Math.max(n, 0), maxEvPerStat);
-    patch({ evs: { ...member.evs!, [stat]: clamped } });
+    const current = member.evs?.[stat] ?? 0;
+    const room = Math.max(0, maxEvTotal - (evTotal - current));
+    const next = Math.min(Math.max(n, 0), maxEvPerStat, room);
+    patch({ evs: { ...member.evs!, [stat]: next } });
   };
 
   const handleMove = (index: number, value: string) => {
@@ -277,39 +326,19 @@ export function TeamMemberEditor({
             {NATURES.map((n, i) => (
               <SelectItem key={n.name} value={n.name}>
                 {natureLabel(n, i)}
+                {natureHint(n)}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
-      {/* ── IVs ── */}
-      <div>
-        <label className="mb-1 block text-xs font-medium">{t("ivs")}</label>
-        <div className="grid grid-cols-6 gap-2">
-          {STAT_KEYS.map((k) => (
-            <div key={k}>
-              <span className="block text-center text-[10px] text-muted-foreground">
-                {STAT_LABEL_KEYS[k]}
-              </span>
-              <Input
-                type="number"
-                min={0}
-                max={31}
-                value={member.ivs?.[k] ?? 31}
-                onChange={(e) => handleIV(k, e.target.value)}
-                className="h-8 text-center text-xs"
-                aria-label={`IV ${k}`}
-              />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ── EVs ── */}
+      {/* ── IVs, EVs (slider) y total calculado por stat ── */}
       <div>
         <div className="mb-1 flex items-center justify-between">
-          <label className="text-xs font-medium">{t("evs")}</label>
+          <label className="text-xs font-medium">
+            {t("ivs")} / {t("evs")}
+          </label>
           <span
             className={`text-xs ${evOver ? "font-bold text-destructive" : "text-muted-foreground"}`}
           >
@@ -319,23 +348,63 @@ export function TeamMemberEditor({
         {evOver && (
           <p className="mb-1 text-[10px] text-destructive">{t("evOver", { max: maxEvTotal })}</p>
         )}
-        <div className="grid grid-cols-6 gap-2">
-          {STAT_KEYS.map((k) => (
-            <div key={k}>
-              <span className="block text-center text-[10px] text-muted-foreground">
-                {STAT_LABEL_KEYS[k]}
-              </span>
-              <Input
-                type="number"
-                min={0}
-                max={maxEvPerStat}
-                value={member.evs?.[k] ?? 0}
-                onChange={(e) => handleEV(k, e.target.value)}
-                className="h-8 text-center text-xs"
-                aria-label={`EV ${k}`}
-              />
-            </div>
-          ))}
+        <div className="grid grid-cols-[2.5rem_3.25rem_minmax(0,1fr)_2.75rem] items-center gap-2">
+          <span aria-hidden />
+          <span className="text-center text-[10px] text-muted-foreground">{t("ivs")}</span>
+          <span className="text-[10px] text-muted-foreground">{t("evs")}</span>
+          <span className="text-right text-[10px] text-muted-foreground">{t("statTotal")}</span>
+
+          {STAT_KEYS.map((k) => {
+            const relation = statRelation(k);
+            const base = baseStats[k] ?? 0;
+            const iv = member.ivs?.[k] ?? 31;
+            const ev = member.evs?.[k] ?? 0;
+            const natureMultiplier = relation === "up" ? 1.1 : relation === "down" ? 0.9 : 1;
+            const total = computeStat({
+              base,
+              iv,
+              ev,
+              level: member.level ?? 100,
+              isHp: k === "hp",
+              natureMultiplier,
+            });
+            return (
+              <Fragment key={k}>
+                <span className={cn("text-xs font-medium", natureClasses(relation))}>
+                  {STAT_LABEL_KEYS[k]}
+                </span>
+                <Input
+                  type="number"
+                  min={0}
+                  max={31}
+                  value={iv}
+                  onChange={(e) => handleIV(k, e.target.value)}
+                  className={cn("h-8 text-center text-xs", natureClasses(relation))}
+                  aria-label={`IV ${k}`}
+                />
+                <div className="flex min-w-0 items-center gap-2">
+                  <input
+                    type="range"
+                    min={0}
+                    max={maxEvPerStat}
+                    step={1}
+                    value={Math.min(ev, maxEvPerStat)}
+                    onChange={(e) => handleEV(k, e.target.value)}
+                    className={cn("h-1.5 w-full cursor-pointer", natureSliderAccent(relation))}
+                    aria-label={`EV ${k}`}
+                  />
+                  <span className="w-7 shrink-0 text-right font-mono text-[11px] text-muted-foreground">
+                    {ev}
+                  </span>
+                </div>
+                <span
+                  className={cn("text-right font-mono text-sm font-semibold", natureClasses(relation))}
+                >
+                  {total}
+                </span>
+              </Fragment>
+            );
+          })}
         </div>
       </div>
 
