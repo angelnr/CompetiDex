@@ -9,7 +9,7 @@ services:
     container_name: competidex-app
     restart: unless-stopped
     ports:
-      - "${WEB_PORT:-3001}:3100"
+      - "127.0.0.1:${WEB_PORT:-3001}:3100"
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
