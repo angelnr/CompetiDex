@@ -75,6 +75,7 @@ function StageNode({ species }: { species: { name: string; url: string } }) {
             className="object-contain transition-transform group-hover:scale-110"
             sizes="96px"
             loading="lazy"
+            unoptimized
           />
         )}
       </div>

@@ -79,6 +79,7 @@ export function AbilityDetail({ ability, locale = "es" }: AbilityDetailProps) {
                     width={32}
                     height={32}
                     className="size-8 shrink-0 object-contain"
+                    unoptimized
                   />
                   <Link
                     href={`/pokemon/${id}`}

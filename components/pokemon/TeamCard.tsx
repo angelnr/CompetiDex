@@ -154,6 +154,7 @@ export function TeamCard({ team, onDelete, onRename, onMove }: TeamCardProps) {
                     width={48}
                     height={48}
                     className="size-12 object-contain"
+                    unoptimized
                   />
                 ) : (
                   <span className="text-[0.5rem] text-muted-foreground/50">#{i + 1}</span>

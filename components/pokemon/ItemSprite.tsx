@@ -33,6 +33,7 @@ export function ItemSprite({ slug, alt, className }: ItemSpriteProps) {
       height={64}
       onError={() => setFailed(true)}
       className={cls}
+      unoptimized
     />
   );
 }

@@ -258,6 +258,7 @@ export function SearchBar({
                       width={32}
                       height={32}
                       className="size-8 shrink-0 object-contain"
+                      unoptimized
                     />
                   )}
                   <span className="font-mono text-xs text-muted-foreground">

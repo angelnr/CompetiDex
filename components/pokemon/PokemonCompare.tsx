@@ -189,6 +189,7 @@ function CompareColumn({
               width={128}
               height={128}
               className="size-32 object-contain"
+              unoptimized
             />
           </div>
         )}

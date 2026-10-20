@@ -101,6 +101,7 @@ export function AddToTeamButton({ pokemonId, name, sprite, types }: AddToTeamBut
                                 width={24}
                                 height={24}
                                 className="size-full object-contain"
+                                unoptimized
                               />
                             )}
                           </div>

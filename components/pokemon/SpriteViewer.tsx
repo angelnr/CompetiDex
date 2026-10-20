@@ -35,7 +35,15 @@ export function SpriteViewer({ name, artwork, artworkShiny, defaultSprite }: Spr
     <div className="flex flex-col items-center gap-3">
       <div className="relative flex size-64 items-center justify-center">
         {src ? (
-          <Image src={src} alt={alt} fill className="object-contain" priority sizes="256px" />
+          <Image
+            src={src}
+            alt={alt}
+            fill
+            className="object-contain"
+            priority
+            sizes="256px"
+            unoptimized
+          />
         ) : (
           <span className="text-sm text-muted-foreground">{t("noSprite")}</span>
         )}

@@ -105,6 +105,7 @@ export function TeamSlot({ member, onRemove, onClick, compact = false }: TeamSlo
             height={48}
             className="size-12 object-contain"
             draggable={false}
+            unoptimized
           />
         )
       ) : onClick ? (
@@ -117,6 +118,7 @@ export function TeamSlot({ member, onRemove, onClick, compact = false }: TeamSlo
               height={48}
               className="size-12 object-contain"
               draggable={false}
+              unoptimized
             />
           )}
           <span className="text-[0.6rem] font-medium leading-tight">{localizedName}</span>
@@ -134,6 +136,7 @@ export function TeamSlot({ member, onRemove, onClick, compact = false }: TeamSlo
               height={48}
               className="size-12 object-contain"
               draggable={false}
+              unoptimized
             />
           )}
           <span className="text-[0.6rem] font-medium leading-tight">{localizedName}</span>

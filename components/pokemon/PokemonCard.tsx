@@ -79,6 +79,7 @@ export function PokemonCard({ resource, eagerId }: PokemonCardProps) {
               height={120}
               className="relative size-28 object-contain transition-transform group-hover:scale-105"
               loading="lazy"
+              unoptimized
             />
           )}
         </CardContent>
