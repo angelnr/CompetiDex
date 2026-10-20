@@ -100,6 +100,35 @@ describe("localStorageTeamStorage · carpetas y migración v3", () => {
     expect(folders).toEqual([]);
   });
 
+  it("migra v3 poniendo a nivel 50 los equipos Champions", async () => {
+    localStorage.setItem(
+      "competidex:teams",
+      JSON.stringify({
+        version: 3,
+        teams: [
+          {
+            ...TEAM,
+            champions: true,
+            members: [
+              {
+                pokemonId: 25,
+                name: "pikachu",
+                slot: 0,
+                sprite: null,
+                types: ["electric"],
+                level: 100,
+              },
+            ],
+          },
+        ],
+        folders: [],
+      }),
+    );
+
+    const teams = await localStorageTeamStorage.list();
+    expect(teams[0]!.members[0]!.level).toBe(50);
+  });
+
   it("guarda y lista carpetas", async () => {
     await localStorageTeamStorage.saveFolder(FOLDER);
     expect(await localStorageTeamStorage.listFolders()).toEqual([FOLDER]);

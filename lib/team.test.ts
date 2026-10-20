@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
   addMember,
+  applyChampionsLevel,
+  CHAMPIONS_LEVEL,
   DEFAULT_EVS,
   DEFAULT_IVS,
   findFreeSlot,
@@ -184,6 +186,31 @@ describe("normalizeMember", () => {
     expect(n.nature).toBe("jolly");
     expect(n.moves).toEqual(["thunderbolt"]);
     expect(n.ivs).toEqual(DEFAULT_IVS);
+  });
+});
+
+describe("applyChampionsLevel", () => {
+  it("fuerza el nivel 50 a todos los miembros en Champions", () => {
+    const members = applyChampionsLevel(
+      [
+        { ...pikachu, level: 100 },
+        { ...bulbasaur, level: 75 },
+      ],
+      true,
+    );
+
+    expect(members.map((m) => m.level)).toEqual([CHAMPIONS_LEVEL, CHAMPIONS_LEVEL]);
+  });
+
+  it("no modifica el nivel fuera de Champions", () => {
+    const members = [{ ...pikachu, level: 100 }];
+    expect(applyChampionsLevel(members, false)).toBe(members);
+  });
+
+  it("conserva la referencia de los miembros que ya están a 50", () => {
+    const member = { ...pikachu, level: CHAMPIONS_LEVEL };
+    const [result] = applyChampionsLevel([member], true);
+    expect(result).toBe(member);
   });
 });
 

@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Team, TeamMember, TeamMemberPatch } from "@/lib/team";
 import {
   addMember,
+  applyChampionsLevel,
+  CHAMPIONS_LEVEL,
   DEFAULT_EVS,
   generateTeamId,
   normalizeMember,
@@ -87,8 +89,11 @@ export interface UseTeamsResult {
  * `/api/folders` (usuario con sesión). Ambos implementan la interfaz
  * `TeamStorage`, por lo que la lógica es idéntica. El storage efectivo cambia
  * al iniciar/cerrar sesión, forzando una recarga de `list()`.
+ *
+ * Si se pasa `teamId`, solo se carga ese equipo (y se omiten las carpetas):
+ * el editor no necesita descargar la lista completa.
  */
-export function useTeams(storage?: TeamStorage): UseTeamsResult {
+export function useTeams(storage?: TeamStorage, teamId?: string): UseTeamsResult {
   const { data: sessionData } = useSession();
   const effectiveStorage: TeamStorage = useMemo(
     () => storage ?? (sessionData?.user ? remoteTeamStorage : localStorageTeamStorage),
@@ -102,12 +107,18 @@ export function useTeams(storage?: TeamStorage): UseTeamsResult {
   const reload = useCallback(async () => {
     setLoaded(false);
     try {
-      const [teamList, folderList] = await Promise.all([
-        effectiveStorage.list(),
-        effectiveStorage.listFolders(),
-      ]);
-      setTeams(teamList);
-      setFolders(folderList);
+      if (teamId) {
+        const team = await effectiveStorage.get(teamId);
+        setTeams(team ? [team] : []);
+        setFolders([]);
+      } else {
+        const [teamList, folderList] = await Promise.all([
+          effectiveStorage.list(),
+          effectiveStorage.listFolders(),
+        ]);
+        setTeams(teamList);
+        setFolders(folderList);
+      }
     } catch (err) {
       console.error("[teams] error al cargar equipos:", err);
       setTeams([]);
@@ -115,7 +126,7 @@ export function useTeams(storage?: TeamStorage): UseTeamsResult {
     } finally {
       setLoaded(true);
     }
-  }, [effectiveStorage]);
+  }, [effectiveStorage, teamId]);
 
   useEffect(() => {
     void reload();
@@ -192,12 +203,15 @@ export function useTeams(storage?: TeamStorage): UseTeamsResult {
       const team = teams.find((t) => t.id === teamId);
       if (!team) return { ok: false, error: "Equipo no encontrado" };
 
-      const result = addMember(team.members, member);
+      const memberToAdd: Omit<TeamMember, "slot"> = team.champions
+        ? { ...member, level: CHAMPIONS_LEVEL }
+        : member;
+      const result = addMember(team.members, memberToAdd);
       if (!result.ok) return result;
 
       const updated: Team = {
         ...team,
-        members: result.members,
+        members: applyChampionsLevel(result.members, team.champions),
         updatedAt: Date.now(),
       };
       setTeams((prev) => prev.map((t) => (t.id === teamId ? updated : t)));
@@ -239,7 +253,7 @@ export function useTeams(storage?: TeamStorage): UseTeamsResult {
 
       const updated: Team = {
         ...team,
-        members,
+        members: applyChampionsLevel(members, team.champions),
         updatedAt: Date.now(),
       };
       setTeams((prev) => prev.map((t) => (t.id === teamId ? updated : t)));
@@ -274,7 +288,11 @@ export function useTeams(storage?: TeamStorage): UseTeamsResult {
       const result = replaceMember(team.members, currentPokemonId, member);
       if (!result.ok) return result;
 
-      const updated: Team = { ...team, members: result.members, updatedAt: Date.now() };
+      const updated: Team = {
+        ...team,
+        members: applyChampionsLevel(result.members, team.champions),
+        updatedAt: Date.now(),
+      };
       setTeams((prev) => prev.map((t) => (t.id === teamId ? updated : t)));
       await effectiveStorage.save(updated);
       return { ok: true, team: updated };
@@ -289,7 +307,10 @@ export function useTeams(storage?: TeamStorage): UseTeamsResult {
       if (!team) return;
       const updated: Team = {
         ...team,
-        members: members.map((m, i) => normalizeMember({ ...m, slot: i })),
+        members: applyChampionsLevel(
+          members.map((m, i) => normalizeMember({ ...m, slot: i })),
+          team.champions,
+        ),
         updatedAt: Date.now(),
       };
       setTeams((prev) => prev.map((t) => (t.id === teamId ? updated : t)));
@@ -307,10 +328,13 @@ export function useTeams(storage?: TeamStorage): UseTeamsResult {
       const updated: Team = {
         ...team,
         champions,
-        members: team.members.map((m) => ({
-          ...m,
-          evs: { ...DEFAULT_EVS },
-        })),
+        members: applyChampionsLevel(
+          team.members.map((m) => ({
+            ...m,
+            evs: { ...DEFAULT_EVS },
+          })),
+          champions,
+        ),
         updatedAt: Date.now(),
       };
 
@@ -419,4 +443,12 @@ export function useTeams(storage?: TeamStorage): UseTeamsResult {
     moveFolder,
     deleteFolder,
   };
+}
+
+/**
+ * Variante para páginas de detalle: carga únicamente el equipo indicado en
+ * lugar de la lista completa. Evita descargar todos los equipos del usuario.
+ */
+export function useTeam(teamId?: string): UseTeamsResult {
+  return useTeams(undefined, teamId);
 }

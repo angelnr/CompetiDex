@@ -105,6 +105,7 @@ describe("parseTeamPayload", () => {
     const team = parseTeamPayload(payload);
     expect(team.champions).toBe(true);
     expect(team.members[0]!.evs!.attack).toBe(30);
+    expect(team.members[0]!.level).toBe(50);
   });
 
   it("rechaza payload no conforme al esquema", () => {

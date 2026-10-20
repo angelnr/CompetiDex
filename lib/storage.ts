@@ -1,10 +1,10 @@
-import type { Team, TeamMember } from "@/lib/team";
-import { normalizeMember } from "@/lib/team";
+import type { Team } from "@/lib/team";
+import { applyChampionsLevel, normalizeMember } from "@/lib/team";
 import type { Folder } from "@/lib/folders";
 import { promoteOnDelete } from "@/lib/folders";
 
 const STORAGE_KEY = "competidex:teams";
-const CURRENT_VERSION = 3;
+const CURRENT_VERSION = 4;
 
 interface StoredData {
   version: number;
@@ -23,6 +23,16 @@ function migrateV1toV2(teams: Team[]): Team[] {
   }));
 }
 
+/**
+ * v4: los equipos Champions existentes deben tener a todos sus miembros al
+ * nivel 50, igual que al marcar el formato en el editor.
+ */
+function migrateV3toV4(teams: Team[]): Team[] {
+  return teams.map((team) =>
+    team.champions ? { ...team, members: applyChampionsLevel(team.members, true) } : team,
+  );
+}
+
 function migrateData(data: StoredData): StoredData {
   const rawTeams = Array.isArray(data.teams) ? data.teams : [];
   const rawFolders = Array.isArray(data.folders) ? data.folders : [];
@@ -35,6 +45,11 @@ function migrateData(data: StoredData): StoredData {
   // v3: las carpetas aparecen; los equipos sin `folderId` van a la raíz.
   if (!data.version || data.version < 3) {
     teams = teams.map((team) => ({ ...team, folderId: team.folderId ?? null }));
+  }
+
+  // v4: nivel 50 fijo para los equipos Champions.
+  if (!data.version || data.version < 4) {
+    teams = migrateV3toV4(teams);
   }
 
   return { version: CURRENT_VERSION, teams, folders: rawFolders };

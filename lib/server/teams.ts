@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import {
+  applyChampionsLevel,
   DEFAULT_EVS,
   DEFAULT_IVS,
   normalizeMember,
@@ -78,7 +79,10 @@ export function toTeam(row: TeamRow): Team {
     name: row.name,
     champions: row.champions ?? false,
     folderId: row.folderId ?? null,
-    members: [...row.members].sort((a, b) => a.slot - b.slot).map(toTeamMember),
+    members: applyChampionsLevel(
+      [...row.members].sort((a, b) => a.slot - b.slot).map(toTeamMember),
+      row.champions ?? false,
+    ),
     createdAt: row.createdAt.getTime(),
     updatedAt: row.updatedAt.getTime(),
   };
@@ -130,7 +134,10 @@ export async function saveTeam(userId: string, team: Team): Promise<Team> {
   const existing = await prisma.team.findUnique({ where: { id: team.id } });
   if (existing && existing.userId !== userId) throw new TeamOwnershipError();
 
-  const members = team.members.map((m) => normalizeMember(m));
+  const members = applyChampionsLevel(
+    team.members.map((m) => normalizeMember(m)),
+    team.champions ?? false,
+  );
   const now = new Date(team.updatedAt ?? Date.now());
 
   const saved = await prisma.$transaction(async (tx) => {

@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import {
+  applyChampionsLevel,
   MAX_TEAM_SIZE,
   normalizeMember,
   validateEvs,
@@ -95,7 +96,10 @@ export function parseTeamPayload(payload: unknown): Team {
     name: parsed.name,
     champions: parsed.champions,
     folderId: parsed.folderId ?? null,
-    members: parsed.members.map((m) => normalizeMember(m)),
+    members: applyChampionsLevel(
+      parsed.members.map((m) => normalizeMember(m)),
+      parsed.champions,
+    ),
     createdAt: parsed.createdAt ?? Date.now(),
     updatedAt: parsed.updatedAt ?? Date.now(),
   };

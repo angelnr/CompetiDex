@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { List, X } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
@@ -28,6 +28,7 @@ import {
   MAX_EV_TOTAL,
   MAX_EV_TOTAL_CHAMPIONS,
   MAX_EV_PER_STAT_CHAMPIONS,
+  CHAMPIONS_LEVEL,
   totalEvs,
 } from "@/lib/team";
 import type { Pokemon } from "@/lib/pokeapi";
@@ -104,8 +105,15 @@ export function TeamMemberEditor({
   const locale = useLocale();
   const localizedName = useLocalizedSpeciesName(member.name);
   const [movepoolSlot, setMovepoolSlot] = useState<number | null>(null);
+  // Borradores de los inputs numéricos de EVs: permiten dejar el campo vacío
+  // mientras se escribe sin que el valor controlado lo reponga al instante.
+  const [evDrafts, setEvDrafts] = useState<Partial<Record<StatKey, string>>>({});
   // Refs de los 4 inputs de movimiento para saltar al siguiente con Tab.
   const moveInputRefs = useRef<Array<HTMLInputElement | null>>([]);
+
+  useEffect(() => {
+    setEvDrafts({});
+  }, [member.pokemonId, champions]);
 
   // Stat base por clave, para calcular el total (base + IVs + EVs + naturaleza).
   const baseStats = useMemo(() => {
@@ -202,6 +210,7 @@ export function TeamMemberEditor({
   const patch = (p: TeamMemberPatch) => onChange(p);
 
   const handleLevel = (val: string) => {
+    if (champions) return;
     const n = parseInt(val, 10);
     if (!isNaN(n)) patch({ level: Math.min(Math.max(n, 1), 100) });
   };
@@ -213,14 +222,41 @@ export function TeamMemberEditor({
     patch({ ivs: { ...member.ivs!, [stat]: clamped } });
   };
 
-  /** Slider de EVs: tope por stat y por total (sin robar EVs a otras stats). */
-  const handleEV = (stat: StatKey, val: string) => {
-    const n = parseInt(val, 10);
-    if (isNaN(n)) return;
+  /** Aplica un valor de EV con los topes por stat y por total. */
+  const applyEv = (stat: StatKey, value: number) => {
     const current = member.evs?.[stat] ?? 0;
     const room = Math.max(0, maxEvTotal - (evTotal - current));
-    const next = Math.min(Math.max(n, 0), maxEvPerStat, room);
+    const next = Math.min(Math.max(Math.round(value), 0), maxEvPerStat, room);
     patch({ evs: { ...member.evs!, [stat]: next } });
+  };
+
+  const clearEvDraft = (stat: StatKey) => {
+    setEvDrafts((prev) => {
+      if (!(stat in prev)) return prev;
+      const next = { ...prev };
+      delete next[stat];
+      return next;
+    });
+  };
+
+  /** Slider de EVs: se sincroniza con el input numérico. */
+  const handleEvSlider = (stat: StatKey, val: string) => {
+    clearEvDraft(stat);
+    applyEv(stat, Number(val));
+  };
+
+  /** Input numérico de EVs: mantiene el borrador mientras se escribe. */
+  const handleEvInput = (stat: StatKey, val: string) => {
+    setEvDrafts((prev) => ({ ...prev, [stat]: val }));
+    if (val.trim() === "") return;
+    const n = Number(val);
+    if (Number.isFinite(n)) applyEv(stat, n);
+  };
+
+  const handleEvBlur = (stat: StatKey) => {
+    const draft = evDrafts[stat];
+    if (draft !== undefined && draft.trim() === "") applyEv(stat, 0);
+    clearEvDraft(stat);
   };
 
   const handleMove = (index: number, value: string) => {
@@ -250,6 +286,7 @@ export function TeamMemberEditor({
             width={48}
             height={48}
             className="size-12 shrink-0 object-contain"
+            unoptimized
           />
           <span className="min-w-0">
             <span className="font-semibold group-hover:underline">{localizedName}</span>
@@ -292,9 +329,10 @@ export function TeamMemberEditor({
             type="number"
             min={1}
             max={100}
-            value={member.level ?? 100}
+            value={champions ? CHAMPIONS_LEVEL : (member.level ?? 100)}
             onChange={(e) => handleLevel(e.target.value)}
             aria-label={t("level")}
+            disabled={champions}
           />
         </div>
 
@@ -413,16 +451,29 @@ export function TeamMemberEditor({
                     max={maxEvPerStat}
                     step={1}
                     value={Math.min(ev, maxEvPerStat)}
-                    onChange={(e) => handleEV(k, e.target.value)}
+                    onChange={(e) => handleEvSlider(k, e.target.value)}
                     className="h-1.5 w-full cursor-pointer accent-primary"
                     aria-label={`EV ${k}`}
                   />
-                  <span className="w-7 shrink-0 text-right font-mono text-[11px] text-muted-foreground">
-                    {ev}
-                  </span>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={maxEvPerStat}
+                    step={1}
+                    inputMode="numeric"
+                    value={evDrafts[k] ?? String(ev)}
+                    onChange={(e) => handleEvInput(k, e.target.value)}
+                    onBlur={() => handleEvBlur(k)}
+                    onFocus={(e) => e.currentTarget.select()}
+                    className="h-8 w-16 shrink-0 px-1 text-center font-mono text-xs"
+                    aria-label={`EV ${k} valor`}
+                  />
                 </div>
                 <span
-                  className={cn("text-right font-mono text-sm font-semibold", natureClasses(relation))}
+                  className={cn(
+                    "text-right font-mono text-sm font-semibold",
+                    natureClasses(relation),
+                  )}
                 >
                   {total}
                 </span>
@@ -448,9 +499,7 @@ export function TeamMemberEditor({
                     inputRef={(el) => {
                       moveInputRefs.current[i] = el;
                     }}
-                    onTabCommit={
-                      i < 3 ? () => moveInputRefs.current[i + 1]?.focus() : undefined
-                    }
+                    onTabCommit={i < 3 ? () => moveInputRefs.current[i + 1]?.focus() : undefined}
                   />
                 </div>
                 <Button

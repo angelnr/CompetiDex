@@ -5,6 +5,8 @@ export const MAX_EV_PER_STAT = 252;
 export const MAX_EV_TOTAL = 510;
 export const MAX_EV_PER_STAT_CHAMPIONS = 32;
 export const MAX_EV_TOTAL_CHAMPIONS = 66;
+/** En formato Champions todos los Pokémon compiten al nivel 50. */
+export const CHAMPIONS_LEVEL = 50;
 
 export interface StatSpread {
   hp: number;
@@ -100,6 +102,15 @@ export function normalizeMember(member: TeamMember): TeamMember {
     evs: member.evs ?? { ...DEFAULT_EVS },
     moves: member.moves ?? [],
   };
+}
+
+/**
+ * Fuerza el nivel 50 en todos los miembros cuando el equipo es de formato
+ * Champions. Devuelve el mismo array si el formato no es Champions.
+ */
+export function applyChampionsLevel(members: TeamMember[], champions?: boolean): TeamMember[] {
+  if (!champions) return members;
+  return members.map((m) => (m.level === CHAMPIONS_LEVEL ? m : { ...m, level: CHAMPIONS_LEVEL }));
 }
 
 export function totalEvs(spread: StatSpread): number {

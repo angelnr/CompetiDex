@@ -21,7 +21,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useTeams } from "@/hooks/useTeams";
+import { useTeam } from "@/hooks/useTeams";
 import { usePokemon } from "@/lib/queries";
 import { teamTypes } from "@/lib/team";
 import { teamToPokepaste } from "@/lib/pokepaste";
@@ -33,8 +33,18 @@ export default function TeamEditorPage() {
   const tNav = useTranslations("nav");
   const params = useParams();
   const teamId = params?.id as string | undefined;
-  const { teams, loaded, addPokemon, removePokemon, updateMember, swapPokemonSlots, replacePokemon, replaceMembers, setChampions, renameTeam } =
-    useTeams();
+  const {
+    teams,
+    loaded,
+    addPokemon,
+    removePokemon,
+    updateMember,
+    swapPokemonSlots,
+    replacePokemon,
+    replaceMembers,
+    setChampions,
+    renameTeam,
+  } = useTeam(teamId);
   const [activeSlot, setActiveSlot] = useState<number | null>(null);
   const [dragSlot, setDragSlot] = useState<number | null>(null);
   const [dragOverSlot, setDragOverSlot] = useState<number | null>(null);
