@@ -167,7 +167,9 @@ Only `.env.example` is committed; never push a real `.env`.
 
 Sign-up requires a verified email, so the app sends the verification link through [Resend](https://resend.com) (plain REST call, no SDK dependency).
 
-> **The sending domain must be one you own.** The `*.ts.net` Funnel hostname cannot be used: `ts.net` is managed by Tailscale, which does not allow publishing the DKIM/SPF/DMARC records Resend requires. Keep `BETTER_AUTH_URL` on the Funnel URL (that is just the app URL) and use a separate owned domain for `EMAIL_FROM`.
+> **The sending domain must be one whose DNS you control.** The `*.ts.net` Funnel hostname cannot be used: `ts.net` is managed by Tailscale, which does not allow publishing the DKIM/SPF/DMARC records Resend requires. Keep `BETTER_AUTH_URL` on the Funnel URL (that is just the app URL) and use a separate domain for `EMAIL_FROM`.
+>
+> The domain does **not** have to be paid: Resend's free plan verifies custom domains, and any free domain whose DNS you can edit works (for example the one-year free `.me` from the GitHub Student Developer Pack). What Resend needs is control of the DNS zone, not a receipt.
 
 1. Create a Resend account and add your domain in **Domains** → **Add Domain**.
 2. Add the DNS records Resend gives you (SPF, DKIM and the MX record for the subdomain). Wait for the domain to show **Verified**.
