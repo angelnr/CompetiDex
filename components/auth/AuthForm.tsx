@@ -86,8 +86,9 @@ export function AuthForm({ className }: { className?: string }) {
         return;
       }
 
-      if (mode === "register") {
-        // Con verificación de email obligatoria no hay sesión todavía.
+      // Si la verificación de email está activa, el registro responde con
+      // `token: null` y no hay sesión: se muestra el aviso en vez de redirigir.
+      if (mode === "register" && result.data?.token === null) {
         setNotice("verifySent");
         setPassword("");
         return;

@@ -7,6 +7,18 @@ import { prisma } from "@/lib/prisma";
 import { getRedis } from "@/lib/redis";
 
 /**
+ * La verificación de email exige un dominio remitente propio (los `*.ts.net`
+ * de Tailscale Funnel no permiten publicar DKIM/SPF). Por eso está desactivada
+ * por defecto: el registro queda abierto y se protege con el throttle por IP
+ * de `/api/auth/sign-up/email`.
+ *
+ * Para activarla: `REQUIRE_EMAIL_VERIFICATION=true` + `RESEND_API_KEY` +
+ * `EMAIL_FROM` con un dominio verificado.
+ */
+const requireEmailVerification =
+  process.env.REQUIRE_EMAIL_VERIFICATION === "true" && Boolean(process.env.RESEND_API_KEY);
+
+/**
  * Storage secundario de Better Auth (sesiones + rate-limit) respaldado por
  * Redis. Si Redis no está disponible (dev sin `REDIS_URL`), degrada a un
  * Map en memoria para no romper la autenticación.
@@ -97,11 +109,11 @@ export const auth = betterAuth({
     // Alineado con la validación del formulario (AuthForm): mínimo 6.
     // El default de Better Auth es 8 y provocaba errores genéricos.
     minPasswordLength: 6,
-    // Sin correo verificado no se crea sesión (frena cuentas basura).
-    requireEmailVerification: true,
+    // Activable por entorno cuando haya dominio + proveedor de correo.
+    requireEmailVerification,
   },
   emailVerification: {
-    sendOnSignUp: true,
+    sendOnSignUp: requireEmailVerification,
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url }) => {
       // Sin proveedor configurado (dev), dejar el enlace en el log para poder
