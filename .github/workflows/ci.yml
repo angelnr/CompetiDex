@@ -124,6 +124,11 @@ jobs:
           DATABASE_URL: file:./ci-e2e.db
         run: pnpm prisma migrate deploy
 
+      # Prisma resuelve rutas SQLite relativas a prisma/. El E2E escribe en la
+      # BBDD (verificación de email) mientras el servidor lee: WAL evita locks.
+      - name: Enable SQLite WAL
+        run: sqlite3 prisma/ci-e2e.db "PRAGMA journal_mode=WAL;"
+
       - name: Run E2E tests
         env:
           REDIS_URL: redis://127.0.0.1:6379

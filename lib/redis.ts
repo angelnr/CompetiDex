@@ -67,9 +67,32 @@ export async function closeRedis(): Promise<void> {
   globalThis.__competidexRedis = undefined;
 }
 
+/** Anti-stampede: lock por clave para que solo un proceso compute el miss. */
+const LOCK_TTL_S = 10;
+const LOCK_WAIT_ATTEMPTS = 10;
+const LOCK_WAIT_MS = 200;
+
+type CacheRead<T> = { hit: true; value: T } | { hit: false };
+
+async function readCached<T>(redis: Redis, key: string): Promise<CacheRead<T>> {
+  try {
+    const cached = await redis.get(key);
+    if (cached !== null) return { hit: true, value: JSON.parse(cached) as T };
+    return { hit: false };
+  } catch {
+    // Si el payload cacheado está corrupto, invalida y re-computa
+    await redis.del(key).catch(() => {});
+    return { hit: false };
+  }
+}
+
 /**
  * Lee una clave cacheada como JSON o la computa y almacena.
  * Si Redis no está disponible, ejecuta el producer sin cachear.
+ *
+ * Si varios procesos piden la misma clave fría a la vez, solo uno computa
+ * (lock `SET NX`); el resto espera a que aparezca el valor cacheado. Si la
+ * espera expira, computa igualmente: mejor lento que un error.
  *
  * @param key Clave Redis (recomendado prefijo por dominio: `pokeapi:pokemon:1`).
  * @param producer Función que produce el valor si hay miss de caché.
@@ -83,19 +106,33 @@ export async function getOrSet<T>(
   const redis = getRedis();
   if (!redis) return producer();
 
+  const initial = await readCached<T>(redis, key);
+  if (initial.hit) return initial.value;
+
+  let hasLock = false;
   try {
-    const cached = await redis.get(key);
-    if (cached !== null) {
-      return JSON.parse(cached) as T;
-    }
+    hasLock = (await redis.set(`lock:${key}`, "1", "EX", LOCK_TTL_S, "NX")) === "OK";
   } catch {
-    // Si el payload cacheado está corrupto, invalida y re-computa
-    await redis.del(key).catch(() => {});
+    // Sin lock disponible (Redis intermitente): computar igualmente.
+    hasLock = true;
   }
 
-  const fresh = await producer();
-  await redis.setex(key, ttlSeconds, JSON.stringify(fresh)).catch(() => {});
-  return fresh;
+  if (!hasLock) {
+    for (let attempt = 0; attempt < LOCK_WAIT_ATTEMPTS; attempt++) {
+      await new Promise((resolve) => setTimeout(resolve, LOCK_WAIT_MS));
+      const waited = await readCached<T>(redis, key);
+      if (waited.hit) return waited.value;
+    }
+    // El ganador tarda demasiado o falló: computamos nosotros.
+  }
+
+  try {
+    const fresh = await producer();
+    await redis.setex(key, ttlSeconds, JSON.stringify(fresh)).catch(() => {});
+    return fresh;
+  } finally {
+    if (hasLock) await redis.del(`lock:${key}`).catch(() => {});
+  }
 }
 
 /** Invalidación explícita de una clave. No-op si no hay Redis. */

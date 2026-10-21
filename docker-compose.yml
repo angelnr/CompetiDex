@@ -15,9 +15,11 @@ services:
       REDIS_URL: ${REDIS_URL:-redis://redis:6379}
       POKEAPI_BASE: ${POKEAPI_BASE:-https://pokeapi.co/api/v2}
       POKEAPI_CACHE_TTL_S: ${POKEAPI_CACHE_TTL_S:-86400}
-      DATABASE_URL: file:/data/prod.db
+      DATABASE_URL: file:/data/prod.db?connection_limit=1
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Definir BETTER_AUTH_SECRET en .env}
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3001}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
       NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-CompetiDex}
     volumes:
       - sqlite-data:/data
@@ -38,9 +40,31 @@ services:
     restart: "no"
     user: "1001:1001"
     environment:
-      DATABASE_URL: file:/data/prod.db
+      DATABASE_URL: file:/data/prod.db?connection_limit=1
     volumes:
       - sqlite-data:/data
+    networks:
+      - competidex
+
+  # Limpieza de sesiones caducadas + backup diario de SQLite.
+  # Corre en bucle dentro del contenedor (una pasada cada 24h).
+  db-maintenance:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: maintenance
+    container_name: competidex-maintenance
+    restart: unless-stopped
+    user: "1001:1001"
+    environment:
+      DATABASE_URL: file:/data/prod.db?connection_limit=1
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+    volumes:
+      - sqlite-data:/data
+    command: ["sh", "-c", "while true; do sh scripts/db-maintenance.sh; sleep 86400; done"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
     networks:
       - competidex
 
@@ -48,7 +72,16 @@ services:
     image: redis:7-alpine
     container_name: competidex-redis
     restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes"]
+    command:
+      [
+        "redis-server",
+        "--appendonly",
+        "yes",
+        "--maxmemory",
+        "256mb",
+        "--maxmemory-policy",
+        "allkeys-lru",
+      ]
     volumes:
       - ./docker-data/redis:/data
     healthcheck:

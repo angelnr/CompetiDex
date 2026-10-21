@@ -57,16 +57,38 @@ FROM deps AS migrate
 
 WORKDIR /app
 
+# sqlite3 CLI para fijar WAL (persistente en el fichero) tras las migraciones.
 # /data debe ser escribible por el mismo uid que el runner (nextjs = 1001)
-RUN mkdir -p /data && chown 1001:1001 /data
+RUN apk add --no-cache sqlite \
+    && mkdir -p /data && chown 1001:1001 /data
 
 # Solo se necesita el esquema/migraciones + el CLI de Prisma (ya en node_modules)
 COPY prisma ./prisma
 
-CMD ["node", "node_modules/prisma/build/index.js", "migrate", "deploy", "--schema", "prisma/schema.prisma"]
+CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy --schema prisma/schema.prisma && sqlite3 /data/prod.db 'PRAGMA journal_mode=WAL;'"]
 
 # =============================================================================
-# Stage 4: runner (imagen final mínima)
+# Stage 4: maintenance (limpieza de sesiones + backups SQLite)
+# Se ejecuta como servicio aparte; no forma parte de la imagen final.
+# =============================================================================
+FROM deps AS maintenance
+
+WORKDIR /app
+
+# sqlite3 CLI: backups vía `.backup` (seguro con WAL) e integrity_check.
+RUN apk add --no-cache sqlite \
+    && mkdir -p /data && chown 1001:1001 /data
+
+COPY prisma ./prisma
+COPY scripts ./scripts
+
+# Cliente Prisma generado para el script de limpieza de sesiones.
+RUN pnpm prisma generate
+
+CMD ["sh", "scripts/db-maintenance.sh"]
+
+# =============================================================================
+# Stage 5: runner (imagen final mínima)
 # =============================================================================
 FROM node:20-alpine AS runner
 

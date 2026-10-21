@@ -7,6 +7,7 @@ process.env.REDIS_URL = "redis://test:6379";
 // El constructor devuelve una instancia compartida con métodos mocked.
 const redisCommands = {
   get: vi.fn(),
+  set: vi.fn(),
   setex: vi.fn(),
   del: vi.fn(),
   scan: vi.fn(),
@@ -25,6 +26,12 @@ beforeEach(() => {
   vi.clearAllMocks();
   process.env.REDIS_URL = "redis://test:6379";
   globalThis.__competidexRedis = redisCommands as unknown as never;
+  // Defaults: miss de caché, lock adquirido, escritura OK.
+  redisCommands.get.mockResolvedValue(null);
+  redisCommands.set.mockResolvedValue("OK");
+  redisCommands.setex.mockResolvedValue("OK");
+  redisCommands.del.mockResolvedValue(1);
+  redisCommands.scan.mockResolvedValue(["0", []]);
 });
 
 afterEach(async () => {
@@ -58,6 +65,29 @@ describe("getOrSet", () => {
       60,
       JSON.stringify({ name: "pikachu" }),
     );
+  });
+
+  it("libera el lock tras computar y cachear", async () => {
+    const producer = vi.fn(async () => ({ name: "pikachu" }));
+
+    await getOrSet("pokeapi:pokemon:25", producer, 60);
+
+    expect(redisCommands.set).toHaveBeenCalledWith("lock:pokeapi:pokemon:25", "1", "EX", 10, "NX");
+    expect(redisCommands.del).toHaveBeenCalledWith("lock:pokeapi:pokemon:25");
+  });
+
+  it("espera el valor del ganador si otro proceso tiene el lock", async () => {
+    redisCommands.get
+      .mockResolvedValueOnce(null) // lectura inicial: miss
+      .mockResolvedValueOnce(JSON.stringify({ shared: true })); // tras esperar
+    redisCommands.set.mockResolvedValueOnce(null); // lock ocupado por otro proceso
+
+    const producer = vi.fn(async () => ({ computed: true }));
+    const result = await getOrSet("pokeapi:pokemon:25", producer, 60);
+
+    expect(result).toEqual({ shared: true });
+    expect(producer).not.toHaveBeenCalled();
+    expect(redisCommands.setex).not.toHaveBeenCalled();
   });
 
   it("invalida y re-computa si el payload cacheado es corrupto", async () => {
