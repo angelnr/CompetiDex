@@ -1,4 +1,10 @@
-import { DEFAULT_EVS, DEFAULT_IVS, type StatSpread, type TeamMember } from "@/lib/team";
+import {
+  DEFAULT_EVS,
+  DEFAULT_IVS,
+  toClassicEvs,
+  type StatSpread,
+  type TeamMember,
+} from "@/lib/team";
 import type { CalcPokemonInput, Level } from "./types";
 import { EMPTY_BOOSTS } from "./stages";
 
@@ -84,8 +90,15 @@ export function titleCase(slug: string): string {
  * Convierte un miembro de equipo (nuestro `TeamMember`) al input de la
  * calculadora. `member.name` ya es el slug kebab de la especie (como lo
  * guarda el editor de equipos), p. ej. `pikachu` o `charizard-mega-x`.
+ *
+ * En equipos Champions el spread guardado son puntos de estadística, así que
+ * se traduce a EVs clásicos (1 punto = 8 EVs) antes de pasarlo al motor.
  */
-export function teamMemberToCalcInput(member: TeamMember, level: Level): CalcPokemonInput {
+export function teamMemberToCalcInput(
+  member: TeamMember,
+  level: Level,
+  champions = false,
+): CalcPokemonInput {
   const moves = [...member.moves!, null, null, null, null].slice(0, 4);
   return {
     species: member.name || null,
@@ -93,8 +106,8 @@ export function teamMemberToCalcInput(member: TeamMember, level: Level): CalcPok
     nature: member.nature ?? "hardy",
     ability: member.ability ?? null,
     item: member.heldItem ?? null,
-    ivs: { ...DEFAULT_IVS, ...member.ivs },
-    evs: { ...DEFAULT_EVS, ...member.evs },
+    ivs: champions ? { ...DEFAULT_IVS } : { ...DEFAULT_IVS, ...member.ivs },
+    evs: toClassicEvs({ ...DEFAULT_EVS, ...member.evs }, champions),
     boosts: { ...EMPTY_BOOSTS },
     moves,
   };

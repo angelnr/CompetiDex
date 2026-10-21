@@ -53,7 +53,7 @@ export const teamMemberSchema = z.object({
   heldItem: z.string().nullable().default(null),
   ability: z.string().nullable().default(null),
   nature: z.string().min(1).default("hardy"),
-  ivs: statSpreadSchema.default(EVS_DEFAULT),
+  ivs: statSpreadSchema.default(IVS_DEFAULT),
   evs: statSpreadSchema.default(EVS_DEFAULT),
   moves: z.array(z.string().min(1)).max(4).default([]),
 });
@@ -97,7 +97,12 @@ export function parseTeamPayload(payload: unknown): Team {
     champions: parsed.champions,
     folderId: parsed.folderId ?? null,
     members: applyChampionsLevel(
-      parsed.members.map((m) => normalizeMember(m)),
+      parsed.members.map((m) => {
+        const member = normalizeMember(m);
+        // Champions no usa IVs: se normalizan al máximo aunque el cliente
+        // envíe otro valor.
+        return parsed.champions ? { ...member, ivs: { ...IVS_DEFAULT } } : member;
+      }),
       parsed.champions,
     ),
     createdAt: parsed.createdAt ?? Date.now(),

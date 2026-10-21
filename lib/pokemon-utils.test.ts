@@ -7,6 +7,7 @@ import {
   capitalize,
   computeStatTotal,
   computeStat,
+  computeChampionsStat,
   getFlavorText,
   getGenus,
   getDisplayName,
@@ -141,6 +142,30 @@ describe("computeStat", () => {
     expect(stat).toBe(131);
   });
 
+  it("cada punto de Champions (8 EVs) sube 1 la stat a nivel 50", () => {
+    const baseStat = 100;
+    const base = computeStat({
+      base: baseStat,
+      iv: 31,
+      ev: 0,
+      level: 50,
+      isHp: false,
+      natureMultiplier: 1,
+    });
+    // 32 puntos = 256 EVs: a nivel 50 cada punto aporta exactamente +1.
+    for (let point = 1; point <= 32; point++) {
+      const total = computeStat({
+        base: baseStat,
+        iv: 31,
+        ev: point * 8,
+        level: 50,
+        isHp: false,
+        natureMultiplier: 1,
+      });
+      expect(total - base).toBe(point);
+    }
+  });
+
   it("calcula a nivel 50", () => {
     // Pikachu lv 50, HP 35, IV 31, EV 0, neutral
     const stat = computeStat({
@@ -153,6 +178,41 @@ describe("computeStat", () => {
     });
     // floor((70 + 31 + 0) * 0.5) + 50 + 10 = floor(50) + 60 = 110
     expect(stat).toBe(110);
+  });
+});
+
+describe("computeChampionsStat", () => {
+  it("parte de base + 20 (no-HP) y base + 75 (HP) sin puntos", () => {
+    expect(
+      computeChampionsStat({ base: 100, points: 0, isHp: false, natureMultiplier: 1 }),
+    ).toBe(120);
+    expect(computeChampionsStat({ base: 100, points: 0, isHp: true, natureMultiplier: 1 })).toBe(
+      175,
+    );
+  });
+
+  it("cada punto de estadística sube exactamente 1", () => {
+    for (let points = 1; points <= 32; points++) {
+      expect(
+        computeChampionsStat({ base: 100, points, isHp: false, natureMultiplier: 1 }),
+      ).toBe(120 + points);
+      expect(computeChampionsStat({ base: 100, points, isHp: true, natureMultiplier: 1 })).toBe(
+        175 + points,
+      );
+    }
+  });
+
+  it("aplica la naturaleza después de sumar los puntos", () => {
+    expect(
+      computeChampionsStat({ base: 100, points: 10, isHp: false, natureMultiplier: 1.1 }),
+    ).toBe(Math.floor((100 + 10 + 20) * 1.1));
+    expect(
+      computeChampionsStat({ base: 100, points: 10, isHp: false, natureMultiplier: 0.9 }),
+    ).toBe(Math.floor((100 + 10 + 20) * 0.9));
+  });
+
+  it("mantiene el HP de Shedinja en 1", () => {
+    expect(computeChampionsStat({ base: 1, points: 32, isHp: true, natureMultiplier: 1 })).toBe(1);
   });
 });
 

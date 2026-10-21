@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   addMember,
   applyChampionsLevel,
+  championsPointToEvs,
+  CHAMPIONS_EV_PER_POINT,
   CHAMPIONS_LEVEL,
   DEFAULT_EVS,
   DEFAULT_IVS,
@@ -17,6 +19,7 @@ import {
   replaceMember,
   swapMemberSlots,
   teamTypes,
+  toClassicEvs,
   totalEvs,
   validateEvs,
   validateIvs,
@@ -227,6 +230,39 @@ describe("totalEvs", () => {
         speed: 6,
       }),
     ).toBe(510);
+  });
+});
+
+describe("puntos de Champions", () => {
+  it("cada punto equivale a 8 EVs", () => {
+    expect(CHAMPIONS_EV_PER_POINT).toBe(8);
+    expect(championsPointToEvs(1)).toBe(8);
+    expect(championsPointToEvs(32)).toBe(256);
+  });
+
+  it("convierte el spread de puntos a EVs clásicos", () => {
+    const points = {
+      hp: 32,
+      attack: 0,
+      defense: 4,
+      "special-attack": 30,
+      "special-defense": 0,
+      speed: 0,
+    };
+    expect(toClassicEvs(points, true)).toEqual({
+      hp: 256,
+      attack: 0,
+      defense: 32,
+      "special-attack": 240,
+      "special-defense": 0,
+      speed: 0,
+    });
+  });
+
+  it("no modifica el spread fuera de Champions", () => {
+    const evs = { ...DEFAULT_EVS, hp: 252 };
+    expect(toClassicEvs(evs, false)).toBe(evs);
+    expect(toClassicEvs(evs)).toBe(evs);
   });
 });
 

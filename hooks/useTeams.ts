@@ -7,6 +7,7 @@ import {
   applyChampionsLevel,
   CHAMPIONS_LEVEL,
   DEFAULT_EVS,
+  DEFAULT_IVS,
   generateTeamId,
   normalizeMember,
   reindexSlots,
@@ -332,6 +333,8 @@ export function useTeams(storage?: TeamStorage, teamId?: string): UseTeamsResult
           team.members.map((m) => ({
             ...m,
             evs: { ...DEFAULT_EVS },
+            // Champions no usa IVs: al entrar en el formato se fijan a 31.
+            ivs: champions ? { ...DEFAULT_IVS } : (m.ivs ?? { ...DEFAULT_IVS }),
           })),
           champions,
         ),

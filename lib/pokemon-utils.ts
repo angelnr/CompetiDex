@@ -633,6 +633,32 @@ export function computeStat({
   return Math.floor((b + 5) * natureMultiplier);
 }
 
+export interface ComputeChampionsStatInput {
+  base: number;
+  /** Puntos de estadística invertidos (0-32). */
+  points: number;
+  isHp: boolean;
+  natureMultiplier: number;
+}
+
+/**
+ * Estadística final en formato Champions: nivel 50 fijo, sin IVs y con puntos
+ * de estadística en lugar de EVs. Cada punto suma exactamente 1 a la stat
+ * antes de aplicar la naturaleza.
+ *
+ * HP: base === 1 ? 1 : base + points + 75
+ * Resto: floor((base + points + 20) * naturaleza)
+ */
+export function computeChampionsStat({
+  base,
+  points,
+  isHp,
+  natureMultiplier,
+}: ComputeChampionsStatInput): number {
+  if (isHp) return base === 1 ? base : base + points + 75;
+  return Math.floor((base + points + 20) * natureMultiplier);
+}
+
 /** Flavor text traducido; fallback a es, luego en. */
 export function getFlavorText(
   entries: { flavor_text: string; language: { name: string } }[],

@@ -134,4 +134,33 @@ describe("lib/calc/convert", () => {
     expect(input.item).toBe("Life Orb");
     expect(input.moves[0]).toBe("thunderbolt");
   });
+
+  it("traduce los puntos de Champions a EVs para el motor", () => {
+    const member: TeamMember = {
+      pokemonId: 25,
+      slot: 0,
+      name: "pikachu",
+      sprite: null,
+      types: ["electric"],
+      level: 50,
+      nature: "timid",
+      ivs: { ...DEFAULT_IVS, hp: 0 },
+      evs: {
+        hp: 32,
+        attack: 0,
+        defense: 0,
+        "special-attack": 30,
+        "special-defense": 0,
+        speed: 4,
+      },
+      moves: ["thunderbolt"],
+    };
+
+    const input = teamMemberToCalcInput(member, 50, true);
+    expect(input.evs.hp).toBe(256);
+    expect(input.evs["special-attack"]).toBe(240);
+    expect(input.evs.speed).toBe(32);
+    // En Champions los IVs se ignoran y se calcula con 31.
+    expect(input.ivs).toEqual(DEFAULT_IVS);
+  });
 });

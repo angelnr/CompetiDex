@@ -7,6 +7,15 @@ export const MAX_EV_PER_STAT_CHAMPIONS = 32;
 export const MAX_EV_TOTAL_CHAMPIONS = 66;
 /** En formato Champions todos los Pokémon compiten al nivel 50. */
 export const CHAMPIONS_LEVEL = 50;
+/**
+ * En Champions los EVs se reparten como puntos de estadística y cada punto
+ * sube 1 la estadística final a nivel 50. Para calcular con la fórmula
+ * clásica, un punto equivale a 8 EVs (al transferir desde HOME el primer
+ * punto sale de 4 EVs y los siguientes de 8, pero el resultado es el mismo).
+ */
+export const CHAMPIONS_EV_PER_POINT = 8;
+/** Champions no usa IVs: internamente se asume siempre el máximo (31). */
+export const CHAMPIONS_FIXED_IV = 31;
 
 export interface StatSpread {
   hp: number;
@@ -89,6 +98,23 @@ export function defaultStatSpread(value: number): StatSpread {
   };
   for (const k of STAT_KEYS) spread[k] = value;
   return spread;
+}
+
+/** Convierte puntos de estadística de Champions a EVs de la fórmula clásica. */
+export function championsPointToEvs(points: number): number {
+  return points * CHAMPIONS_EV_PER_POINT;
+}
+
+/**
+ * Traduce un spread de puntos de Champions (máx. 32/66) a EVs clásicos para
+ * calcular estadísticas con la fórmula estándar. Fuera de Champions el spread
+ * se devuelve tal cual.
+ */
+export function toClassicEvs(spread: StatSpread, champions?: boolean): StatSpread {
+  if (!champions) return spread;
+  const evs = { ...spread };
+  for (const k of STAT_KEYS) evs[k] = championsPointToEvs(spread[k]);
+  return evs;
 }
 
 export function normalizeMember(member: TeamMember): TeamMember {

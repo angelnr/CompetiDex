@@ -90,7 +90,12 @@ export function DamageCalculator() {
   }, [attacker, defender, field]);
 
   const members = teams.flatMap((team) =>
-    team.members.map((m) => ({ teamId: team.id, teamName: team.name, member: m })),
+    team.members.map((m) => ({
+      teamId: team.id,
+      teamName: team.name,
+      champions: !!team.champions,
+      member: m,
+    })),
   );
 
   const loadMember = (key: string | null) => {
@@ -98,7 +103,7 @@ export function DamageCalculator() {
     const idx = members.findIndex((m) => `${m.teamName}\u0000${m.member.pokemonId}` === key);
     const entry = idx >= 0 ? members[idx] : undefined;
     if (!entry) return;
-    const input = teamMemberToCalcInput(entry.member, field.level);
+    const input = teamMemberToCalcInput(entry.member, field.level, entry.champions);
     // No sabemos si ha de ir a atacante o defensor: el patrón de uso habitual
     // rellena el lado enfocado; simplificamos rellenando el atacante.
     setAttacker(input);

@@ -91,6 +91,7 @@ describe("parseTeamPayload", () => {
       members: [
         {
           ...VALID.members[0]!,
+          ivs: { ...VALID.members[0]!.ivs, hp: 0 },
           evs: {
             hp: 4,
             attack: 30,
@@ -106,6 +107,31 @@ describe("parseTeamPayload", () => {
     expect(team.champions).toBe(true);
     expect(team.members[0]!.evs!.attack).toBe(30);
     expect(team.members[0]!.level).toBe(50);
+    // Champions no usa IVs: se normalizan al máximo (31).
+    expect(team.members[0]!.ivs!.hp).toBe(31);
+  });
+
+  it("usa IVs 31 por defecto cuando el miembro no los incluye", () => {
+    const payload = {
+      ...VALID,
+      members: [
+        {
+          pokemonId: 25,
+          slot: 0,
+          name: "pikachu",
+          types: ["electric"],
+        },
+      ],
+    };
+    const team = parseTeamPayload(payload);
+    expect(team.members[0]!.ivs).toEqual({
+      hp: 31,
+      attack: 31,
+      defense: 31,
+      "special-attack": 31,
+      "special-defense": 31,
+      speed: 31,
+    });
   });
 
   it("rechaza payload no conforme al esquema", () => {

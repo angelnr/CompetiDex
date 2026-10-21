@@ -28,12 +28,15 @@ import {
   MAX_EV_TOTAL,
   MAX_EV_TOTAL_CHAMPIONS,
   MAX_EV_PER_STAT_CHAMPIONS,
+  CHAMPIONS_FIXED_IV,
   CHAMPIONS_LEVEL,
+  DEFAULT_EVS,
   totalEvs,
 } from "@/lib/team";
 import type { Pokemon } from "@/lib/pokeapi";
 import {
   baseSpeciesSlug,
+  computeChampionsStat,
   computeStat,
   formatPokedexId,
   getName,
@@ -90,17 +93,13 @@ export function TeamMemberEditor({
   const tTeams = useTranslations("teams");
   const maxEvPerStat = champions ? MAX_EV_PER_STAT_CHAMPIONS : MAX_EV_PER_STAT;
   const maxEvTotal = champions ? MAX_EV_TOTAL_CHAMPIONS : MAX_EV_TOTAL;
-  const evTotal = totalEvs(
-    member.evs ?? {
-      hp: 0,
-      attack: 0,
-      defense: 0,
-      "special-attack": 0,
-      "special-defense": 0,
-      speed: 0,
-    },
-  );
+  const evTotal = totalEvs(member.evs ?? DEFAULT_EVS);
   const evOver = evTotal > maxEvTotal;
+  // En Champions los valores guardados son puntos de estadística, no EVs.
+  const evLabel = champions ? t("statPoints") : t("evs");
+  const evOverMessage = champions
+    ? t("pointsOver", { max: maxEvTotal })
+    : t("evOver", { max: maxEvTotal });
   const selectedItem = useMemo(() => findItem(member.heldItem), [member.heldItem]);
   const locale = useLocale();
   const localizedName = useLocalizedSpeciesName(member.name);
@@ -399,7 +398,7 @@ export function TeamMemberEditor({
       <div>
         <div className="mb-1 flex items-center justify-between">
           <label className="text-xs font-medium">
-            {t("ivs")} / {t("evs")}
+            {champions ? t("statPoints") : `${t("ivs")} / ${t("evs")}`}
           </label>
           <span
             className={`text-xs ${evOver ? "font-bold text-destructive" : "text-muted-foreground"}`}
@@ -407,43 +406,63 @@ export function TeamMemberEditor({
             {evTotal}/{maxEvTotal}
           </span>
         </div>
-        {evOver && (
-          <p className="mb-1 text-[10px] text-destructive">{t("evOver", { max: maxEvTotal })}</p>
+        {champions && (
+          <p className="mb-1 text-[10px] text-muted-foreground">{t("championsPointsHint")}</p>
         )}
-        <div className="grid grid-cols-[2.5rem_3.25rem_minmax(0,1fr)_2.75rem] items-center gap-2">
+        {evOver && <p className="mb-1 text-[10px] text-destructive">{evOverMessage}</p>}
+        <div
+          className={cn(
+            "grid items-center gap-2",
+            champions
+              ? "grid-cols-[2.5rem_minmax(0,1fr)_2.75rem]"
+              : "grid-cols-[2.5rem_3.25rem_minmax(0,1fr)_2.75rem]",
+          )}
+        >
           <span aria-hidden />
-          <span className="text-center text-[10px] text-muted-foreground">{t("ivs")}</span>
-          <span className="text-[10px] text-muted-foreground">{t("evs")}</span>
+          {!champions && (
+            <span className="text-center text-[10px] text-muted-foreground">{t("ivs")}</span>
+          )}
+          <span className="text-[10px] text-muted-foreground">{evLabel}</span>
           <span className="text-right text-[10px] text-muted-foreground">{t("statTotal")}</span>
 
           {STAT_KEYS.map((k) => {
             const relation = statRelation(k);
             const base = baseStats[k] ?? 0;
-            const iv = member.ivs?.[k] ?? 31;
+            const iv = member.ivs?.[k] ?? CHAMPIONS_FIXED_IV;
             const ev = member.evs?.[k] ?? 0;
             const natureMultiplier = relation === "up" ? 1.1 : relation === "down" ? 0.9 : 1;
-            const total = computeStat({
-              base,
-              iv,
-              ev,
-              level: member.level ?? 100,
-              isHp: k === "hp",
-              natureMultiplier,
-            });
+            // Champions usa puntos (sin IVs, nivel 50); el resto, la fórmula clásica.
+            const total = champions
+              ? computeChampionsStat({
+                  base,
+                  points: ev,
+                  isHp: k === "hp",
+                  natureMultiplier,
+                })
+              : computeStat({
+                  base,
+                  iv,
+                  ev,
+                  level: member.level ?? 100,
+                  isHp: k === "hp",
+                  natureMultiplier,
+                });
             return (
               <Fragment key={k}>
                 <span className={cn("text-xs font-medium", natureClasses(relation))}>
                   {STAT_LABEL_KEYS[k]}
                 </span>
-                <Input
-                  type="number"
-                  min={0}
-                  max={31}
-                  value={iv}
-                  onChange={(e) => handleIV(k, e.target.value)}
-                  className={cn("h-8 text-center text-xs", natureClasses(relation))}
-                  aria-label={`IV ${k}`}
-                />
+                {!champions && (
+                  <Input
+                    type="number"
+                    min={0}
+                    max={31}
+                    value={iv}
+                    onChange={(e) => handleIV(k, e.target.value)}
+                    className={cn("h-8 text-center text-xs", natureClasses(relation))}
+                    aria-label={`IV ${k}`}
+                  />
+                )}
                 <div className="flex min-w-0 items-center gap-2">
                   <input
                     type="range"
@@ -453,7 +472,7 @@ export function TeamMemberEditor({
                     value={Math.min(ev, maxEvPerStat)}
                     onChange={(e) => handleEvSlider(k, e.target.value)}
                     className="h-1.5 w-full cursor-pointer accent-primary"
-                    aria-label={`EV ${k}`}
+                    aria-label={`${evLabel} ${k}`}
                   />
                   <Input
                     type="number"
@@ -466,7 +485,7 @@ export function TeamMemberEditor({
                     onBlur={() => handleEvBlur(k)}
                     onFocus={(e) => e.currentTarget.select()}
                     className="h-8 w-16 shrink-0 px-1 text-center font-mono text-xs"
-                    aria-label={`EV ${k} valor`}
+                    aria-label={`${evLabel} ${k} valor`}
                   />
                 </div>
                 <span
