@@ -21,6 +21,15 @@ export async function sendEmail({ to, subject, html }: SendEmailInput): Promise<
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM;
 
+  // Tailscale gestiona la zona *.ts.net y no permite publicar DKIM/SPF:
+  // un remitente bajo ts.net nunca podrá verificarse en Resend.
+  if (from?.includes(".ts.net")) {
+    console.error(
+      "[email] EMAIL_FROM usa un dominio *.ts.net: Tailscale controla su DNS y no admite " +
+        "registros DKIM/SPF, así que Resend nunca lo verificará. Usa un dominio propio.",
+    );
+  }
+
   if (!apiKey || !from) {
     console.error("[email] RESEND_API_KEY o EMAIL_FROM no configurados; correo no enviado");
     return;

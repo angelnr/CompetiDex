@@ -56,6 +56,17 @@ describe("sendEmail", () => {
     });
   });
 
+  it("avisa si el remitente usa un dominio ts.net (imposible de verificar)", async () => {
+    process.env.EMAIL_FROM = "CompetiDex <no-reply@servidor-angel.tailda287c.ts.net>";
+    fetchMock.mockResolvedValueOnce(new Response("{}", { status: 200 }));
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    await sendEmail({ to: "user@example.com", subject: "Hola", html: "<p>Hola</p>" });
+
+    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("ts.net"));
+    errorSpy.mockRestore();
+  });
+
   it("logea el error si Resend responde con fallo", async () => {
     fetchMock.mockResolvedValueOnce(new Response("invalid api key", { status: 401 }));
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
