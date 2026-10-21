@@ -90,6 +90,7 @@ cp .env.example .env      # set BETTER_AUTH_SECRET
 pnpm install
 pnpm prisma generate
 pnpm prisma migrate dev   # creates SQLite with users, teams and folders
+sqlite3 prisma/dev.db "PRAGMA journal_mode=WAL;"   # once: enable WAL
 pnpm dev
 ```
 
@@ -103,8 +104,32 @@ docker compose up --build
 ```
 
 - App: `http://localhost:3001` (configurable through `WEB_PORT`).
-- Redis: internal to the compose network (no published port).
-- SQLite persists in the `sqlite-data` volume; the one-shot `migrate` service runs `prisma migrate deploy` before the app starts.
+- Redis: internal to the compose network (no published port), capped at 256 MB with `allkeys-lru` eviction (sessions also live in SQLite, so eviction never logs users out).
+- SQLite persists in the `sqlite-data` volume. The one-shot `migrate` service runs `prisma migrate deploy` and then switches the database to WAL mode (persistent), so readers never block the writer. The app connects with `?connection_limit=1` to serialize writes.
+- `db-maintenance` runs once a day inside its container: deletes expired sessions and writes a verified SQLite backup to `/data/backups` (14-day retention, configurable with `BACKUP_RETENTION_DAYS`).
+
+### Backups and restore
+
+Backups are created with SQLite's `.backup` API (safe while WAL is active) and checked with `PRAGMA integrity_check`.
+
+To restore one (the app can keep running, but stop it to avoid writes during the swap):
+
+```bash
+# 1. Copy the chosen backup out of the named volume
+docker compose exec db-maintenance sh -c 'ls -lh /data/backups'
+
+# 2. Stop the writers
+docker compose stop app db-maintenance
+
+# 3. Replace the live database (inside the volume)
+docker compose run --rm --entrypoint sh db-maintenance -c \
+  'cp /data/backups/prod-YYYYMMDD-HHMMSS.db /data/prod.db && sqlite3 /data/prod.db "PRAGMA journal_mode=WAL;"'
+
+# 4. Start again
+docker compose up -d app db-maintenance
+```
+
+If the backup predates WAL mode, step 3 re-applies it; always confirm with `sqlite3 /data/prod.db "PRAGMA journal_mode;"` → `wal`.
 
 ## Scripts
 
@@ -121,20 +146,56 @@ pnpm format       # Prettier
 
 ## Environment variables
 
-| Variable               | Description                                | Default                     |
-| ---------------------- | ------------------------------------------ | --------------------------- |
-| `NODE_ENV`             | `development` / `production`               | `development`               |
-| `PORT`                 | Next.js port locally                       | `3100`                      |
-| `WEB_PORT`             | Port published by docker-compose           | `3001`                      |
-| `DATABASE_URL`         | Prisma URL                                 | `file:./dev.db`             |
-| `REDIS_URL`            | Redis connection (optional in dev)         | `redis://localhost:6379`    |
-| `POKEAPI_BASE`         | PokeAPI base URL                           | `https://pokeapi.co/api/v2` |
-| `POKEAPI_CACHE_TTL_S`  | Default Redis cache TTL (seconds)          | `86400`                     |
-| `BETTER_AUTH_SECRET`   | Signing secret (`openssl rand -base64 32`) | — (required)                |
-| `BETTER_AUTH_URL`      | Public app URL                             | `http://localhost:3100`     |
-| `NEXT_PUBLIC_APP_NAME` | Name shown in the UI                       | `CompetiDex`                |
+| Variable               | Description                                | Default                            |
+| ---------------------- | ------------------------------------------ | ---------------------------------- |
+| `NODE_ENV`             | `development` / `production`               | `development`                      |
+| `PORT`                 | Next.js port locally                       | `3100`                             |
+| `WEB_PORT`             | Port published by docker-compose           | `3001`                             |
+| `DATABASE_URL`         | Prisma URL                                 | `file:./dev.db?connection_limit=1` |
+| `REDIS_URL`            | Redis connection (optional in dev)         | `redis://localhost:6379`           |
+| `POKEAPI_BASE`         | PokeAPI base URL                           | `https://pokeapi.co/api/v2`        |
+| `POKEAPI_CACHE_TTL_S`  | Default Redis cache TTL (seconds)          | `86400`                            |
+| `BETTER_AUTH_SECRET`   | Signing secret (`openssl rand -base64 32`) | — (required)                       |
+| `BETTER_AUTH_URL`      | Public app URL (Tailscale Funnel in prod)  | `http://localhost:3100`            |
+| `RESEND_API_KEY`       | Resend API key for verification emails     | — (required in prod)               |
+| `EMAIL_FROM`           | Verified Resend sender                     | — (required in prod)               |
+| `NEXT_PUBLIC_APP_NAME` | Name shown in the UI                       | `CompetiDex`                       |
 
 Only `.env.example` is committed; never push a real `.env`.
+
+## Email verification (Resend)
+
+Sign-up requires a verified email, so the app sends the verification link through [Resend](https://resend.com) (plain REST call, no SDK dependency).
+
+1. Create a Resend account and add your domain in **Domains** → **Add Domain**.
+2. Add the DNS records Resend gives you (SPF, DKIM and the MX record for the subdomain). Wait for the domain to show **Verified**.
+3. Create an API key in **API Keys** → **Create API Key** (Sending access is enough).
+4. Set the variables in `.env`:
+   ```bash
+   BETTER_AUTH_URL=https://<node>.<tailnet>.ts.net   # public Funnel URL
+   RESEND_API_KEY=re_xxxxxxxxx
+   EMAIL_FROM="CompetiDex <no-reply@yourdomain.com>"
+   ```
+5. Restart the app (`docker compose up -d --build app`).
+
+Without `RESEND_API_KEY` the app logs the verification URL to the container log instead of sending it (useful in development: `docker compose logs -f app`).
+
+## Scaling to PostgreSQL (runbook)
+
+SQLite + WAL comfortably handles a few hundred concurrent users. Consider migrating when any of these is true:
+
+- More than ~500 daily active users, or sustained write traffic from team saves.
+- p95 latency of `/api/teams` above 500 ms.
+- `SQLITE_BUSY` errors keep appearing in the logs after WAL is enabled.
+
+Steps (the schema is already portable: `Json`-like fields are stored as `String`):
+
+1. Add a `postgres:16-alpine` service to `docker-compose.yml` with a named volume and a healthcheck.
+2. In `prisma/schema.prisma`, change `provider = "sqlite"` to `"postgresql"` (keep `binaryTargets` only if you still build for musl).
+3. Point `DATABASE_URL` (app and `migrate`) to the Postgres URL.
+4. Run `prisma migrate deploy` (the `migrate` service does it automatically) and verify with `prisma migrate status`.
+5. Replace the SQLite backup step in `scripts/db-maintenance.sh` with `pg_dump` (keep the 14-day rotation).
+6. Rollback: restore the last SQLite backup using the section above and revert the compose/schema changes.
 
 ## Testing and CI
 
