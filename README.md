@@ -180,6 +180,15 @@ Sign-up requires a verified email, so the app sends the verification link throug
 
 Without `RESEND_API_KEY` the app logs the verification URL to the container log instead of sending it (useful in development: `docker compose logs -f app`).
 
+> **Upgrading an existing deployment:** accounts created before email verification was enabled stay unverified and cannot sign in. Mark them as verified once, after deploying:
+>
+> ```bash
+> docker compose stop app
+> docker compose run --rm --entrypoint sh db-maintenance -c \
+>   "sqlite3 /data/prod.db 'UPDATE user SET emailVerified = 1;'"
+> docker compose up -d app
+> ```
+
 ## Scaling to PostgreSQL (runbook)
 
 SQLite + WAL comfortably handles a few hundred concurrent users. Consider migrating when any of these is true:
