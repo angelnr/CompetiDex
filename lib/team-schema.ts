@@ -18,6 +18,18 @@ export class TeamValidationError extends Error {
   }
 }
 
+/**
+ * Límites de los campos de texto. Sin ellos, un usuario podría almacenar
+ * megabytes por miembro y llenar la BBDD pese a los topes de equipos.
+ */
+const MAX_SPRITE_URL = 500;
+const MAX_TYPE_NAME = 30;
+const MAX_TYPE_COUNT = 3;
+const MAX_NATURE = 30;
+const MAX_ITEM = 100;
+const MAX_ABILITY = 100;
+const MAX_MOVE_NAME = 50;
+
 const statSpreadField = z.number().int().min(0).max(999);
 
 const statSpreadSchema = z.object({
@@ -55,15 +67,15 @@ export const teamMemberSchema = z.object({
     .min(0)
     .max(MAX_TEAM_SIZE - 1),
   name: z.string().trim().min(1).max(80),
-  sprite: z.string().nullable().default(null),
-  types: z.array(z.string().min(1)).default([]),
+  sprite: z.string().max(MAX_SPRITE_URL).nullable().default(null),
+  types: z.array(z.string().min(1).max(MAX_TYPE_NAME)).max(MAX_TYPE_COUNT).default([]),
   level: z.number().int().min(1).max(100).default(100),
-  heldItem: z.string().nullable().default(null),
-  ability: z.string().nullable().default(null),
-  nature: z.string().min(1).default("hardy"),
+  heldItem: z.string().max(MAX_ITEM).nullable().default(null),
+  ability: z.string().max(MAX_ABILITY).nullable().default(null),
+  nature: z.string().min(1).max(MAX_NATURE).default("hardy"),
   ivs: statSpreadSchema.default(IVS_DEFAULT),
   evs: statSpreadSchema.default(EVS_DEFAULT),
-  moves: z.array(z.string().min(1)).max(4).default([]),
+  moves: z.array(z.string().min(1).max(MAX_MOVE_NAME)).max(4).default([]),
 });
 
 export const teamSchema = z.object({

@@ -10,6 +10,7 @@ import {
   TeamOwnershipError,
 } from "@/lib/server/teams";
 import { parseTeamPayload, TeamValidationError } from "@/lib/team-schema";
+import { PayloadTooLargeError, readJsonBody } from "@/lib/request";
 import { ZodError } from "zod";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -34,8 +35,11 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
 
   let body: unknown;
   try {
-    body = await req.json();
-  } catch {
+    body = await readJsonBody(req);
+  } catch (err) {
+    if (err instanceof PayloadTooLargeError) {
+      return NextResponse.json({ error: "payload demasiado grande" }, { status: 413 });
+    }
     return NextResponse.json({ error: "payload JSON inválido" }, { status: 400 });
   }
 

@@ -134,6 +134,22 @@ describe("parseTeamPayload", () => {
     });
   });
 
+  it("rechaza campos de texto desmesurados", () => {
+    const withMember = (overrides: Record<string, unknown>) => ({
+      ...VALID,
+      members: [{ ...VALID.members[0]!, ...overrides }],
+    });
+
+    expect(() => parseTeamPayload(withMember({ sprite: "x".repeat(501) }))).toThrow();
+    expect(() => parseTeamPayload(withMember({ nature: "x".repeat(31) }))).toThrow();
+    expect(() =>
+      parseTeamPayload(withMember({ types: Array.from({ length: 4 }, () => "electric") })),
+    ).toThrow();
+    expect(() => parseTeamPayload(withMember({ moves: ["x".repeat(51)] }))).toThrow();
+    expect(() => parseTeamPayload(withMember({ heldItem: "x".repeat(101) }))).toThrow();
+    expect(() => parseTeamPayload(withMember({ ability: "x".repeat(101) }))).toThrow();
+  });
+
   it("rechaza payload no conforme al esquema", () => {
     expect(() => parseTeamPayload({ id: 123 })).toThrow();
     expect(() => parseTeamPayload(null)).toThrow();
