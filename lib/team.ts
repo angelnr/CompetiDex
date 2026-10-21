@@ -1,6 +1,8 @@
 import type { StatKey } from "@/lib/natures";
 
 export const MAX_TEAM_SIZE = 6;
+/** Tope de equipos por usuario (protección anti-abuso de la BBDD). */
+export const MAX_TEAMS_PER_USER = 100;
 export const MAX_EV_PER_STAT = 252;
 export const MAX_EV_TOTAL = 510;
 export const MAX_EV_PER_STAT_CHAMPIONS = 32;

@@ -1,7 +1,12 @@
 import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
-import { MAX_FOLDER_DEPTH, validateFolderName, type Folder } from "@/lib/folders";
+import {
+  MAX_FOLDER_DEPTH,
+  MAX_FOLDERS_PER_USER,
+  validateFolderName,
+  type Folder,
+} from "@/lib/folders";
 
 export class FolderOwnershipError extends Error {
   constructor() {
@@ -14,6 +19,13 @@ export class FolderValidationError extends Error {
   constructor(message: string) {
     super(message);
     this.name = "FolderValidationError";
+  }
+}
+
+export class FolderLimitError extends Error {
+  constructor() {
+    super(`Límite de ${MAX_FOLDERS_PER_USER} carpetas alcanzado`);
+    this.name = "FolderLimitError";
   }
 }
 
@@ -99,6 +111,7 @@ export async function saveFolder(userId: string, folder: Folder): Promise<Folder
 
   const rows = await prisma.folder.findMany({ where: { userId } });
   const existing = rows.find((r) => r.id === folder.id);
+  if (!existing && rows.length >= MAX_FOLDERS_PER_USER) throw new FolderLimitError();
   const parentId = folder.parentId && folder.parentId.length > 0 ? folder.parentId : null;
 
   if (parentId) {

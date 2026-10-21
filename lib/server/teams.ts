@@ -5,6 +5,7 @@ import {
   applyChampionsLevel,
   DEFAULT_EVS,
   DEFAULT_IVS,
+  MAX_TEAMS_PER_USER,
   normalizeMember,
   STAT_KEYS,
   type StatSpread,
@@ -16,6 +17,13 @@ export class TeamOwnershipError extends Error {
   constructor() {
     super("Equipo no encontrado");
     this.name = "TeamOwnershipError";
+  }
+}
+
+export class TeamLimitError extends Error {
+  constructor() {
+    super(`Límite de ${MAX_TEAMS_PER_USER} equipos alcanzado`);
+    this.name = "TeamLimitError";
   }
 }
 
@@ -133,6 +141,10 @@ function toDbMember(teamId: string, member: TeamMember) {
 export async function saveTeam(userId: string, team: Team): Promise<Team> {
   const existing = await prisma.team.findUnique({ where: { id: team.id } });
   if (existing && existing.userId !== userId) throw new TeamOwnershipError();
+  if (!existing) {
+    const teamCount = await prisma.team.count({ where: { userId } });
+    if (teamCount >= MAX_TEAMS_PER_USER) throw new TeamLimitError();
+  }
 
   const members = applyChampionsLevel(
     team.members.map((m) => normalizeMember(m)),

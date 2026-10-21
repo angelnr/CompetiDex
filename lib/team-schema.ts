@@ -10,6 +10,14 @@ import {
   type Team,
 } from "@/lib/team";
 
+/** Error de validación de dominio (slots, duplicados, EVs/IVs). */
+export class TeamValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "TeamValidationError";
+  }
+}
+
 const statSpreadField = z.number().int().min(0).max(999);
 
 const statSpreadSchema = z.object({
@@ -77,18 +85,18 @@ export function parseTeamPayload(payload: unknown): Team {
 
   for (const member of parsed.members) {
     if (usedSlots.has(member.slot)) {
-      throw new Error("slot duplicado en el equipo");
+      throw new TeamValidationError("slot duplicado en el equipo");
     }
     if (seenPokemon.has(member.pokemonId)) {
-      throw new Error("no puede haber Pokémon duplicados");
+      throw new TeamValidationError("no puede haber Pokémon duplicados");
     }
     usedSlots.add(member.slot);
     seenPokemon.add(member.pokemonId);
 
     const evError = validateEvs(member.evs, parsed.champions);
-    if (evError) throw new Error(evError);
+    if (evError) throw new TeamValidationError(evError);
     const ivError = validateIvs(member.ivs);
-    if (ivError) throw new Error(ivError);
+    if (ivError) throw new TeamValidationError(ivError);
   }
 
   return {

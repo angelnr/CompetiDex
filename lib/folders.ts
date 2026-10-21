@@ -8,6 +8,8 @@
 
 export const MAX_FOLDER_DEPTH = 3;
 export const MAX_FOLDER_NAME_LENGTH = 30;
+/** Tope de carpetas por usuario (protección anti-abuso de la BBDD). */
+export const MAX_FOLDERS_PER_USER = 100;
 
 export interface Folder {
   id: string;

@@ -6,6 +6,7 @@ import { auth } from "@/lib/auth";
 import { parseFolderPayload } from "@/lib/folder-schema";
 import {
   deleteFolder,
+  FolderLimitError,
   FolderOwnershipError,
   FolderValidationError,
   saveFolder,
@@ -41,6 +42,9 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     }
     if (err instanceof FolderOwnershipError) {
       return NextResponse.json({ error: err.message }, { status: 404 });
+    }
+    if (err instanceof FolderLimitError) {
+      return NextResponse.json({ error: err.message }, { status: 409 });
     }
     console.error("[folder] error al guardar carpeta:", err);
     return NextResponse.json({ error: "error interno" }, { status: 500 });

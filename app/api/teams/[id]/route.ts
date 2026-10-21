@@ -2,8 +2,14 @@ import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
 import { auth } from "@/lib/auth";
-import { deleteTeam, getTeam, saveTeam, TeamOwnershipError } from "@/lib/server/teams";
-import { parseTeamPayload } from "@/lib/team-schema";
+import {
+  deleteTeam,
+  getTeam,
+  saveTeam,
+  TeamLimitError,
+  TeamOwnershipError,
+} from "@/lib/server/teams";
+import { parseTeamPayload, TeamValidationError } from "@/lib/team-schema";
 import { ZodError } from "zod";
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -44,14 +50,17 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     if (err instanceof ZodError) {
       return NextResponse.json({ error: "payload inválido" }, { status: 400 });
     }
+    if (err instanceof TeamValidationError) {
+      return NextResponse.json({ error: err.message }, { status: 400 });
+    }
     if (err instanceof TeamOwnershipError) {
       return NextResponse.json({ error: err.message }, { status: 404 });
     }
+    if (err instanceof TeamLimitError) {
+      return NextResponse.json({ error: err.message }, { status: 409 });
+    }
     if (err instanceof SyntaxError) {
       return NextResponse.json({ error: "payload JSON inválido" }, { status: 400 });
-    }
-    if (err instanceof Error) {
-      return NextResponse.json({ error: err.message }, { status: 400 });
     }
     console.error("[team] error al guardar equipo:", err);
     return NextResponse.json({ error: "error interno" }, { status: 500 });
