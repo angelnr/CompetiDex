@@ -12,6 +12,12 @@ DB_PATH="${DATABASE_PATH:-/data/prod.db}"
 BACKUP_DIR="${BACKUP_DIR:-/data/backups}"
 RETENTION_DAYS="${BACKUP_RETENTION_DAYS:-14}"
 
+# Aviso temprano si el volumen se está quedando sin espacio.
+AVAILABLE_KB="$(df -Pk /data | awk 'NR==2 {print $4}')"
+if [ -n "$AVAILABLE_KB" ] && [ "$AVAILABLE_KB" -lt 1048576 ]; then
+  echo "[maintenance] AVISO: menos de 1 GB libre en /data" >&2
+fi
+
 node /app/scripts/session-cleanup.mjs
 
 mkdir -p "$BACKUP_DIR"

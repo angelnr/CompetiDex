@@ -1,3 +1,10 @@
+# Rotación de logs: sin tope, json-file puede llenar el disco del host.
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   app:
     build:
@@ -18,9 +25,11 @@ services:
       DATABASE_URL: file:/data/prod.db?connection_limit=1
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Definir BETTER_AUTH_SECRET en .env}
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3001}
+      REQUIRE_EMAIL_VERIFICATION: ${REQUIRE_EMAIL_VERIFICATION:-false}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       EMAIL_FROM: ${EMAIL_FROM:-}
       NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-CompetiDex}
+    logging: *default-logging
     volumes:
       - sqlite-data:/data
     depends_on:
@@ -41,6 +50,7 @@ services:
     user: "1001:1001"
     environment:
       DATABASE_URL: file:/data/prod.db?connection_limit=1
+    logging: *default-logging
     volumes:
       - sqlite-data:/data
     networks:
@@ -59,6 +69,7 @@ services:
     environment:
       DATABASE_URL: file:/data/prod.db?connection_limit=1
       BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-14}
+    logging: *default-logging
     volumes:
       - sqlite-data:/data
     command: ["sh", "-c", "while true; do sh scripts/db-maintenance.sh; sleep 86400; done"]
@@ -82,6 +93,7 @@ services:
         "--maxmemory-policy",
         "allkeys-lru",
       ]
+    logging: *default-logging
     volumes:
       - ./docker-data/redis:/data
     healthcheck:

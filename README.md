@@ -146,26 +146,38 @@ pnpm format       # Prettier
 
 ## Environment variables
 
-| Variable               | Description                                | Default                            |
-| ---------------------- | ------------------------------------------ | ---------------------------------- |
-| `NODE_ENV`             | `development` / `production`               | `development`                      |
-| `PORT`                 | Next.js port locally                       | `3100`                             |
-| `WEB_PORT`             | Port published by docker-compose           | `3001`                             |
-| `DATABASE_URL`         | Prisma URL                                 | `file:./dev.db?connection_limit=1` |
-| `REDIS_URL`            | Redis connection (optional in dev)         | `redis://localhost:6379`           |
-| `POKEAPI_BASE`         | PokeAPI base URL                           | `https://pokeapi.co/api/v2`        |
-| `POKEAPI_CACHE_TTL_S`  | Default Redis cache TTL (seconds)          | `86400`                            |
-| `BETTER_AUTH_SECRET`   | Signing secret (`openssl rand -base64 32`) | — (required)                       |
-| `BETTER_AUTH_URL`      | Public app URL (Tailscale Funnel in prod)  | `http://localhost:3100`            |
-| `RESEND_API_KEY`       | Resend API key for verification emails     | — (required in prod)               |
-| `EMAIL_FROM`           | Verified Resend sender                     | — (required in prod)               |
-| `NEXT_PUBLIC_APP_NAME` | Name shown in the UI                       | `CompetiDex`                       |
+| Variable                     | Description                                 | Default                            |
+| ---------------------------- | ------------------------------------------- | ---------------------------------- |
+| `NODE_ENV`                   | `development` / `production`                | `development`                      |
+| `PORT`                       | Next.js port locally                        | `3100`                             |
+| `WEB_PORT`                   | Port published by docker-compose            | `3001`                             |
+| `DATABASE_URL`               | Prisma URL                                  | `file:./dev.db?connection_limit=1` |
+| `REDIS_URL`                  | Redis connection (optional in dev)          | `redis://localhost:6379`           |
+| `POKEAPI_BASE`               | PokeAPI base URL                            | `https://pokeapi.co/api/v2`        |
+| `POKEAPI_CACHE_TTL_S`        | Default Redis cache TTL (seconds)           | `86400`                            |
+| `BETTER_AUTH_SECRET`         | Signing secret (`openssl rand -base64 32`)  | — (required)                       |
+| `BETTER_AUTH_URL`            | Public app URL (Tailscale Funnel in prod)   | `http://localhost:3100`            |
+| `REQUIRE_EMAIL_VERIFICATION` | Require a verified email to sign in         | `false`                            |
+| `RESEND_API_KEY`             | Resend API key (only if verification is on) | — (optional)                       |
+| `EMAIL_FROM`                 | Verified Resend sender (if verification on) | — (optional)                       |
+| `NEXT_PUBLIC_APP_NAME`       | Name shown in the UI                        | `CompetiDex`                       |
 
 Only `.env.example` is committed; never push a real `.env`.
 
-## Email verification (Resend)
+## Registration policy
 
-Sign-up requires a verified email, so the app sends the verification link through [Resend](https://resend.com) (plain REST call, no SDK dependency).
+By default **sign-up is open and does not require email verification** (that would need a sending domain, which the Funnel hostname cannot provide). Abuse is bounded by:
+
+- **5 registrations per hour per IP** at `/api/auth/sign-up/email` (Redis-backed, shared NAT is fine).
+- **100 teams / 100 folders per user**.
+- **64 KB max request body** on team/folder endpoints and bounded text fields.
+- Daily cleanup of expired sessions.
+
+To require verification later, set `REQUIRE_EMAIL_VERIFICATION=true` **and** configure a verified sending domain in Resend (next section).
+
+## Email verification (optional, Resend)
+
+The verification code is already wired but **disabled by default**. When enabled, the app sends the link through [Resend](https://resend.com) (plain REST call, no SDK dependency).
 
 > **The sending domain must be one whose DNS you control.** The `*.ts.net` Funnel hostname cannot be used: `ts.net` is managed by Tailscale, which does not allow publishing the DKIM/SPF/DMARC records Resend requires. Keep `BETTER_AUTH_URL` on the Funnel URL (that is just the app URL) and use a separate domain for `EMAIL_FROM`.
 >
@@ -177,14 +189,15 @@ Sign-up requires a verified email, so the app sends the verification link throug
 4. Set the variables in `.env`:
    ```bash
    BETTER_AUTH_URL=https://<node>.<tailnet>.ts.net   # public Funnel URL
+   REQUIRE_EMAIL_VERIFICATION=true
    RESEND_API_KEY=re_xxxxxxxxx
    EMAIL_FROM="CompetiDex <no-reply@yourdomain.com>"
    ```
 5. Restart the app (`docker compose up -d --build app`).
 
-Without `RESEND_API_KEY` the app logs the verification URL to the container log instead of sending it (useful in development: `docker compose logs -f app`).
+Verification is only enforced when **both** `REQUIRE_EMAIL_VERIFICATION=true` and `RESEND_API_KEY` are set, so a half-configured deployment cannot lock users out. Without `RESEND_API_KEY` the app logs the verification URL to the container log instead of sending it (useful in development: `docker compose logs -f app`).
 
-> **Upgrading an existing deployment:** accounts created before email verification was enabled stay unverified and cannot sign in. Mark them as verified once, after deploying:
+> **When enabling verification on an existing deployment:** accounts created while it was off stay unverified and cannot sign in. Mark them as verified once:
 >
 > ```bash
 > docker compose stop app

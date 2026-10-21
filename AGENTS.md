@@ -274,19 +274,20 @@ Cuando quieras reiniciar el servidor, usa `fuser -k 3100/tcp` en lugar de `kill`
 
 Solo `.env.example` se commitea. Variables mínimas esperadas:
 
-| Var                    | Descripción                                                 | Default dev                        |
-| ---------------------- | ----------------------------------------------------------- | ---------------------------------- |
-| `NODE_ENV`             | `development` / `production`                                | `development`                      |
-| `PORT`                 | Puerto de Next.js                                           | `3100`                             |
-| `DATABASE_URL`         | URL de Prisma (SQLite preparado para Postgres)              | `file:./dev.db`                    |
-| `REDIS_URL`            | URL de conexión a Redis                                     | `redis://localhost:6379`           |
-| `POKEAPI_BASE`         | Base URL de PokeAPI                                         | `https://pokeapi.co/api/v2`        |
-| `POKEAPI_CACHE_TTL_S`  | TTL por defecto en Redis (segundos)                         | `86400`                            |
-| `BETTER_AUTH_SECRET`   | Secreto de firma de Better Auth (`openssl rand -base64 32`) | (sin default, obligatorio)         |
-| `BETTER_AUTH_URL`      | URL pública de la app (en prod, URL de Tailscale Funnel)    | `http://localhost:3100`            |
-| `RESEND_API_KEY`       | API key de Resend para correos de verificación              | (sin default, obligatorio en prod) |
-| `EMAIL_FROM`           | Remitente verificado en Resend                              | (sin default, obligatorio en prod) |
-| `NEXT_PUBLIC_APP_NAME` | Nombre público mostrado en UI                               | `CompetiDex`                       |
+| Var                          | Descripción                                                     | Default dev                 |
+| ---------------------------- | --------------------------------------------------------------- | --------------------------- |
+| `NODE_ENV`                   | `development` / `production`                                    | `development`               |
+| `PORT`                       | Puerto de Next.js                                               | `3100`                      |
+| `DATABASE_URL`               | URL de Prisma (SQLite preparado para Postgres)                  | `file:./dev.db`             |
+| `REDIS_URL`                  | URL de conexión a Redis                                         | `redis://localhost:6379`    |
+| `POKEAPI_BASE`               | Base URL de PokeAPI                                             | `https://pokeapi.co/api/v2` |
+| `POKEAPI_CACHE_TTL_S`        | TTL por defecto en Redis (segundos)                             | `86400`                     |
+| `BETTER_AUTH_SECRET`         | Secreto de firma de Better Auth (`openssl rand -base64 32`)     | (sin default, obligatorio)  |
+| `BETTER_AUTH_URL`            | URL pública de la app (en prod, URL de Tailscale Funnel)        | `http://localhost:3100`     |
+| `REQUIRE_EMAIL_VERIFICATION` | Exige email verificado para iniciar sesión                      | `false`                     |
+| `RESEND_API_KEY`             | API key de Resend (solo si la verificación está activa)         | (opcional)                  |
+| `EMAIL_FROM`                 | Remitente verificado en Resend (si la verificación está activa) | (opcional)                  |
+| `NEXT_PUBLIC_APP_NAME`       | Nombre público mostrado en UI                                   | `CompetiDex`                |
 
 Al añadir una nueva variable, documentarla aquí y en `.env.example`.
 
