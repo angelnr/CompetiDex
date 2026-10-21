@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import type { SecondaryStorage } from "better-auth";
 
+import { sendEmail } from "@/lib/email";
 import { prisma } from "@/lib/prisma";
 import { getRedis } from "@/lib/redis";
 
@@ -96,6 +97,30 @@ export const auth = betterAuth({
     // Alineado con la validación del formulario (AuthForm): mínimo 6.
     // El default de Better Auth es 8 y provocaba errores genéricos.
     minPasswordLength: 6,
+    // Sin correo verificado no se crea sesión (frena cuentas basura).
+    requireEmailVerification: true,
+  },
+  emailVerification: {
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      // Sin proveedor configurado (dev), dejar el enlace en el log para poder
+      // completar el flujo manualmente. En producción RESEND_API_KEY existe.
+      if (!process.env.RESEND_API_KEY) {
+        console.info(`[auth] enlace de verificación (dev, sin RESEND_API_KEY): ${url}`);
+      }
+      const appName = process.env.NEXT_PUBLIC_APP_NAME ?? "CompetiDex";
+      await sendEmail({
+        to: user.email,
+        subject: `Verifica tu cuenta en ${appName}`,
+        html: [
+          `<p>Hola ${user.name},</p>`,
+          `<p>Confirma tu correo para activar tu cuenta en ${appName}:</p>`,
+          `<p><a href="${url}">Verificar cuenta</a></p>`,
+          `<p>Si no creaste esta cuenta, puedes ignorar este mensaje.</p>`,
+        ].join(""),
+      });
+    },
   },
   secondaryStorage: createSecondaryStorage(),
   session: {

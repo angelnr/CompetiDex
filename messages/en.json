@@ -566,7 +566,12 @@
       "password": "Password must be at least 6 characters long."
     },
     "errorPasswordTooShort": "Password must be at least 6 characters long.",
-    "errorRateLimited": "Too many attempts. Please wait a moment and try again."
+    "errorRateLimited": "Too many attempts. Please wait a moment and try again.",
+    "errorEmailNotVerified": "You must verify your email before signing in.",
+    "verifySent": "We've sent you a verification email. Check your inbox.",
+    "resendSent": "Email resent. Check your inbox.",
+    "resendVerification": "Resend verification email",
+    "resending": "Sending…"
   },
   "calc": {
     "title": "Damage Calculator",

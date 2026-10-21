@@ -566,7 +566,12 @@
       "password": "Le mot de passe doit contenir au moins 6 caractères."
     },
     "errorPasswordTooShort": "Le mot de passe doit contenir au moins 6 caractères.",
-    "errorRateLimited": "Trop de tentatives. Veuillez patienter un instant."
+    "errorRateLimited": "Trop de tentatives. Veuillez patienter un instant.",
+    "errorEmailNotVerified": "Tu dois vérifier ton e-mail avant de te connecter.",
+    "verifySent": "Nous t'avons envoyé un e-mail de vérification. Consulte ta boîte de réception.",
+    "resendSent": "E-mail renvoyé. Consulte ta boîte de réception.",
+    "resendVerification": "Renvoyer l'e-mail de vérification",
+    "resending": "Envoi…"
   },
   "calc": {
     "title": "Calculateur de dégâts",

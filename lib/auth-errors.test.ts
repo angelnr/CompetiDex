@@ -19,6 +19,12 @@ describe("readAuthErrorKey", () => {
     );
   });
 
+  it("mapea email sin verificar", () => {
+    expect(
+      readAuthErrorKey({ message: "Email not verified", code: "EMAIL_NOT_VERIFIED", status: 403 }),
+    ).toBe("errorEmailNotVerified");
+  });
+
   it("mapea credenciales inválidas", () => {
     expect(readAuthErrorKey({ message: "Invalid email or password", status: 401 })).toBe(
       "errorInvalidCredentials",

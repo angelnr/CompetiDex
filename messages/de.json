@@ -566,7 +566,12 @@
       "password": "Das Passwort muss mindestens 6 Zeichen lang sein."
     },
     "errorPasswordTooShort": "Das Passwort muss mindestens 6 Zeichen lang sein.",
-    "errorRateLimited": "Zu viele Versuche. Bitte warte einen Moment."
+    "errorRateLimited": "Zu viele Versuche. Bitte warte einen Moment.",
+    "errorEmailNotVerified": "Du musst deine E-Mail bestätigen, bevor du dich anmeldest.",
+    "verifySent": "Wir haben dir eine Bestätigungs-E-Mail geschickt. Prüfe dein Postfach.",
+    "resendSent": "E-Mail erneut gesendet. Prüfe dein Postfach.",
+    "resendVerification": "Bestätigungs-E-Mail erneut senden",
+    "resending": "Wird gesendet…"
   },
   "calc": {
     "title": "Schadensrechner",

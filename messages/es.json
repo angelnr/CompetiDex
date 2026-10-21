@@ -566,7 +566,12 @@
       "password": "La contraseña debe tener al menos 6 caracteres."
     },
     "errorPasswordTooShort": "La contraseña debe tener al menos 6 caracteres.",
-    "errorRateLimited": "Demasiados intentos. Espera un momento e inténtalo de nuevo."
+    "errorRateLimited": "Demasiados intentos. Espera un momento e inténtalo de nuevo.",
+    "errorEmailNotVerified": "Debes verificar tu correo antes de iniciar sesión.",
+    "verifySent": "Te hemos enviado un correo de verificación. Revisa tu bandeja de entrada.",
+    "resendSent": "Correo reenviado. Revisa tu bandeja de entrada.",
+    "resendVerification": "Reenviar correo de verificación",
+    "resending": "Enviando…"
   },
   "calc": {
     "title": "Calculadora de daño",

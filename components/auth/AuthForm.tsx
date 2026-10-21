@@ -25,6 +25,8 @@ export function AuthForm({ className }: { className?: string }) {
   const [fieldError, setFieldError] = useState<string | null>(null);
   const [errorKey, setErrorKey] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [notice, setNotice] = useState<"verifySent" | "resendSent" | null>(null);
+  const [resending, setResending] = useState(false);
 
   const schema =
     mode === "login"
@@ -38,9 +40,27 @@ export function AuthForm({ className }: { className?: string }) {
           password: z.string().min(6),
         });
 
+  async function handleResend() {
+    if (!email.trim()) {
+      setFieldError("email");
+      return;
+    }
+    setErrorKey(null);
+    setResending(true);
+    try {
+      await authClient.sendVerificationEmail({ email: email.trim() });
+      setNotice("resendSent");
+    } catch (err) {
+      setErrorKey(readAuthErrorKey(err));
+    } finally {
+      setResending(false);
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErrorKey(null);
+    setNotice(null);
 
     const parsed = schema.safeParse({ name, email, password });
     if (!parsed.success) {
@@ -66,6 +86,13 @@ export function AuthForm({ className }: { className?: string }) {
         return;
       }
 
+      if (mode === "register") {
+        // Con verificación de email obligatoria no hay sesión todavía.
+        setNotice("verifySent");
+        setPassword("");
+        return;
+      }
+
       router.push("/equipos");
     } catch (err) {
       setErrorKey(readAuthErrorKey(err));
@@ -82,6 +109,7 @@ export function AuthForm({ className }: { className?: string }) {
           setMode(v as Mode);
           setErrorKey(null);
           setFieldError(null);
+          setNotice(null);
         }}
       >
         <TabsList className="grid w-full grid-cols-2">
@@ -149,10 +177,23 @@ export function AuthForm({ className }: { className?: string }) {
 
         {errorKey && <p className="text-sm text-destructive">{t(errorKey)}</p>}
         {fieldError && <p className="text-sm text-destructive">{t(`errorField.${fieldError}`)}</p>}
+        {notice && <p className="text-sm text-muted-foreground">{t(notice)}</p>}
 
         <Button type="submit" className="w-full" disabled={submitting}>
           {submitting ? t("loading") : mode === "login" ? t("submitLogin") : t("submitRegister")}
         </Button>
+
+        {errorKey === "errorEmailNotVerified" && (
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={handleResend}
+            disabled={resending}
+          >
+            {resending ? t("resending") : t("resendVerification")}
+          </Button>
+        )}
       </form>
     </div>
   );

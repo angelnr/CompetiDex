@@ -16,6 +16,7 @@ export function readAuthErrorKey(err: unknown): string {
     .toLowerCase();
 
   if (/already.?exists|ya existe|user_exists/.test(text)) return "errorEmailExists";
+  if (/not verified|email_not_verified|unverified/.test(text)) return "errorEmailNotVerified";
   if (/too short|password_too_short|password.*(short|length)/.test(text)) {
     return "errorPasswordTooShort";
   }
