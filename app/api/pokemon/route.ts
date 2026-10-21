@@ -41,12 +41,23 @@ import { getLocalizedItemNames } from "@/lib/item-names";
 import { getMovepool } from "@/lib/moveset";
 import { getLocalizedMoveNames } from "@/lib/move-names";
 import { getLocalizedLocationNames, MAX_LOCATION_AREAS } from "@/lib/location-area-names";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { getClientIp } from "@/lib/client-ip";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+/**
+ * PokeAPI tiene ~1300 Pokémon: offsets mayores solo sirven para generar claves
+ * de caché únicas y disparar peticiones inútiles al upstream.
+ */
+const MAX_LIST_OFFSET = 5_000;
+/** 10 req/s por IP: frena scripts sin castigar a usuarios tras un NAT compartido. */
+const RATE_LIMIT_PER_MINUTE = 600;
+const RATE_LIMIT_WINDOW_S = 60;
+
 const listSchema = z.object({
-  offset: z.coerce.number().int().min(0).optional(),
+  offset: z.coerce.number().int().min(0).max(MAX_LIST_OFFSET).optional(),
   limit: z.coerce.number().int().min(1).max(2000).optional(),
 });
 
@@ -69,6 +80,15 @@ function handleError(err: unknown) {
 }
 
 export async function GET(request: Request): Promise<NextResponse> {
+  const ip = getClientIp(request.headers);
+  const allowed = await checkRateLimit(`pokemon:${ip}`, RATE_LIMIT_PER_MINUTE, RATE_LIMIT_WINDOW_S);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "demasiadas peticiones" },
+      { status: 429, headers: { "Retry-After": String(RATE_LIMIT_WINDOW_S) } },
+    );
+  }
+
   const { searchParams } = new URL(request.url);
 
   try {
