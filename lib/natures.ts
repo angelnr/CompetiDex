@@ -5,6 +5,16 @@
 
 export type StatKey = "hp" | "attack" | "defense" | "special-attack" | "special-defense" | "speed";
 
+/** Abreviaturas de stat para los selectores de naturaleza y las tablas. */
+export const NATURE_STAT_LABELS: Record<StatKey, string> = {
+  hp: "hp",
+  attack: "atk",
+  defense: "def",
+  "special-attack": "spa",
+  "special-defense": "spd",
+  speed: "spe",
+};
+
 export interface Nature {
   id: number;
   name: string;

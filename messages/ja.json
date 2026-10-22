@@ -57,6 +57,7 @@
     "weight": "重さ",
     "baseExp": "基礎経験値",
     "happiness": "なつき度",
+    "eggGroups": "タマゴグループ",
     "compare": "比較",
     "calculate": "計算",
     "statsTotal": "合計",
@@ -165,13 +166,22 @@
     "noEncounters": "このポケモンの出現データは見つかりませんでした。",
     "gameLabel": "ゲーム:",
     "noWildInGame": "このゲームでは野生で出現しません。",
+    "anyTime": "いつでも",
     "table": {
       "route": "道路",
       "method": "方法",
+      "time": "時間帯",
       "minLevel": "最小Lv",
       "maxLevel": "最大Lv",
       "chance": "確率"
     }
+  },
+  "locationArea": {
+    "pokemonCount": "この道路に出現するポケモン（{count}）",
+    "noEncounters": "このゲームでは出現データがありません。",
+    "pokemon": "ポケモン",
+    "detailView": "詳細表示",
+    "groupedView": "グループ表示"
   },
   "teams": {
     "title": "マイチーム",
@@ -462,7 +472,9 @@
   },
   "encounterMethods": {
     "gift": "プレゼント",
-    "walk": "歩く",
+    "walk": "草むら",
+    "headbutt": "ずつき",
+    "max-raid": "マックスレイド",
     "surf": "サーフィン",
     "rock-smash": "いわくだき",
     "dark-grass": "暗い草むら",
@@ -497,6 +509,35 @@
     "npc-trade": "NPC交換",
     "wanderer": "さまよう",
     "pokeflute": "ポケモンのふえ"
+  },
+  "encounterConditions": {
+    "time-day": "昼",
+    "time-night": "夜",
+    "time-morning": "朝",
+    "time-evening": "夕方"
+  },
+  "eggGroups": {
+    "monster": "怪獣",
+    "water1": "水中1",
+    "bug": "虫",
+    "flying": "飛行",
+    "ground": "陸上",
+    "fairy": "妖精",
+    "plant": "植物",
+    "humanshape": "人型",
+    "water3": "水中3",
+    "mineral": "鉱物",
+    "indeterminate": "不定形",
+    "water2": "水中2",
+    "ditto": "メタモン",
+    "dragon": "ドラゴン",
+    "no-eggs": "未発見"
+  },
+  "eggGroupPage": {
+    "title": "タマゴグループ：{group}",
+    "count": "{count}種",
+    "species": "ポケモン",
+    "noSpecies": "このグループに登録されているポケモンはいません。"
   },
   "lang": {
     "switcherAria": "言語を変更",

@@ -16,6 +16,7 @@ import { getTypeMeta } from "@/lib/pokemon-types";
 import type { Pokemon, PokemonSpecies, Type, Ability } from "@/lib/pokeapi";
 import type { MegaVarietyInfo } from "@/lib/pokemon-utils";
 import {
+  capitalize,
   computeStatTotal,
   formatHeight,
   formatWeight,
@@ -46,6 +47,7 @@ export function PokemonFormContent({
   locale,
 }: PokemonFormContentProps) {
   const t = useTranslations("pokemon");
+  const tEggGroups = useTranslations("eggGroups");
   const [selectedMega, setSelectedMega] = useState<MegaVarietyInfo | null>(null);
   const { data: megaData, isLoading: megaLoading } = usePokemon(selectedMega?.id);
 
@@ -109,6 +111,11 @@ export function PokemonFormContent({
 
   const isLegendary = species.is_legendary;
   const isMythical = species.is_mythical;
+  const eggGroups = species.egg_groups ?? [];
+  const eggGroupLabel = (name: string) => {
+    const label = tEggGroups(name);
+    return label === `eggGroups.${name}` ? capitalize(name.replace(/-/g, " ")) : label;
+  };
 
   return (
     <div className="mb-8 grid items-start gap-6 lg:grid-cols-2">
@@ -213,6 +220,21 @@ export function PokemonFormContent({
             <div>
               <dt className="text-muted-foreground">{t("happiness")}</dt>
               <dd className="font-medium">{species.base_happiness}</dd>
+            </div>
+            <div className="col-span-2">
+              <dt className="text-muted-foreground">{t("eggGroups")}</dt>
+              <dd className="font-medium">
+                {eggGroups.length > 0
+                  ? eggGroups.map((group, index) => (
+                      <span key={group.name}>
+                        {index > 0 && " · "}
+                        <Link href={`/grupo-huevo/${group.name}`} className="hover:underline">
+                          {eggGroupLabel(group.name)}
+                        </Link>
+                      </span>
+                    ))
+                  : "—"}
+              </dd>
             </div>
           </dl>
 

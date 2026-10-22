@@ -57,6 +57,7 @@
     "weight": "Peso",
     "baseExp": "Exp. base",
     "happiness": "Felicidad",
+    "eggGroups": "Grupo huevo",
     "compare": "Comparar",
     "calculate": "Calcular",
     "statsTotal": "Total",
@@ -165,13 +166,22 @@
     "noEncounters": "No se encontraron datos de encuentro para este Pokémon.",
     "gameLabel": "Juego:",
     "noWildInGame": "No se encuentra en estado salvaje en este juego.",
+    "anyTime": "Cualquier hora",
     "table": {
       "route": "Ruta",
       "method": "Método",
+      "time": "Horario",
       "minLevel": "Nivel mín.",
       "maxLevel": "Nivel máx.",
       "chance": "Probabilidad"
     }
+  },
+  "locationArea": {
+    "pokemonCount": "Pokémon en esta ruta ({count})",
+    "noEncounters": "No hay encuentros registrados en este juego.",
+    "pokemon": "Pokémon",
+    "detailView": "Vista de detalle",
+    "groupedView": "Vista agrupada"
   },
   "teams": {
     "title": "Mis Equipos",
@@ -462,7 +472,9 @@
   },
   "encounterMethods": {
     "gift": "Regalo",
-    "walk": "Caminando",
+    "walk": "Hierba alta",
+    "headbutt": "Golpe cabeza",
+    "max-raid": "Incursión Max",
     "surf": "Surfeando",
     "rock-smash": "Golpe cabeza",
     "dark-grass": "Hierba (oscuridad)",
@@ -497,6 +509,35 @@
     "npc-trade": "Intercambio NPC",
     "wanderer": "Errante",
     "pokeflute": "Poké Flauta"
+  },
+  "encounterConditions": {
+    "time-day": "Día",
+    "time-night": "Noche",
+    "time-morning": "Mañana",
+    "time-evening": "Tarde"
+  },
+  "eggGroups": {
+    "monster": "Monstruo",
+    "water1": "Agua 1",
+    "bug": "Bicho",
+    "flying": "Volador",
+    "ground": "Campo",
+    "fairy": "Hada",
+    "plant": "Planta",
+    "humanshape": "Humanoide",
+    "water3": "Agua 3",
+    "mineral": "Mineral",
+    "indeterminate": "Amorfo",
+    "water2": "Agua 2",
+    "ditto": "Ditto",
+    "dragon": "Dragón",
+    "no-eggs": "Desconocido"
+  },
+  "eggGroupPage": {
+    "title": "Grupo huevo: {group}",
+    "count": "{count} especies",
+    "species": "Especie",
+    "noSpecies": "No hay especies registradas en este grupo."
   },
   "lang": {
     "switcherAria": "Cambiar idioma",

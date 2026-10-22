@@ -57,6 +57,7 @@
     "weight": "Poids",
     "baseExp": "Exp. de base",
     "happiness": "Bonheur",
+    "eggGroups": "Groupe d'œuf",
     "compare": "Comparer",
     "calculate": "Calculer",
     "statsTotal": "Total",
@@ -165,13 +166,22 @@
     "noEncounters": "Aucune donnée de rencontre trouvée pour ce Pokémon.",
     "gameLabel": "Jeu :",
     "noWildInGame": "Introuvable à l'état sauvage dans ce jeu.",
+    "anyTime": "À toute heure",
     "table": {
       "route": "Route",
       "method": "Méthode",
+      "time": "Moment",
       "minLevel": "Niv. min",
       "maxLevel": "Niv. max",
       "chance": "Probabilité"
     }
+  },
+  "locationArea": {
+    "pokemonCount": "Pokémon dans cette zone ({count})",
+    "noEncounters": "Aucune rencontre enregistrée dans ce jeu.",
+    "pokemon": "Pokémon",
+    "detailView": "Vue détaillée",
+    "groupedView": "Vue groupée"
   },
   "teams": {
     "title": "Mes Équipes",
@@ -462,7 +472,9 @@
   },
   "encounterMethods": {
     "gift": "Cadeau",
-    "walk": "Marche",
+    "walk": "Hautes herbes",
+    "headbutt": "Coup de tête",
+    "max-raid": "Raid Max",
     "surf": "Surf",
     "rock-smash": "Éclate-Roc",
     "dark-grass": "Herbe sombre",
@@ -497,6 +509,35 @@
     "npc-trade": "Échange PNJ",
     "wanderer": "Errant",
     "pokeflute": "Poké Flûte"
+  },
+  "encounterConditions": {
+    "time-day": "Jour",
+    "time-night": "Nuit",
+    "time-morning": "Matin",
+    "time-evening": "Soir"
+  },
+  "eggGroups": {
+    "monster": "Monstre",
+    "water1": "Eau 1",
+    "bug": "Insecte",
+    "flying": "Vol",
+    "ground": "Terrestre",
+    "fairy": "Fée",
+    "plant": "Végétal",
+    "humanshape": "Humanoïde",
+    "water3": "Eau 3",
+    "mineral": "Minéral",
+    "indeterminate": "Amorphe",
+    "water2": "Eau 2",
+    "ditto": "Métamorph",
+    "dragon": "Dragon",
+    "no-eggs": "Inconnu"
+  },
+  "eggGroupPage": {
+    "title": "Groupe d'œuf : {group}",
+    "count": "{count} espèces",
+    "species": "Espèce",
+    "noSpecies": "Aucune espèce enregistrée dans ce groupe."
   },
   "lang": {
     "switcherAria": "Changer la langue",
