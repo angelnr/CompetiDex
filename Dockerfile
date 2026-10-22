@@ -3,7 +3,7 @@
 # =============================================================================
 # Stage 1: deps
 # =============================================================================
-FROM node:20-alpine AS deps
+FROM node:24.22.1-alpine AS deps
 
 ENV PNPM_HOME=/pnpm \
     PATH=/pnpm:$PATH \
@@ -24,7 +24,7 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 # =============================================================================
 # Stage 2: builder
 # =============================================================================
-FROM node:20-alpine AS builder
+FROM node:24.22.1-alpine AS builder
 
 ENV PNPM_HOME=/pnpm \
     PATH=/pnpm:$PATH \
@@ -90,7 +90,7 @@ CMD ["sh", "scripts/db-maintenance.sh"]
 # =============================================================================
 # Stage 5: runner (imagen final mínima)
 # =============================================================================
-FROM node:20-alpine AS runner
+FROM node:24.22.1-alpine AS runner
 
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
