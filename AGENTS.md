@@ -262,7 +262,7 @@ docker compose up --build   # app en :3100 + Redis en :6379
 Cuando quieras reiniciar el servidor, usa `fuser -k 3100/tcp` en lugar de `kill` normal, que a veces no mata el proceso completo de Next.js.
 
 - El `Dockerfile` es multi-stage: `deps` → `builder` → `migrate` → `runner`.
-- Imagen final basada en `node:20-alpine`, usuario non-root, standalone output.
+- Imagen final basada en `node:24.22.1-alpine`, usuario non-root, standalone output.
 - El servicio `migrate` (target `migrate`, one-shot) aplica `prisma migrate deploy`
   antes de arrancar `app` (`depends_on: service_completed_successfully`).
 - SQLite persiste en el volumen nombrado `sqlite-data` montado en `/data`
