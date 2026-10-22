@@ -111,6 +111,15 @@
     "noPokemon": "Aucun Pokémon connu n'a ce talent.",
     "toolTipAria": "Voir la description de {name}"
   },
+  "moveDetail": {
+    "learnedBy": "Pokémon qui apprennent cette capacité ({count})",
+    "noLearners": "Aucun Pokémon de {game} n'apprend cette capacité.",
+    "loadError": "Impossible de charger les Pokémon qui apprennent cette capacité.",
+    "gameLabel": "Jeu",
+    "pokemon": "Pokémon",
+    "method": "Apprentissage",
+    "levelMethod": "Niveau {level}"
+  },
   "effectiveness": {
     "title": "Calculateur d'efficacités",
     "step1": "1. Sélectionne le type de la capacité",
@@ -430,6 +439,7 @@
     "machine": "CT/CS",
     "tutor": "Donneur de capacités",
     "egg": "Œuf",
+    "train": "Entraînement",
     "light-ball-egg": "Œuf (Light Ball)",
     "form-change": "Changement de forme",
     "zygarde-cube": "Zygarde Cube"

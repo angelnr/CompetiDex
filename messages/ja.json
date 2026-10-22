@@ -111,6 +111,15 @@
     "noPokemon": "この特性を持つポケモンはいません。",
     "toolTipAria": "{name}の説明を見る"
   },
+  "moveDetail": {
+    "learnedBy": "このわざを覚えるポケモン（{count}）",
+    "noLearners": "{game}でこのわざを覚えるポケモンはいません。",
+    "loadError": "このわざを覚えるポケモンを読み込めませんでした。",
+    "gameLabel": "ゲーム",
+    "pokemon": "ポケモン",
+    "method": "習得方法",
+    "levelMethod": "レベル{level}"
+  },
   "effectiveness": {
     "title": "タイプ相性計算機",
     "step1": "1. 技のタイプを選択",
@@ -430,6 +439,7 @@
     "machine": "わざマシン",
     "tutor": "教え技",
     "egg": "タマゴ技",
+    "train": "トレーニング",
     "light-ball-egg": "タマゴ (Light Ball)",
     "form-change": "フォームチェンジ",
     "zygarde-cube": "ジガルデキューブ"

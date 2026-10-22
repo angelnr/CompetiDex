@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
+
+import { Link } from "@/i18n/routing";
 import {
   Table,
   TableBody,
@@ -215,7 +217,9 @@ function MoveRow({
     <TableRow>
       <TableCell className="font-mono text-xs">{level}</TableCell>
       <TableCell className="font-medium">
-        {nameEs ?? (move ? move.name : moveSlot.move.name)}
+        <Link href={`/movimiento/${moveId}`} className="hover:underline">
+          {nameEs ?? (move ? move.name : moveSlot.move.name)}
+        </Link>
       </TableCell>
       <TableCell>
         {isLoading ? (
