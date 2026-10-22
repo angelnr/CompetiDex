@@ -111,6 +111,15 @@
     "noPokemon": "Ningún Pokémon conocido tiene esta habilidad.",
     "toolTipAria": "Ver descripción de {name}"
   },
+  "moveDetail": {
+    "learnedBy": "Pokémon que aprenden este movimiento ({count})",
+    "noLearners": "Ningún Pokémon de {game} aprende este movimiento.",
+    "loadError": "No se pudieron cargar los Pokémon que aprenden este movimiento.",
+    "gameLabel": "Juego",
+    "pokemon": "Pokémon",
+    "method": "Aprendizaje",
+    "levelMethod": "Nivel {level}"
+  },
   "effectiveness": {
     "title": "Calculadora de efectividades",
     "step1": "1. Selecciona el tipo del movimiento",
@@ -430,6 +439,7 @@
     "machine": "MT/MA",
     "tutor": "Tutor",
     "egg": "Movimiento huevo",
+    "train": "Entrenamiento",
     "light-ball-egg": "Huevo (Light Ball)",
     "form-change": "Cambio de forma",
     "zygarde-cube": "Zygarde Cube"

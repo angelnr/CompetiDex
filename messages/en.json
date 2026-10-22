@@ -111,6 +111,15 @@
     "noPokemon": "No known Pokémon have this ability.",
     "toolTipAria": "View description of {name}"
   },
+  "moveDetail": {
+    "learnedBy": "Pokémon that learn this move ({count})",
+    "noLearners": "No Pokémon in {game} learns this move.",
+    "loadError": "Could not load the Pokémon that learn this move.",
+    "gameLabel": "Game",
+    "pokemon": "Pokémon",
+    "method": "Method",
+    "levelMethod": "Level {level}"
+  },
   "effectiveness": {
     "title": "Effectiveness Calculator",
     "step1": "1. Select the move type",
@@ -430,6 +439,7 @@
     "machine": "TM/HM",
     "tutor": "Tutor",
     "egg": "Egg move",
+    "train": "Training",
     "light-ball-egg": "Egg (Light Ball)",
     "form-change": "Form change",
     "zygarde-cube": "Zygarde Cube"

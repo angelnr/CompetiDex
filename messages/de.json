@@ -111,6 +111,15 @@
     "noPokemon": "Kein bekanntes Pokémon hat diese Fähigkeit.",
     "toolTipAria": "Beschreibung von {name} anzeigen"
   },
+  "moveDetail": {
+    "learnedBy": "Pokémon, die diese Attacke lernen ({count})",
+    "noLearners": "Kein Pokémon in {game} lernt diese Attacke.",
+    "loadError": "Die Pokémon, die diese Attacke lernen, konnten nicht geladen werden.",
+    "gameLabel": "Spiel",
+    "pokemon": "Pokémon",
+    "method": "Erlernmethode",
+    "levelMethod": "Level {level}"
+  },
   "effectiveness": {
     "title": "Effektivitätsrechner",
     "step1": "1. Wähle den Angriffstyp",
@@ -430,6 +439,7 @@
     "machine": "TM/VM",
     "tutor": "Attacken-Lehrer",
     "egg": "Ei-Attacke",
+    "train": "Training",
     "light-ball-egg": "Ei (Light Ball)",
     "form-change": "Formwandel",
     "zygarde-cube": "Zygarde-Würfel"
