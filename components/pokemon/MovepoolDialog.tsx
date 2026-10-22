@@ -27,9 +27,11 @@ import { useMovepool } from "@/lib/queries";
 import type { MovepoolMove } from "@/lib/moveset";
 import {
   filterMovepool,
+  isMoveAvailableInGame,
   isNumericSortColumn,
   normalizeQuery,
   parseMovepoolQuery,
+  pickDefaultVersionGroup,
   sortMovepool,
   type MovepoolLabels,
   type MovepoolSortColumn,
@@ -64,6 +66,8 @@ export interface MovepoolDialogProps {
   /** Slug actualmente seleccionado (se resalta). */
   selectedSlug?: string | null;
   onSelect: (slug: string) => void;
+  /** En formato Champions prioriza el learnset `champions` si existe. */
+  champions?: boolean;
 }
 
 /**
@@ -78,6 +82,7 @@ export function MovepoolDialog({
   speciesLabel,
   selectedSlug,
   onSelect,
+  champions = false,
 }: MovepoolDialogProps) {
   const t = useTranslations("teams.member");
   const tMoves = useTranslations("moves");
@@ -90,17 +95,12 @@ export function MovepoolDialog({
   const [game, setGame] = useState<string | undefined>(undefined);
   const [sort, setSort] = useState<MovepoolSortState | null>(null);
 
-  // Juego por defecto: el más reciente (prefiriendo Escarlata/Púrpura).
+  // Juego por defecto: Champions si el formato lo pide y la especie tiene
+  // learnset propio; si no, Escarlata/Púrpura y luego el más reciente.
   useEffect(() => {
     if (!data || data.versionGroups.length === 0) return;
-    setGame((prev) =>
-      prev && data.versionGroups.includes(prev)
-        ? prev
-        : data.versionGroups.includes("scarlet-violet")
-          ? "scarlet-violet"
-          : data.versionGroups.at(-1),
-    );
-  }, [data]);
+    setGame(pickDefaultVersionGroup(data.versionGroups, champions));
+  }, [data, champions]);
 
   // Limpia búsqueda y orden al abrir para arrancar siempre desde cero.
   useEffect(() => {
@@ -145,16 +145,16 @@ export function MovepoolDialog({
       name: (move) => pickName(move, locale),
       type: (move) => tTypes(move.type),
       category: (move) =>
-        CATEGORIES.has(move.category) ? tMoves(`damageClass.${move.category}`) : slugTitle(move.category),
+        CATEGORIES.has(move.category)
+          ? tMoves(`damageClass.${move.category}`)
+          : slugTitle(move.category),
     }),
     [locale, tTypes, tMoves],
   );
 
   const filtered = useMemo(() => {
     if (!data) return [];
-    const byGame = data.moves.filter(
-      (move) => !game || move.vgs.length === 0 || move.vgs.includes(game),
-    );
+    const byGame = data.moves.filter((move) => isMoveAvailableInGame(move, game));
     return filterMovepool(byGame, filter, (move) => ({
       name: pickName(move, locale),
       englishName: move.names.en ?? "",
@@ -174,7 +174,9 @@ export function MovepoolDialog({
 
   const toggleSort = (column: MovepoolSortColumn) => {
     setSort((prev) =>
-      prev && prev.column === column ? { column, reverse: !prev.reverse } : { column, reverse: false },
+      prev && prev.column === column
+        ? { column, reverse: !prev.reverse }
+        : { column, reverse: false },
     );
   };
 

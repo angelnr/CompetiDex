@@ -12,10 +12,14 @@ vi.mock("@/lib/redis", () => ({
 
 const getPokemonMock = vi.fn();
 const getMoveMock = vi.fn();
+const getPokemonSpeciesMock = vi.fn();
+const getEvolutionChainMock = vi.fn();
 
 vi.mock("@/lib/pokeapi", () => ({
   getPokemon: (...args: unknown[]) => getPokemonMock(...args),
   getMove: (...args: unknown[]) => getMoveMock(...args),
+  getPokemonSpecies: (...args: unknown[]) => getPokemonSpeciesMock(...args),
+  getEvolutionChain: (...args: unknown[]) => getEvolutionChainMock(...args),
 }));
 
 import { getMovepool } from "@/lib/moveset";
@@ -32,6 +36,20 @@ const MYSTICAL_FIRE = {
   accuracy: 100,
   pp: 10,
   priority: 0,
+};
+
+const FAKE_OUT = {
+  name: "fake-out",
+  names: [
+    { name: "Sorpresa", language: { name: "es" } },
+    { name: "Fake Out", language: { name: "en" } },
+  ],
+  type: { name: "normal" },
+  damage_class: { name: "physical" },
+  power: 40,
+  accuracy: 100,
+  pp: 10,
+  priority: 3,
 };
 
 const FOLLOW_ME = {
@@ -86,7 +104,7 @@ describe("getMovepool", () => {
     expect(pool.versionGroups).toEqual(["sword-shield", "scarlet-violet"]);
 
     const [key, , ttl] = getOrSetMock.mock.calls[0]!;
-    expect(key).toBe("pokeapi:moveset:10186:v3");
+    expect(key).toBe("pokeapi:moveset:10186:v4");
     expect(ttl).toBe(604_800);
   });
 
@@ -166,6 +184,64 @@ describe("getMovepool", () => {
     expect(pool.moves).toEqual([]);
     expect(pool.versionGroups).toEqual([]);
     expect(getMoveMock).not.toHaveBeenCalled();
+  });
+
+  it("añade los movimientos huevo heredados de la preevolución (Pawmot)", async () => {
+    getPokemonMock.mockImplementation((id: number | string) => {
+      if (id === 923) {
+        return Promise.resolve({
+          id: 923,
+          name: "pawmot",
+          species: { name: "pawmot", url: "https://pokeapi.co/api/v2/pokemon-species/923/" },
+          moves: [
+            {
+              move: { name: "thunder-shock" },
+              version_group_details: [
+                {
+                  level_learned_at: 3,
+                  version_group: { name: "scarlet-violet" },
+                  move_learn_method: { name: "level-up" },
+                },
+              ],
+            },
+          ],
+        });
+      }
+      return Promise.resolve({
+        id: 921,
+        name: "pawmi",
+        species: { name: "pawmi", url: "https://pokeapi.co/api/v2/pokemon-species/921/" },
+        moves: [
+          {
+            move: { name: "fake-out" },
+            version_group_details: [
+              {
+                level_learned_at: 0,
+                version_group: { name: "scarlet-violet" },
+                move_learn_method: { name: "egg" },
+              },
+            ],
+          },
+        ],
+      });
+    });
+    getPokemonSpeciesMock.mockResolvedValue({
+      evolution_chain: { url: "https://pokeapi.co/api/v2/evolution-chain/460/" },
+    });
+    getEvolutionChainMock.mockResolvedValue({
+      id: 460,
+      chain: { species: { name: "pawmi" }, evolves_to: [] },
+    });
+    getMoveMock.mockImplementation((slug: string) =>
+      Promise.resolve(slug === "fake-out" ? FAKE_OUT : MYSTICAL_FIRE),
+    );
+
+    const pool = await getMovepool(923);
+
+    const fakeOut = pool.moves.find((m) => m.slug === "fake-out");
+    expect(fakeOut).toBeDefined();
+    expect(fakeOut!.vgs).toEqual(["scarlet-violet"]);
+    expect(pool.moves.map((m) => m.slug)).toContain("thunder-shock");
   });
 
   it("une el learnset de una mega con el de su especie base", async () => {

@@ -3,9 +3,11 @@ import { describe, it, expect } from "vitest";
 import {
   compareAlphanumeric,
   filterMovepool,
+  isMoveAvailableInGame,
   isMovepoolFilterEmpty,
   normalizeQuery,
   parseMovepoolQuery,
+  pickDefaultVersionGroup,
   sortMovepool,
   type MovepoolLabels,
   type MovepoolSortColumn,
@@ -34,6 +36,32 @@ const LABELS: MovepoolLabels = {
 };
 
 const slugs = (moves: MovepoolMove[]) => moves.map((m) => m.slug);
+
+describe("pickDefaultVersionGroup", () => {
+  it("prioriza Champions cuando el formato lo pide y existe", () => {
+    expect(pickDefaultVersionGroup(["scarlet-violet", "champions"], true)).toBe("champions");
+  });
+
+  it("cae a Escarlata/Púrpura si no hay learnset Champions", () => {
+    expect(pickDefaultVersionGroup(["sword-shield", "scarlet-violet"], true)).toBe(
+      "scarlet-violet",
+    );
+  });
+
+  it("fuera de Champions prefiere Escarlata/Púrpura y luego el más reciente", () => {
+    expect(pickDefaultVersionGroup(["sword-shield", "scarlet-violet"])).toBe("scarlet-violet");
+    expect(pickDefaultVersionGroup(["red-blue", "gold-silver"])).toBe("gold-silver");
+  });
+});
+
+describe("isMoveAvailableInGame", () => {
+  it("filtra por version-group y deja pasar los que no tienen datos", () => {
+    expect(isMoveAvailableInGame({ vgs: ["scarlet-violet"] }, "scarlet-violet")).toBe(true);
+    expect(isMoveAvailableInGame({ vgs: ["scarlet-violet"] }, "champions")).toBe(false);
+    expect(isMoveAvailableInGame({ vgs: [] }, "champions")).toBe(true);
+    expect(isMoveAvailableInGame({ vgs: ["scarlet-violet"] }, undefined)).toBe(true);
+  });
+});
 
 describe("normalizeQuery", () => {
   it("quita acentos, pasa a minúsculas y recorta", () => {
@@ -129,7 +157,10 @@ describe("sortMovepool", () => {
 
   it("desempata por nombre alfanumérico cuando la columna coincide", () => {
     const tied = [move("b", { names: { es: "Beta" } }), move("a", { names: { es: "Alfa" } })];
-    expect(slugs(sortMovepool(tied, { column: "power", reverse: false }, LABELS))).toEqual(["a", "b"]);
+    expect(slugs(sortMovepool(tied, { column: "power", reverse: false }, LABELS))).toEqual([
+      "a",
+      "b",
+    ]);
   });
 
   it("no muta el array original", () => {
@@ -184,19 +215,42 @@ describe("parseMovepoolQuery", () => {
 
 describe("filterMovepool", () => {
   const moves = [
-    move("moonblast", { names: { es: "Fuerza Lunar", en: "Moonblast" }, type: "fairy", category: "special" }),
-    move("play-rough", { names: { es: "Carantoña", en: "Play Rough" }, type: "fairy", category: "physical" }),
-    move("thunderbolt", { names: { es: "Rayo", en: "Thunderbolt" }, type: "electric", category: "special" }),
-    move("dragon-dance", { names: { es: "Danza Dragón", en: "Dragon Dance" }, type: "dragon", category: "status" }),
+    move("moonblast", {
+      names: { es: "Fuerza Lunar", en: "Moonblast" },
+      type: "fairy",
+      category: "special",
+    }),
+    move("play-rough", {
+      names: { es: "Carantoña", en: "Play Rough" },
+      type: "fairy",
+      category: "physical",
+    }),
+    move("thunderbolt", {
+      names: { es: "Rayo", en: "Thunderbolt" },
+      type: "electric",
+      category: "special",
+    }),
+    move("dragon-dance", {
+      names: { es: "Danza Dragón", en: "Dragon Dance" },
+      type: "dragon",
+      category: "status",
+    }),
   ];
-  const names = (m: MovepoolMove) => ({ name: m.names.es ?? m.slug, englishName: m.names.en ?? "" });
+  const names = (m: MovepoolMove) => ({
+    name: m.names.es ?? m.slug,
+    englishName: m.names.en ?? "",
+  });
 
   it("devuelve todo sin filtros", () => {
     expect(filterMovepool(moves, { types: [], categories: [], terms: [] }, names)).toBe(moves);
   });
 
   it("filtra por varios tipos con OR", () => {
-    const result = filterMovepool(moves, { types: ["fairy", "electric"], categories: [], terms: [] }, names);
+    const result = filterMovepool(
+      moves,
+      { types: ["fairy", "electric"], categories: [], terms: [] },
+      names,
+    );
     expect(slugs(result)).toEqual(["moonblast", "play-rough", "thunderbolt"]);
   });
 

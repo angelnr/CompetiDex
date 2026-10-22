@@ -46,7 +46,8 @@ import {
 import { useLocalizedSpeciesName } from "@/hooks/useLocalizedSpeciesName";
 import { findItem, localizeItem } from "@/lib/items";
 import { NATURES, type StatKey } from "@/lib/natures";
-import { useAbilities, useItem, useNatures, usePokemon } from "@/lib/queries";
+import { useAbilities, useItem, useMovepool, useNatures } from "@/lib/queries";
+import { isMoveAvailableInGame, pickDefaultVersionGroup } from "@/lib/movepool-filter";
 import { cn } from "@/lib/utils";
 
 export interface TeamMemberEditorProps {
@@ -185,26 +186,26 @@ export function TeamMemberEditor({
         : undefined,
     [pokemon.moves, member.name],
   );
-  const { data: basePokemon } = usePokemon(baseSlug);
 
-  // Fuente del movepool de la tabla completa: la propia especie si tiene
-  // movimientos, o la especie base (megas sin learnset en PokeAPI).
+  // Fuente única para el autocompletado y la tabla completa: el movepool ya
+  // incluye los movimientos huevo heredados de la preevolución.
   const movepoolSource: number | string | undefined =
     pokemon.moves.length > 0 ? member.pokemonId : baseSlug;
-
+  const { data: movepool } = useMovepool(movepoolSource);
+  // En Champions el autocompletado respeta su learnset (o SV si la especie
+  // aún no tiene datos de Champions). En Estándar se mantienen todas las
+  // versiones, como antes.
+  const defaultGame = useMemo(
+    () => (champions ? pickDefaultVersionGroup(movepool?.versionGroups ?? [], true) : undefined),
+    [movepool, champions],
+  );
   const availableMoves = useMemo(() => {
-    const source = [...pokemon.moves, ...(basePokemon?.moves ?? [])];
-    const seen = new Set<string>();
-    return source
-      .map((m) => m.move.name)
-      .filter((name) => {
-        const lower = name.toLowerCase();
-        if (seen.has(lower)) return false;
-        seen.add(lower);
-        return true;
-      })
+    if (!movepool) return [];
+    return movepool.moves
+      .filter((move) => isMoveAvailableInGame(move, defaultGame))
+      .map((move) => move.slug)
       .sort();
-  }, [pokemon.moves, basePokemon?.moves]);
+  }, [movepool, defaultGame]);
 
   const patch = (p: TeamMemberPatch) => onChange(p);
 
@@ -558,6 +559,7 @@ export function TeamMemberEditor({
         sourceId={movepoolSource}
         speciesLabel={localizedName}
         selectedSlug={movepoolSlot !== null ? (member.moves?.[movepoolSlot] ?? null) : null}
+        champions={champions}
         onSelect={(slug) => {
           if (movepoolSlot !== null) handleMove(movepoolSlot, slug);
         }}

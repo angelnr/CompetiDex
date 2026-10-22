@@ -10,6 +10,31 @@ import type { MovepoolMove } from "@/lib/moveset";
 
 export type MovepoolSortColumn = "name" | "type" | "category" | "power" | "accuracy" | "pp";
 
+/**
+ * Juego inicial del movepool. En Champions se usa su propio learnset si la
+ * especie lo tiene; si no (p. ej. Pawmot), se cae a Escarlata/Púrpura y, por
+ * último, al version-group más reciente disponible.
+ */
+export function pickDefaultVersionGroup(
+  versionGroups: string[],
+  champions = false,
+): string | undefined {
+  if (champions && versionGroups.includes("champions")) return "champions";
+  if (versionGroups.includes("scarlet-violet")) return "scarlet-violet";
+  return versionGroups.at(-1);
+}
+
+/**
+ * Indica si un movimiento está disponible en el juego seleccionado. Los
+ * movimientos sin version-groups se mantienen visibles como fallback.
+ */
+export function isMoveAvailableInGame(
+  move: Pick<MovepoolMove, "vgs">,
+  game: string | undefined,
+): boolean {
+  return !game || move.vgs.length === 0 || move.vgs.includes(game);
+}
+
 export const MOVEPOOL_SORT_COLUMNS: MovepoolSortColumn[] = [
   "name",
   "type",

@@ -20,6 +20,7 @@ import {
   getName,
   speciesLabelWithGender,
 } from "@/lib/pokemon-utils";
+import { enrichPokemonWithInheritedEggMoves } from "@/lib/move-inheritance";
 
 const STATIC_RANGE = { min: 1, max: 151 };
 export const revalidate = 86_400;
@@ -46,12 +47,22 @@ async function loadPokemonData(id: number) {
     const species = await getPokemonSpecies(speciesId);
     const evolutionChainId = extractIdFromUrl(species.evolution_chain.url);
     const evolutionChain = await getEvolutionChain(evolutionChainId);
+    // PokeAPI no copia los movimientos huevo a las evoluciones; los añadimos
+    // por version-group para que la ficha muestre el learnset completo.
+    const enrichedPokemon = await enrichPokemonWithInheritedEggMoves(pokemon, evolutionChain);
     const typeData = await Promise.all(pokemon.types.map((t) => getType(t.type.name)));
     const abilityData = await Promise.all(
       pokemon.abilities.map((a) => getAbility(extractIdFromUrl(a.ability.url)).catch(() => null)),
     );
     const encounters = await getEncounters(id).catch(() => null);
-    return { pokemon, species, evolutionChain, typeData, abilityData, encounters };
+    return {
+      pokemon: enrichedPokemon,
+      species,
+      evolutionChain,
+      typeData,
+      abilityData,
+      encounters,
+    };
   } catch (err) {
     if (err instanceof PokeAPIError && err.status === 404) {
       return null;

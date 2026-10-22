@@ -16,6 +16,7 @@ import { getMove, getPokemon, type Pokemon, type PokemonMoveSlot } from "@/lib/p
 import { getOrSet } from "@/lib/redis";
 import { isExcludedVersionGroup, versionGroupOrder } from "@/lib/version-names";
 import { baseSpeciesSlug, isMegaName } from "@/lib/pokemon-utils";
+import { enrichPokemonWithInheritedEggMoves } from "@/lib/move-inheritance";
 
 /** Locales soportados en la app (ver i18n/routing.ts). */
 const APP_LOCALES = ["es", "en", "fr", "de", "ja"] as const;
@@ -108,7 +109,7 @@ async function resolveSlots(pokemon: Pokemon): Promise<PokemonMoveSlot[]> {
 }
 
 async function buildMovepool(idOrName: number | string): Promise<Movepool> {
-  const pokemon = await getPokemon(idOrName);
+  const pokemon = await enrichPokemonWithInheritedEggMoves(await getPokemon(idOrName));
   const slots = await resolveSlots(pokemon);
 
   // Agrupa version-groups legales por movimiento (deduplicado).
@@ -186,10 +187,12 @@ async function buildMovepool(idOrName: number | string): Promise<Movepool> {
 
 /**
  * Movepool completo de una especie. Cachea el DTO ensamblado en Redis (7d)
- * bajo `pokeapi:moveset:{id}:v3`. Devuelve un pool vacío para formas sin
+ * bajo `pokeapi:moveset:{id}:v4`. Devuelve un pool vacío para formas sin
  * movimientos (p. ej. megas sin learnset en PokeAPI).
+ *
+ * v4 incluye los movimientos huevo heredados de la especie raíz.
  */
 export function getMovepool(idOrName: number | string): Promise<Movepool> {
-  const key = `pokeapi:moveset:${idOrName}:v3`;
+  const key = `pokeapi:moveset:${idOrName}:v4`;
   return getOrSet(key, () => buildMovepool(idOrName), MOVESET_TTL_S);
 }
