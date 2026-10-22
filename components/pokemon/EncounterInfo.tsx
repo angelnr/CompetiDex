@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 
+import { Link } from "@/i18n/routing";
 import {
   Table,
   TableBody,
@@ -33,6 +34,7 @@ export function EncounterInfo({ encounters }: EncounterInfoProps) {
   const locale = useLocale();
   const t = useTranslations("encounters");
   const tMethods = useTranslations("encounterMethods");
+  const tConditions = useTranslations("encounterConditions");
   const tVersions = useTranslations("versions");
   const tSuffixes = useTranslations("locationSuffixes");
 
@@ -73,6 +75,9 @@ export function EncounterInfo({ encounters }: EncounterInfoProps) {
           location: area.location_area.name,
           locationAreaId: extractIdFromUrl(area.location_area.url),
           method: ed.method.name,
+          time: ed.condition_values
+            .map((condition) => condition.name)
+            .filter((name) => name.startsWith("time-")),
           minLevel: ed.min_level,
           maxLevel: ed.max_level,
           chance: ed.chance,
@@ -108,6 +113,7 @@ export function EncounterInfo({ encounters }: EncounterInfoProps) {
             <TableRow>
               <TableHead>{t("table.route")}</TableHead>
               <TableHead>{t("table.method")}</TableHead>
+              <TableHead>{t("table.time")}</TableHead>
               <TableHead>{t("table.minLevel")}</TableHead>
               <TableHead>{t("table.maxLevel")}</TableHead>
               <TableHead>{t("table.chance")}</TableHead>
@@ -117,14 +123,22 @@ export function EncounterInfo({ encounters }: EncounterInfoProps) {
             {rows.map((r, i) => (
               <TableRow key={i}>
                 <TableCell className="font-medium">
-                  {resolveLocationName({
-                    areaName: r.location,
-                    locale,
-                    localized: localizedNames?.[String(r.locationAreaId)],
-                    suffixLabel,
-                  })}
+                  <Link
+                    href={`/ruta/${r.locationAreaId}?game=${encodeURIComponent(currentVersion ?? "")}`}
+                    className="hover:underline"
+                  >
+                    {resolveLocationName({
+                      areaName: r.location,
+                      locale,
+                      localized: localizedNames?.[String(r.locationAreaId)],
+                      suffixLabel,
+                    })}
+                  </Link>
                 </TableCell>
                 <TableCell>{formatMethodName(r.method, tMethods)}</TableCell>
+                <TableCell>
+                  {r.time.length > 0 ? formatTimeNames(r.time, tConditions) : t("anyTime")}
+                </TableCell>
                 <TableCell>{r.minLevel}</TableCell>
                 <TableCell>{r.maxLevel}</TableCell>
                 <TableCell>{r.chance}%</TableCell>
@@ -165,4 +179,15 @@ function formatMethodName(name: string, t: (key: string) => string): string {
   return label === `encounterMethods.${name}` || label === name
     ? capitalize(name.replace(/-/g, " "))
     : label;
+}
+
+function formatTimeNames(names: string[], t: (key: string) => string): string {
+  return names
+    .map((name) => {
+      const label = t(name);
+      return label === `encounterConditions.${name}`
+        ? capitalize(name.replace("time-", ""))
+        : label;
+    })
+    .join(" · ");
 }

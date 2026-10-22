@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatBar } from "@/components/pokemon/StatBar";
 import { computeStat } from "@/lib/pokemon-utils";
-import { NATURES, type StatKey } from "@/lib/natures";
+import { NATURE_STAT_LABELS, NATURES, type StatKey } from "@/lib/natures";
 import { cn } from "@/lib/utils";
 import type { PokemonStat } from "@/lib/pokeapi";
 
@@ -121,7 +121,9 @@ export function StatsCalculator({ stats }: StatsCalculatorProps) {
           >
             {NATURES.map((n) => {
               const suffix =
-                n.increased && n.decreased ? ` (+${n.increased} -${n.decreased})` : " (—)";
+                n.increased && n.decreased
+                  ? ` (+${NATURE_STAT_LABELS[n.increased]} / -${NATURE_STAT_LABELS[n.decreased]})`
+                  : " (—)";
               return (
                 <option key={n.id} value={n.name}>
                   {n.nameEs}

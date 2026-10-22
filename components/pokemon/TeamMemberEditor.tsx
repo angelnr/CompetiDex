@@ -45,7 +45,7 @@ import {
 } from "@/lib/pokemon-utils";
 import { useLocalizedSpeciesName } from "@/hooks/useLocalizedSpeciesName";
 import { findItem, localizeItem } from "@/lib/items";
-import { NATURES, type StatKey } from "@/lib/natures";
+import { NATURE_STAT_LABELS, NATURES, type StatKey } from "@/lib/natures";
 import { useAbilities, useItem, useMovepool, useNatures } from "@/lib/queries";
 import { isMoveAvailableInGame, pickDefaultVersionGroup } from "@/lib/movepool-filter";
 import { cn } from "@/lib/utils";
@@ -61,15 +61,6 @@ export interface TeamMemberEditorProps {
   /** IDs ya presentes en el equipo (se excluyen del selector de especie). */
   speciesExcludeIds?: number[] | undefined;
 }
-
-const STAT_LABEL_KEYS: Record<StatKey, string> = {
-  hp: "hp",
-  attack: "atk",
-  defense: "def",
-  "special-attack": "spa",
-  "special-defense": "spd",
-  speed: "spe",
-};
 
 /**
  * Clases de color por stat según la naturaleza: rojo si sube, azul si baja
@@ -165,8 +156,8 @@ export function TeamMemberEditor({
   /** Sufijo "(+atk / -spa)" con los cambios de la naturaleza. */
   const natureHint = (n: (typeof NATURES)[number]): string => {
     const parts: string[] = [];
-    if (n.increased) parts.push(`+${STAT_LABEL_KEYS[n.increased]}`);
-    if (n.decreased) parts.push(`-${STAT_LABEL_KEYS[n.decreased]}`);
+    if (n.increased) parts.push(`+${NATURE_STAT_LABELS[n.increased]}`);
+    if (n.decreased) parts.push(`-${NATURE_STAT_LABELS[n.decreased]}`);
     return parts.length > 0 ? ` (${parts.join(" / ")})` : "";
   };
 
@@ -451,7 +442,7 @@ export function TeamMemberEditor({
             return (
               <Fragment key={k}>
                 <span className={cn("text-xs font-medium", natureClasses(relation))}>
-                  {STAT_LABEL_KEYS[k]}
+                  {NATURE_STAT_LABELS[k]}
                 </span>
                 {!champions && (
                   <Input

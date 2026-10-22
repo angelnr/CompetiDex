@@ -30,6 +30,7 @@ const CACHE_TTL = {
   ability: 86_400,
   move: 604_800, // 7d
   item: 604_800, // 7d
+  eggGroup: 604_800, // 7d
   encounters: 86_400,
   locationArea: 604_800, // 7d
 } as const;
@@ -173,6 +174,7 @@ export interface PokemonSpecies {
   color: NamedAPIResource;
   evolution_chain: { url: string };
   evolves_from_species: NamedAPIResource | null;
+  egg_groups?: NamedAPIResource[];
   generation: NamedAPIResource;
   names: PokemonSpeciesName[];
   genera: PokemonSpeciesGenus[];
@@ -392,12 +394,26 @@ export interface LocationAreaName {
  * PokeAPI tenga para la localización padre: `en`/`fr`/`de` casi completos y
  * `es`/`ja` solo en algunas regiones (ver `lib/location-area-names.ts`).
  */
+export interface LocationAreaPokemonEncounter {
+  pokemon: NamedAPIResource;
+  version_details: VersionEncounterDetail[];
+}
+
 export interface LocationArea {
   id: number;
   name: string;
   game_index: number;
   names: LocationAreaName[];
   location: NamedAPIResource;
+  pokemon_encounters?: LocationAreaPokemonEncounter[];
+}
+
+/** Grupo huevo y todas las especies que pertenecen a él. */
+export interface EggGroup {
+  id: number;
+  name: string;
+  names: LocationAreaName[];
+  pokemon_species: NamedAPIResource[];
 }
 
 /**
@@ -577,6 +593,12 @@ export function getLocationArea(idOrName: number | string): Promise<LocationArea
 export function getLocation(idOrName: number | string): Promise<Location> {
   const id = typeof idOrName === "number" ? String(idOrName) : idOrName;
   return pokeapiFetch<Location>(`/location/${id}`, CACHE_TTL.locationArea);
+}
+
+/** Grupo huevo por id o nombre: /egg-group/{idOrName} */
+export function getEggGroup(idOrName: number | string): Promise<EggGroup> {
+  const id = typeof idOrName === "number" ? String(idOrName) : idOrName;
+  return pokeapiFetch<EggGroup>(`/egg-group/${id}`, CACHE_TTL.eggGroup);
 }
 
 export { PokeAPIError };

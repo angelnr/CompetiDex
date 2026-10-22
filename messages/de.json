@@ -57,6 +57,7 @@
     "weight": "Gewicht",
     "baseExp": "Basis-EP",
     "happiness": "Zuneigung",
+    "eggGroups": "Ei-Gruppe",
     "compare": "Vergleichen",
     "calculate": "Berechnen",
     "statsTotal": "Gesamt",
@@ -165,13 +166,22 @@
     "noEncounters": "Keine Begegnungsdaten für dieses Pokémon gefunden.",
     "gameLabel": "Spiel:",
     "noWildInGame": "In diesem Spiel nicht wild vorkommend.",
+    "anyTime": "Jederzeit",
     "table": {
       "route": "Route",
       "method": "Methode",
+      "time": "Tageszeit",
       "minLevel": "Min. Lv.",
       "maxLevel": "Max. Lv.",
       "chance": "Wahrscheinlichkeit"
     }
+  },
+  "locationArea": {
+    "pokemonCount": "Pokémon in dieser Route ({count})",
+    "noEncounters": "Für dieses Spiel sind keine Begegnungen erfasst.",
+    "pokemon": "Pokémon",
+    "detailView": "Detailansicht",
+    "groupedView": "Gruppierte Ansicht"
   },
   "teams": {
     "title": "Meine Teams",
@@ -462,7 +472,9 @@
   },
   "encounterMethods": {
     "gift": "Geschenk",
-    "walk": "Laufen",
+    "walk": "Hohes Gras",
+    "headbutt": "Kopfnuss",
+    "max-raid": "Max-Raid",
     "surf": "Surfen",
     "rock-smash": "Zertrümmerer",
     "dark-grass": "Dunkles Gras",
@@ -497,6 +509,35 @@
     "npc-trade": "NPC-Tausch",
     "wanderer": "Wanderer",
     "pokeflute": "Pokéflöte"
+  },
+  "encounterConditions": {
+    "time-day": "Tag",
+    "time-night": "Nacht",
+    "time-morning": "Morgen",
+    "time-evening": "Abend"
+  },
+  "eggGroups": {
+    "monster": "Monster",
+    "water1": "Wasser 1",
+    "bug": "Käfer",
+    "flying": "Flug",
+    "ground": "Feld",
+    "fairy": "Fee",
+    "plant": "Pflanze",
+    "humanshape": "Humanotyp",
+    "water3": "Wasser 3",
+    "mineral": "Mineral",
+    "indeterminate": "Amorph",
+    "water2": "Wasser 2",
+    "ditto": "Ditto",
+    "dragon": "Drache",
+    "no-eggs": "Unbekannt"
+  },
+  "eggGroupPage": {
+    "title": "Ei-Gruppe: {group}",
+    "count": "{count} Arten",
+    "species": "Art",
+    "noSpecies": "In dieser Gruppe sind keine Arten erfasst."
   },
   "lang": {
     "switcherAria": "Sprache wechseln",
