@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 
 import { Link } from "@/i18n/routing";
@@ -26,13 +26,17 @@ import { useMove } from "@/lib/queries";
 import type { PokemonMoveSlot } from "@/lib/pokeapi";
 import { extractIdFromUrl, getName } from "@/lib/pokemon-utils";
 import { isExcludedVersionGroup, versionGroupOrder } from "@/lib/version-names";
+import { defaultMoveMethod, methodsInGame, pickDefaultMoveGame } from "@/lib/move-methods";
+import {
+  preferredVersionGroup,
+  saveVersionGroup,
+  subscribeGamePreference,
+} from "@/lib/game-preference";
 import type { Move } from "@/lib/pokeapi";
 
 export interface MovesSectionProps {
   moveSlots: PokemonMoveSlot[];
 }
-
-const METHODS = ["level-up", "machine", "tutor", "egg"] as const;
 
 function capiCapitalize(str: string): string {
   return str
@@ -68,9 +72,43 @@ export function MovesSection({ moveSlots }: MovesSectionProps) {
     return Array.from(set).sort(versionGroupOrder);
   }, [moveSlots]);
 
-  const [selectedGame, setSelectedGame] = useState<string | undefined>(
-    allVersionGroups.includes("scarlet-violet") ? "scarlet-violet" : allVersionGroups.at(-1),
+  const [selectedGame, setSelectedGame] = useState<string | undefined>(() =>
+    pickDefaultMoveGame(allVersionGroups),
   );
+  const availableMethods = useMemo(
+    () => methodsInGame(moveSlots, selectedGame),
+    [moveSlots, selectedGame],
+  );
+  const [selectedMethod, setSelectedMethod] = useState<string | undefined>(() =>
+    defaultMoveMethod(moveSlots, selectedGame),
+  );
+
+  // Restaura el último juego consultado y se mantiene sincronizado con el
+  // selector de encuentros de la misma ficha.
+  useEffect(() => {
+    const sync = () => {
+      const stored = preferredVersionGroup(allVersionGroups);
+      if (!stored) return;
+      setSelectedGame(stored);
+      setSelectedMethod(defaultMoveMethod(moveSlots, stored));
+    };
+
+    sync();
+    return subscribeGamePreference(sync);
+  }, [allVersionGroups, moveSlots]);
+
+  // Si la pestaña elegida deja de existir al cambiar de juego, se usa la
+  // primera que sí tenga movimientos.
+  const activeMethod =
+    selectedMethod && availableMethods.includes(selectedMethod)
+      ? selectedMethod
+      : availableMethods[0];
+
+  const handleGameChange = (game: string) => {
+    setSelectedGame(game);
+    setSelectedMethod(defaultMoveMethod(moveSlots, game));
+    saveVersionGroup(game);
+  };
 
   return (
     <div className="space-y-4">
@@ -78,7 +116,7 @@ export function MovesSection({ moveSlots }: MovesSectionProps) {
         <label htmlFor="move-game-select" className="text-sm font-medium">
           {t("gameLabel")}
         </label>
-        <Select value={selectedGame ?? ""} onValueChange={(v) => setSelectedGame(v)}>
+        <Select value={selectedGame ?? ""} onValueChange={handleGameChange}>
           <SelectTrigger id="move-game-select" className="w-56 max-w-full">
             <SelectValue />
           </SelectTrigger>
@@ -92,57 +130,67 @@ export function MovesSection({ moveSlots }: MovesSectionProps) {
         </Select>
       </div>
 
-      <Tabs defaultValue="level-up">
-        <TabsList className="h-auto flex-wrap justify-start">
-          {METHODS.map((m) => (
-            <TabsTrigger key={m} value={m}>
-              {methodLabel(m)}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+      {activeMethod === undefined ? (
+        <p className="py-4 text-sm text-muted-foreground">
+          {t("noMoves", {
+            method: methodLabel(availableMethods[0] ?? "level-up").toLowerCase(),
+            version: vgLabel(selectedGame ?? ""),
+          })}
+        </p>
+      ) : (
+        <Tabs value={activeMethod} onValueChange={setSelectedMethod}>
+          <TabsList className="h-auto flex-wrap justify-start">
+            {availableMethods.map((method) => (
+              <TabsTrigger key={method} value={method}>
+                {methodLabel(method)}
+              </TabsTrigger>
+            ))}
+          </TabsList>
 
-        {METHODS.map((method) => {
-          const filtered = filterMoves(moveSlots, selectedGame, method);
-          return (
-            <TabsContent key={method} value={method}>
-              {filtered.length === 0 ? (
-                <p className="py-4 text-sm text-muted-foreground">
-                  {t("noMoves", {
-                    method: methodLabel(method).toLowerCase(),
-                    version: vgLabel(selectedGame ?? ""),
-                  })}
-                </p>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-16">{t("table.level")}</TableHead>
-                      <TableHead>{t("table.name")}</TableHead>
-                      <TableHead>{t("table.type")}</TableHead>
-                      <TableHead>{t("table.effect")}</TableHead>
-                      <TableHead>{t("table.category")}</TableHead>
-                      <TableHead className="w-16 text-right">{t("table.power")}</TableHead>
-                      <TableHead className="w-14 text-right">{t("table.pp")}</TableHead>
-                      <TableHead className="w-16 text-right">{t("table.accuracy")}</TableHead>
-                      <TableHead className="w-16 text-right">{t("table.priority")}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filtered.map((item) => (
-                      <MoveRow
-                        key={item.move.name}
-                        moveSlot={item}
-                        level={item.level}
-                        game={selectedGame ?? ""}
-                      />
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </TabsContent>
-          );
-        })}
-      </Tabs>
+          {availableMethods.map((method) => {
+            const filtered = filterMoves(moveSlots, selectedGame, method);
+            return (
+              <TabsContent key={method} value={method}>
+                {filtered.length === 0 ? (
+                  <p className="py-4 text-sm text-muted-foreground">
+                    {t("noMoves", {
+                      method: methodLabel(method).toLowerCase(),
+                      version: vgLabel(selectedGame ?? ""),
+                    })}
+                  </p>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-16">{t("table.level")}</TableHead>
+                        <TableHead>{t("table.name")}</TableHead>
+                        <TableHead>{t("table.type")}</TableHead>
+                        <TableHead>{t("table.effect")}</TableHead>
+                        <TableHead>{t("table.category")}</TableHead>
+                        <TableHead className="w-16 text-right">{t("table.power")}</TableHead>
+                        <TableHead className="w-14 text-right">{t("table.pp")}</TableHead>
+                        <TableHead className="w-16 text-right">{t("table.accuracy")}</TableHead>
+                        <TableHead className="w-16 text-right">{t("table.priority")}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filtered.map((item) => (
+                        <MoveRow
+                          key={item.move.name}
+                          moveSlot={item}
+                          method={method}
+                          level={item.level}
+                          game={selectedGame ?? ""}
+                        />
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </TabsContent>
+            );
+          })}
+        </Tabs>
+      )}
     </div>
   );
 }
@@ -182,10 +230,12 @@ function damageClassLabel(
 
 function MoveRow({
   moveSlot,
+  method,
   level,
   game,
 }: {
   moveSlot: PokemonMoveSlot;
+  method: string;
   level: number;
   game: string;
 }) {
@@ -215,7 +265,9 @@ function MoveRow({
 
   return (
     <TableRow>
-      <TableCell className="font-mono text-xs">{level}</TableCell>
+      <TableCell className="font-mono text-xs">
+        {method === "level-up" ? level : t("emptyFallback")}
+      </TableCell>
       <TableCell className="font-medium">
         <Link href={`/movimiento/${moveId}`} className="hover:underline">
           {nameEs ?? (move ? move.name : moveSlot.move.name)}

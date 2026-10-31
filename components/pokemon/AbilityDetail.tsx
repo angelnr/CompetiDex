@@ -11,6 +11,7 @@ import {
   getFlavorText,
   getName,
   getPixelSpriteById,
+  isBaseOrRegionalPokemon,
 } from "@/lib/pokemon-utils";
 
 export interface AbilityDetailProps {
@@ -31,7 +32,7 @@ export function AbilityDetail({ ability, locale = "es" }: AbilityDetailProps) {
   const pokemonList = ability.pokemon
     .filter((p) => {
       const id = extractIdFromUrl(p.pokemon.url);
-      return id <= 1025;
+      return isBaseOrRegionalPokemon(id, p.pokemon.name);
     })
     .sort((a, b) => {
       const idA = extractIdFromUrl(a.pokemon.url);

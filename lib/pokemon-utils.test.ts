@@ -24,6 +24,7 @@ import {
   isGenderFormName,
   genderBaseSpecies,
   getGenderFormSuggestions,
+  isBaseOrRegionalPokemon,
   formatSpeciesLabel,
   pokepasteSpeciesLine,
   baseSpeciesSlug,
@@ -183,9 +184,9 @@ describe("computeStat", () => {
 
 describe("computeChampionsStat", () => {
   it("parte de base + 20 (no-HP) y base + 75 (HP) sin puntos", () => {
-    expect(
-      computeChampionsStat({ base: 100, points: 0, isHp: false, natureMultiplier: 1 }),
-    ).toBe(120);
+    expect(computeChampionsStat({ base: 100, points: 0, isHp: false, natureMultiplier: 1 })).toBe(
+      120,
+    );
     expect(computeChampionsStat({ base: 100, points: 0, isHp: true, natureMultiplier: 1 })).toBe(
       175,
     );
@@ -193,9 +194,9 @@ describe("computeChampionsStat", () => {
 
   it("cada punto de estadística sube exactamente 1", () => {
     for (let points = 1; points <= 32; points++) {
-      expect(
-        computeChampionsStat({ base: 100, points, isHp: false, natureMultiplier: 1 }),
-      ).toBe(120 + points);
+      expect(computeChampionsStat({ base: 100, points, isHp: false, natureMultiplier: 1 })).toBe(
+        120 + points,
+      );
       expect(computeChampionsStat({ base: 100, points, isHp: true, natureMultiplier: 1 })).toBe(
         175 + points,
       );
@@ -576,6 +577,21 @@ describe("isRegionalName", () => {
     expect(isRegionalName("charizard-mega-x")).toBe(false);
     expect(isRegionalName("venusaur-mega")).toBe(false);
     expect(isRegionalName("pikachu")).toBe(false);
+  });
+});
+
+describe("isBaseOrRegionalPokemon", () => {
+  it("incluye especies base, formas regionales y de género", () => {
+    expect(isBaseOrRegionalPokemon(25, "pikachu")).toBe(true);
+    expect(isBaseOrRegionalPokemon(10180, "stunfisk-galar")).toBe(true);
+    expect(isBaseOrRegionalPokemon(10100, "raichu-alola")).toBe(true);
+    expect(isBaseOrRegionalPokemon(10186, "indeedee-female")).toBe(true);
+  });
+
+  it("excluye megas y variantes cosméticas", () => {
+    expect(isBaseOrRegionalPokemon(10034, "charizard-mega-x")).toBe(false);
+    expect(isBaseOrRegionalPokemon(10080, "pikachu-rock-star")).toBe(false);
+    expect(isBaseOrRegionalPokemon(10094, "pikachu-original-cap")).toBe(false);
   });
 });
 

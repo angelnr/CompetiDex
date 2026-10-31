@@ -7,9 +7,15 @@
  * filtrar por movimiento y juego en una sola petición. El resultado se cachea
  * en Redis 7 días.
  *
- * Nota: el GraphQL beta puede ir por detrás del REST (p. ej. aún no incluye el
- * version-group `champions`). En ese caso el movimiento simplemente no ofrece
- * esa opción en el selector; el resto de juegos funciona igual.
+ * Nota: el GraphQL beta puede ir por detrás del REST (p. ej. aún no incluye
+ * `champions`, `legends-za` ni `mega-dimension`). En ese caso el movimiento
+ * simplemente no ofrece esa opción en el selector; el resto de juegos funciona
+ * igual.
+ *
+ * Las consultas no se limitan a las especies base (`id <= 1025`): las formas
+ * regionales y de género tienen learnsets propios (p. ej. Stunfisk de Galar y
+ * Snap Trap), así que se incluyen. Las megas, las formas exclusivas de combate
+ * y las variantes cosméticas se quedan fuera porque no se entrenan aparte.
  */
 
 import { getOrSet } from "@/lib/redis";
@@ -89,6 +95,28 @@ interface EggChainsQueryData {
 }
 
 const METHOD_ORDER = ["level-up", "machine", "tutor", "egg", "train"];
+
+/**
+ * Filtro GraphQL de los Pokémon que se listan como aprendices.
+ *
+ * Incluye las especies base (`id <= 1025`), las formas regionales (Galar,
+ * Alola, Hisui, Paldea) y las formas de género, que tienen learnsets propios.
+ * Deja fuera megas, formas exclusivas de combate y variantes puramente
+ * cosméticas (gorras de Pikachu, etc.), que duplicarían filas sin aportar
+ * información.
+ */
+const LEARNER_POKEMON_WHERE = `
+  _or: [
+    { id: { _lte: 1025 } }
+    { name: { _regex: "-(alola|galar|hisui)(-standard)?$" } }
+    { name: { _regex: "-paldea(-[a-z-]+)?$" } }
+    { name: { _regex: "-(male|female)$" } }
+  ]
+  pokemon_v2_pokemonforms: {
+    is_mega: { _eq: false }
+    is_battle_only: { _eq: false }
+  }
+`;
 
 function methodRank(name: string): number {
   const index = METHOD_ORDER.indexOf(name);
@@ -171,7 +199,7 @@ export async function getMoveLearnerGames(moveId: number): Promise<MoveLearnerGa
         pokemon_v2_pokemonmoves_aggregate(
           where: {
             move_id: { _eq: $id }
-            pokemon_v2_pokemon: { id: { _lte: 1025 }, is_default: { _eq: true } }
+            pokemon_v2_pokemon: { ${LEARNER_POKEMON_WHERE} }
           }
         ) {
           aggregate { count }
@@ -182,7 +210,7 @@ export async function getMoveLearnerGames(moveId: number): Promise<MoveLearnerGa
 
   try {
     const data = await getOrSet(
-      `pokeapi:move-learner-games:${moveId}:v1`,
+      `pokeapi:move-learner-games:${moveId}:v2`,
       () => graphql<GamesQueryData>(query, { id: moveId }),
       LEARNERS_TTL_S,
     );
@@ -241,7 +269,7 @@ async function expandInheritedEggLearners(
             id
             name
             evolves_from_species_id
-            pokemon_v2_pokemons(where: { is_default: { _eq: true } }) {
+            pokemon_v2_pokemons(where: { ${LEARNER_POKEMON_WHERE} }) {
               id
               name
               pokemon_v2_pokemonmoves(
@@ -338,7 +366,7 @@ export async function getMoveLearners(
         pokemon_v2_pokemonmoves(
           where: {
             pokemon_v2_versiongroup: { name: { _eq: $game } }
-            pokemon_v2_pokemon: { id: { _lte: 1025 }, is_default: { _eq: true } }
+            pokemon_v2_pokemon: { ${LEARNER_POKEMON_WHERE} }
           }
           order_by: { pokemon_v2_pokemon: { id: asc } }
         ) {
@@ -352,7 +380,7 @@ export async function getMoveLearners(
 
   try {
     const data = await getOrSet(
-      `pokeapi:move-learners:${moveId}:${versionGroup}:v2`,
+      `pokeapi:move-learners:${moveId}:${versionGroup}:v3`,
       () =>
         graphql<LearnersQueryData>(query, {
           id: moveId,

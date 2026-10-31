@@ -20,6 +20,13 @@ function graphqlResponse(data: unknown): Response {
 
 const fetchMock = vi.fn();
 
+/** Query GraphQL enviada en la última petición simulada. */
+function lastQuery(): string {
+  const call = fetchMock.mock.calls.at(-1)!;
+  const body = JSON.parse(call[1]!.body as string) as { query: string };
+  return body.query;
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
   vi.stubGlobal("fetch", fetchMock);
@@ -87,10 +94,20 @@ describe("getMoveLearnerGames", () => {
       { name: "scarlet-violet", order: 27, count: 3 },
     ]);
     expect(getOrSetMock).toHaveBeenCalledWith(
-      "pokeapi:move-learner-games:252:v1",
+      "pokeapi:move-learner-games:252:v2",
       expect.any(Function),
       604_800,
     );
+  });
+
+  it("cuenta las formas regionales y descarta megas y formas de combate", async () => {
+    fetchMock.mockResolvedValue(graphqlResponse({ pokemon_v2_versiongroup: [] }));
+
+    await getMoveLearnerGames(779);
+
+    expect(lastQuery()).toContain("is_mega: { _eq: false }");
+    expect(lastQuery()).toContain("is_battle_only: { _eq: false }");
+    expect(lastQuery()).toContain("-(alola|galar|hisui)(-standard)?$");
   });
 });
 
@@ -129,6 +146,37 @@ describe("getMoveLearners", () => {
         ],
       },
     ]);
+  });
+
+  it("incluye formas regionales como Stunfisk de Galar (Snap Trap)", async () => {
+    fetchMock.mockResolvedValue(
+      graphqlResponse({
+        pokemon_v2_move: [
+          {
+            pokemon_v2_pokemonmoves: [
+              {
+                level: 45,
+                pokemon_v2_movelearnmethod: { name: "level-up" },
+                pokemon_v2_pokemon: { id: 10180, name: "stunfisk-galar" },
+              },
+            ],
+          },
+        ],
+      }),
+    );
+
+    const learners = await getMoveLearners(779, "sword-shield");
+
+    expect(learners).toEqual([
+      {
+        pokemonId: 10180,
+        pokemonName: "stunfisk-galar",
+        methods: [{ name: "level-up", level: 45 }],
+      },
+    ]);
+    expect(lastQuery()).toContain("is_mega: { _eq: false }");
+    expect(lastQuery()).toContain("is_battle_only: { _eq: false }");
+    expect(lastQuery()).toContain("-(alola|galar|hisui)(-standard)?$");
   });
 
   it("traduce el alias de BDSP al identificador que espera GraphQL", async () => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 
 import { Link } from "@/i18n/routing";
@@ -24,6 +24,7 @@ import { capitalize, extractIdFromUrl } from "@/lib/pokemon-utils";
 import { resolveLocationName } from "@/lib/location-names";
 import { useLocationAreaNames } from "@/lib/queries";
 import { isExcludedVersion, versionOrder } from "@/lib/version-names";
+import { preferredVersion, saveVersion, subscribeGamePreference } from "@/lib/game-preference";
 
 export interface EncounterInfoProps {
   encounters?: LocationAreaEncounter[] | null;
@@ -47,7 +48,29 @@ export function EncounterInfo({ encounters }: EncounterInfoProps) {
     () => (encounters && encounters.length > 0 ? getUniqueVersions(encounters) : []),
     [encounters],
   );
+
+  // Restaura el último juego consultado. Si la versión exacta no existe para
+  // esta especie (juego exclusivo), cae a la otra versión de su familia
+  // (p. ej. Escudo → Espada). También se sincroniza con Movimientos.
+  useEffect(() => {
+    const sync = () => {
+      const stored = preferredVersion(versionNames);
+      setSelectedVersion((current) => {
+        if (stored) return stored;
+        return current && versionNames.includes(current) ? current : undefined;
+      });
+    };
+
+    sync();
+    return subscribeGamePreference(sync);
+  }, [versionNames]);
+
   const currentVersion = selectedVersion ?? versionNames[0];
+
+  const handleVersionChange = (version: string) => {
+    setSelectedVersion(version);
+    saveVersion(version);
+  };
 
   // Solo se piden los nombres de las áreas de la versión visible. El español
   // resuelve primero con el diccionario curado; PokeAPI cubre el resto.
@@ -91,7 +114,7 @@ export function EncounterInfo({ encounters }: EncounterInfoProps) {
         <label htmlFor="version-select" className="text-sm font-medium">
           {t("gameLabel")}
         </label>
-        <Select value={currentVersion ?? ""} onValueChange={setSelectedVersion}>
+        <Select value={currentVersion ?? ""} onValueChange={handleVersionChange}>
           <SelectTrigger id="version-select" className="w-56">
             <SelectValue />
           </SelectTrigger>

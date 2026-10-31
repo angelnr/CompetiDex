@@ -372,6 +372,16 @@ export function genderBaseSpecies(name: string): string {
   return m?.[1] ?? name;
 }
 
+/**
+ * Indica si un Pokémon debe listarse como representante de su especie en
+ * listados de movimientos/habilidades: especie base (`id <= 1025`), forma
+ * regional o forma de género. Excluye megas, formas exclusivas de combate y
+ * variantes cosméticas (gorras de Pikachu, etc.), que no aportan datos propios.
+ */
+export function isBaseOrRegionalPokemon(id: number, name: string): boolean {
+  return id <= 1025 || isRegionalName(name) || isGenderFormName(name);
+}
+
 /** Retorna la forma hembra si el nombre coincide con la forma macho. */
 export function getGenderFormSuggestions(speciesName: string): { name: string; id: number }[] {
   return GENDER_FEMALE_MAP[speciesName] ?? [];
