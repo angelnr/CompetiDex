@@ -162,7 +162,7 @@ jobs:
           DATABASE_URL: file:./ci-e2e.db
           BETTER_AUTH_SECRET: ci-e2e-secret-not-for-production
           BETTER_AUTH_URL: http://localhost:3100
-        run: pnpm test:e2e --reporter=github
+        run: pnpm test:e2e
 
       - name: Upload test results
         if: ${{ !cancelled() }}
