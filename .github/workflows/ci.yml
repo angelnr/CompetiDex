@@ -138,6 +138,8 @@ jobs:
       - name: Run E2E tests
         env:
           REDIS_URL: redis://127.0.0.1:6379
+          # `next start` sin -p escucha en 3000, pero Playwright vigila 3100.
+          PORT: "3100"
           NODE_ENV: production
           DATABASE_URL: file:./ci-e2e.db
           BETTER_AUTH_SECRET: ci-e2e-secret-not-for-production

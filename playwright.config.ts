@@ -41,6 +41,9 @@ export default defineConfig({
             // En CI no hay Redis; el proxy cachea con fallback (lib/redis tolerate
             // el miss si REDIS_URL no responde gracias a retryPolicy).
             NODE_ENV: "production",
+            // `next start` no hereda el puerto de `dev`; sin esto escucha en 3000
+            // y el webServer de Playwright (que vigila baseURL) nunca responde.
+            PORT: process.env.PORT ?? "3100",
             REDIS_URL: process.env.REDIS_URL ?? "",
             DATABASE_URL: process.env.DATABASE_URL ?? "file:./ci-e2e.db",
             BETTER_AUTH_SECRET:
