@@ -18,6 +18,11 @@ export default defineConfig({
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "html",
   use: {
     baseURL: `http://localhost:${process.env.PORT ?? "3100"}`,
+    // Los tests están escritos en español y el middleware de next-intl detecta
+    // el idioma por Accept-Language: sin esto, el Chromium de CI (en-US) recibe
+    // /en y todos los selectores en español fallan.
+    locale: "es-ES",
+    extraHTTPHeaders: { "Accept-Language": "es-ES,es;q=0.9" },
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
