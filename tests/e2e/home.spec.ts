@@ -1,45 +1,28 @@
 import { test, expect } from "@playwright/test";
 
 /**
- * Smoke test del Home: grid y buscador se renderizan correctamente.
- * Assume que el dev server (o server de CI) está en :3100.
+ * Smoke test del Home: título, buscador y bloque de ayuda.
  *
- * El listado de Pokémon se carga en cliente (PokeAPI, con caché Redis). En CI
- * no hay Redis, así que la primera petición va a la API externa y puede tardar:
- * de ahí los timeouts amplios.
+ * Ojo: el Home ya NO pinta un grid de cards; solo muestra la cabecera, la barra
+ * de búsqueda y un texto de ayuda. Las cards viven en otras vistas.
  */
-const CARD_LINK = 'a[href*="/pokemon/"]';
-
 test.describe("Home", () => {
-  test("muestra título y descripción de CompetiDex", async ({ page }) => {
+  test("muestra título y subtítulo de CompetiDex", async ({ page }) => {
     await page.goto("/");
     await expect(page).toHaveTitle(/CompetiDex/i);
     await expect(page.getByRole("heading", { name: /CompetiDex/i })).toBeVisible();
+    await expect(page.getByText(/Pokédex all-in-one/i)).toBeVisible();
   });
 
   test("renderiza la barra de búsqueda con label accesible", async ({ page }) => {
     await page.goto("/");
-    const search = page.getByLabel(/buscar pok/i);
+    const search = page.getByRole("combobox", { name: /buscar pokémon/i });
     await expect(search).toBeVisible();
-    await expect(search).toHaveAttribute("type", "search");
   });
 
-  test("renderiza al menos una card de Pokémon tras hidratar", async ({ page }) => {
+  test("muestra el bloque de ayuda con el número de Pokémon", async ({ page }) => {
     await page.goto("/");
-    // Ojo: no usar getByRole("link").first(), que devuelve el enlace del logo.
-    const firstCard = page.locator(CARD_LINK).first();
-    await expect(firstCard).toBeVisible({ timeout: 30_000 });
-
-    const href = await firstCard.getAttribute("href");
-    expect(href).toMatch(/\/pokemon\/\d+/);
-  });
-
-  test("el grid renderiza varias cards de Pokémon", async ({ page }) => {
-    await page.goto("/");
-    const cards = page.locator(CARD_LINK);
-    await expect(cards.first()).toBeVisible({ timeout: 30_000 });
-    // El grid del Home lista más de un Pokémon; si solo hubiera uno, el
-    // contenedor no se estaría pintando.
-    expect(await cards.count()).toBeGreaterThan(1);
+    await expect(page.getByText(/Busca cualquier Pokémon por nombre/i)).toBeVisible();
+    await expect(page.getByText(/Más de 1000 Pokémon disponibles/i)).toBeVisible();
   });
 });
