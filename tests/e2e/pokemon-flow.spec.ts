@@ -21,8 +21,8 @@ test.describe("Flujo home → búsqueda → ficha → navegación", () => {
     await expect(suggestion).toBeVisible({ timeout: 10_000 });
     await suggestion.click();
 
-    // 3. Ficha de Pikachu
-    await expect(page).toHaveURL(/\/pokemon\/pikachu$/);
+    // 3. Ficha de Pikachu (las fichas se resuelven por id, con prefijo de idioma)
+    await expect(page).toHaveURL(/\/pokemon\/25$/);
     await expect(page).toHaveTitle(/Pikachu/i);
 
     // Datos visibles: PS, Ataque, Defensa (barras de stats)

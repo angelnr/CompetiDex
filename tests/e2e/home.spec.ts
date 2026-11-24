@@ -3,7 +3,13 @@ import { test, expect } from "@playwright/test";
 /**
  * Smoke test del Home: grid y buscador se renderizan correctamente.
  * Assume que el dev server (o server de CI) está en :3100.
+ *
+ * El listado de Pokémon se carga en cliente (PokeAPI, con caché Redis). En CI
+ * no hay Redis, así que la primera petición va a la API externa y puede tardar:
+ * de ahí los timeouts amplios.
  */
+const CARD_LINK = 'a[href*="/pokemon/"]';
+
 test.describe("Home", () => {
   test("muestra título y descripción de CompetiDex", async ({ page }) => {
     await page.goto("/");
@@ -20,17 +26,20 @@ test.describe("Home", () => {
 
   test("renderiza al menos una card de Pokémon tras hidratar", async ({ page }) => {
     await page.goto("/");
-    // Las cards son Links a /pokemon/{id}
-    const firstCard = page.getByRole("link").first();
-    await expect(firstCard).toBeVisible({ timeout: 15_000 });
-    // El href debe apuntar a una ficha
+    // Ojo: no usar getByRole("link").first(), que devuelve el enlace del logo.
+    const firstCard = page.locator(CARD_LINK).first();
+    await expect(firstCard).toBeVisible({ timeout: 30_000 });
+
     const href = await firstCard.getAttribute("href");
     expect(href).toMatch(/\/pokemon\/\d+/);
   });
 
-  test("el grid existe con clase grid-cols", async ({ page }) => {
+  test("el grid renderiza varias cards de Pokémon", async ({ page }) => {
     await page.goto("/");
-    const grid = page.locator(".grid.grid-cols-2").first();
-    await expect(grid).toBeVisible({ timeout: 15_000 });
+    const cards = page.locator(CARD_LINK);
+    await expect(cards.first()).toBeVisible({ timeout: 30_000 });
+    // El grid del Home lista más de un Pokémon; si solo hubiera uno, el
+    // contenedor no se estaría pintando.
+    expect(await cards.count()).toBeGreaterThan(1);
   });
 });
