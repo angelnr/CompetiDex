@@ -73,11 +73,17 @@ jobs:
           BETTER_AUTH_SECRET: ci-build-secret-not-for-production
         run: pnpm build
 
+      # .next es un directorio oculto y upload-artifact@v4.4+ lo excluye por
+      # defecto: sin include-hidden-files el artefacto se sube vacío y el fallo
+      # aparece en el job de E2E ("Unable to find any artifacts"). Con
+      # if-no-files-found: error la subida vacía falla aquí, donde se ve.
       - name: Upload .next artifact
         uses: actions/upload-artifact@v4
         with:
           name: next-build
           path: .next
+          include-hidden-files: true
+          if-no-files-found: error
           retention-days: 3
 
   # ----- E2E con Playwright (lint/typecheck/build ya validados arriba) -----
